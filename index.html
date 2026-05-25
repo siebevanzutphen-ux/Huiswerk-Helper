@@ -1,0 +1,1031 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="Huiswerk Helper">
+<title>Huiswerk Helper</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&family=Nunito+Sans:wght@400;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --brand: #5B4FCF;
+    --brand-light: #EAE8FF;
+    --brand-mid: #7B6FDF;
+    --accent: #FF6B6B;
+    --accent-light: #FFF0F0;
+    --success: #22C55E;
+    --success-light: #DCFCE7;
+    --bg: #F7F6FF;
+    --surface: #FFFFFF;
+    --surface2: #F3F2FB;
+    --text: #1A1535;
+    --text-muted: #6B6589;
+    --border: #E2E0F0;
+    --radius: 20px;
+    --radius-sm: 12px;
+    --shadow: 0 4px 24px rgba(91,79,207,0.10);
+    --shadow-lg: 0 8px 40px rgba(91,79,207,0.18);
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+
+  body {
+    font-family: 'Nunito Sans', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    min-height: -webkit-fill-available;
+    overflow-x: hidden;
+  }
+
+  /* SCREENS */
+  .screen { display: none; flex-direction: column; min-height: 100vh; min-height: -webkit-fill-available; }
+  .screen.active { display: flex; }
+
+  /* ── HOME SCREEN ── */
+  #screen-home {
+    background: linear-gradient(155deg, #EAE8FF 0%, #F7F6FF 50%, #FFF0F0 100%);
+    align-items: center;
+    justify-content: center;
+    padding: 40px 24px;
+    text-align: center;
+  }
+
+  .home-logo {
+    width: 88px;
+    height: 88px;
+    background: var(--brand);
+    border-radius: 28px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 24px;
+    box-shadow: 0 8px 32px rgba(91,79,207,0.30);
+    font-size: 42px;
+  }
+
+  .home-title {
+    font-family: 'Nunito', sans-serif;
+    font-size: 32px;
+    font-weight: 800;
+    color: var(--brand);
+    margin-bottom: 8px;
+    letter-spacing: -0.5px;
+  }
+
+  .home-sub {
+    font-size: 16px;
+    color: var(--text-muted);
+    margin-bottom: 48px;
+    line-height: 1.5;
+    max-width: 280px;
+    margin-left: auto;
+    margin-right: auto;
+  }
+
+  .home-cards {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    width: 100%;
+    max-width: 360px;
+    margin-bottom: 40px;
+  }
+
+  .home-card {
+    background: var(--surface);
+    border-radius: var(--radius-sm);
+    padding: 16px 12px;
+    border: 1.5px solid var(--border);
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .home-card span:first-child { font-size: 28px; }
+  .home-card .card-label { color: var(--text-muted); font-size: 12px; font-weight: 400; }
+
+  .btn-primary {
+    background: var(--brand);
+    color: white;
+    border: none;
+    border-radius: 100px;
+    padding: 18px 40px;
+    font-family: 'Nunito', sans-serif;
+    font-size: 17px;
+    font-weight: 700;
+    cursor: pointer;
+    box-shadow: 0 4px 20px rgba(91,79,207,0.35);
+    transition: transform 0.1s, box-shadow 0.1s;
+    width: 100%;
+    max-width: 320px;
+    letter-spacing: 0.2px;
+  }
+
+  .btn-primary:active { transform: scale(0.97); box-shadow: 0 2px 10px rgba(91,79,207,0.25); }
+
+  /* ── CAPTURE SCREEN ── */
+  #screen-capture {
+    background: var(--bg);
+  }
+
+  .topbar {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 16px 20px;
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    position: sticky;
+    top: 0;
+    z-index: 10;
+  }
+
+  .btn-back {
+    width: 40px;
+    height: 40px;
+    border-radius: 12px;
+    background: var(--surface2);
+    border: none;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 18px;
+    flex-shrink: 0;
+    transition: background 0.15s;
+  }
+  .btn-back:active { background: var(--border); }
+
+  .topbar-title {
+    font-family: 'Nunito', sans-serif;
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--text);
+  }
+
+  .capture-body {
+    flex: 1;
+    padding: 24px 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+  }
+
+  .upload-zone {
+    background: var(--surface);
+    border: 2.5px dashed var(--brand-mid);
+    border-radius: var(--radius);
+    min-height: 220px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    cursor: pointer;
+    transition: background 0.15s, border-color 0.15s;
+    position: relative;
+    overflow: hidden;
+  }
+  .upload-zone:active { background: var(--brand-light); border-color: var(--brand); }
+
+  .upload-zone img.preview {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    border-radius: var(--radius);
+  }
+
+  .upload-icon { font-size: 48px; }
+  .upload-text { font-family: 'Nunito', sans-serif; font-size: 16px; font-weight: 700; color: var(--brand); }
+  .upload-hint { font-size: 13px; color: var(--text-muted); }
+
+  .upload-actions {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+  }
+
+  .btn-outline {
+    background: var(--surface);
+    color: var(--brand);
+    border: 1.5px solid var(--brand);
+    border-radius: 100px;
+    padding: 14px 20px;
+    font-family: 'Nunito', sans-serif;
+    font-size: 15px;
+    font-weight: 700;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    transition: background 0.1s;
+  }
+  .btn-outline:active { background: var(--brand-light); }
+
+  input[type=file] { display: none; }
+
+  .subject-label {
+    font-family: 'Nunito', sans-serif;
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--text);
+    margin-bottom: 8px;
+  }
+
+  .subject-chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  .chip {
+    background: var(--surface);
+    border: 1.5px solid var(--border);
+    border-radius: 100px;
+    padding: 8px 16px;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text-muted);
+    cursor: pointer;
+    transition: all 0.15s;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    user-select: none;
+  }
+  .chip.selected {
+    background: var(--brand-light);
+    border-color: var(--brand);
+    color: var(--brand);
+  }
+
+  .context-input {
+    background: var(--surface);
+    border: 1.5px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 14px 16px;
+    font-family: 'Nunito Sans', sans-serif;
+    font-size: 15px;
+    color: var(--text);
+    width: 100%;
+    resize: none;
+    outline: none;
+    min-height: 80px;
+    transition: border-color 0.15s;
+  }
+  .context-input:focus { border-color: var(--brand); }
+  .context-input::placeholder { color: var(--text-muted); }
+
+  /* ── CHAT SCREEN ── */
+  #screen-chat {
+    background: var(--bg);
+  }
+
+  .chat-topbar {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 16px;
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    position: sticky;
+    top: 0;
+    z-index: 10;
+  }
+
+  .tutor-avatar {
+    width: 40px;
+    height: 40px;
+    border-radius: 14px;
+    background: var(--brand);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 20px;
+    flex-shrink: 0;
+  }
+
+  .tutor-info .tutor-name {
+    font-family: 'Nunito', sans-serif;
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--text);
+  }
+  .tutor-info .tutor-status {
+    font-size: 12px;
+    color: var(--success);
+    font-weight: 600;
+  }
+
+  .chat-messages {
+    flex: 1;
+    overflow-y: auto;
+    padding: 20px 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .image-preview-msg {
+    align-self: flex-end;
+    background: var(--surface);
+    border-radius: 18px 18px 4px 18px;
+    border: 1.5px solid var(--border);
+    overflow: hidden;
+    max-width: 240px;
+    box-shadow: var(--shadow);
+  }
+  .image-preview-msg img {
+    width: 100%;
+    display: block;
+    border-radius: 16px;
+  }
+
+  .bubble {
+    max-width: 85%;
+    padding: 14px 18px;
+    border-radius: 20px;
+    font-size: 15px;
+    line-height: 1.55;
+    animation: popIn 0.25s ease;
+  }
+
+  @keyframes popIn {
+    from { opacity: 0; transform: translateY(8px) scale(0.97); }
+    to { opacity: 1; transform: translateY(0) scale(1); }
+  }
+
+  .bubble.tutor {
+    background: var(--surface);
+    border: 1.5px solid var(--border);
+    border-bottom-left-radius: 4px;
+    align-self: flex-start;
+    color: var(--text);
+    box-shadow: var(--shadow);
+  }
+
+  .bubble.user {
+    background: var(--brand);
+    color: white;
+    border-bottom-right-radius: 4px;
+    align-self: flex-end;
+  }
+
+  .bubble.thinking {
+    background: var(--surface);
+    border: 1.5px solid var(--border);
+    align-self: flex-start;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 14px 18px;
+  }
+
+  .dot {
+    width: 8px; height: 8px;
+    background: var(--brand-mid);
+    border-radius: 50%;
+    animation: bounce 1.2s infinite;
+  }
+  .dot:nth-child(2) { animation-delay: 0.2s; }
+  .dot:nth-child(3) { animation-delay: 0.4s; }
+
+  @keyframes bounce {
+    0%, 80%, 100% { transform: translateY(0); opacity: 0.4; }
+    40% { transform: translateY(-6px); opacity: 1; }
+  }
+
+  .hint-chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 10px;
+  }
+
+  .hint-chip {
+    background: var(--brand-light);
+    color: var(--brand);
+    border: 1.5px solid var(--brand);
+    border-radius: 100px;
+    padding: 8px 14px;
+    font-size: 13px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: background 0.15s;
+    font-family: 'Nunito', sans-serif;
+  }
+  .hint-chip:active { background: var(--brand); color: white; }
+
+  .solved-banner {
+    background: var(--success-light);
+    border: 1.5px solid var(--success);
+    border-radius: var(--radius-sm);
+    padding: 16px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-family: 'Nunito', sans-serif;
+    font-size: 15px;
+    font-weight: 700;
+    color: #15803D;
+    align-self: center;
+    margin: 4px 0;
+  }
+
+  .chat-input-area {
+    padding: 12px 16px;
+    background: var(--surface);
+    border-top: 1px solid var(--border);
+    display: flex;
+    gap: 10px;
+    align-items: flex-end;
+  }
+
+  .chat-input {
+    flex: 1;
+    background: var(--surface2);
+    border: 1.5px solid var(--border);
+    border-radius: 20px;
+    padding: 12px 16px;
+    font-family: 'Nunito Sans', sans-serif;
+    font-size: 15px;
+    color: var(--text);
+    resize: none;
+    outline: none;
+    max-height: 120px;
+    overflow-y: auto;
+    line-height: 1.4;
+    transition: border-color 0.15s;
+  }
+  .chat-input:focus { border-color: var(--brand); }
+  .chat-input::placeholder { color: var(--text-muted); }
+
+  .btn-send {
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    background: var(--brand);
+    border: none;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    box-shadow: 0 2px 12px rgba(91,79,207,0.30);
+    transition: transform 0.1s;
+  }
+  .btn-send:active { transform: scale(0.93); }
+  .btn-send:disabled { background: var(--border); box-shadow: none; cursor: not-allowed; }
+  .btn-send svg { width: 20px; height: 20px; fill: white; }
+
+  /* Progress bar */
+  .progress-wrap {
+    padding: 0 16px 4px;
+    background: var(--surface);
+  }
+  .progress-label {
+    font-size: 11px;
+    color: var(--text-muted);
+    font-weight: 600;
+    margin-bottom: 4px;
+    display: flex;
+    justify-content: space-between;
+  }
+  .progress-bar {
+    height: 6px;
+    background: var(--border);
+    border-radius: 100px;
+    overflow: hidden;
+  }
+  .progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--brand), var(--accent));
+    border-radius: 100px;
+    transition: width 0.6s ease;
+  }
+
+  /* API key screen */
+  #screen-apikey {
+    align-items: center;
+    justify-content: center;
+    padding: 40px 24px;
+    background: linear-gradient(155deg, #EAE8FF 0%, #F7F6FF 100%);
+  }
+
+  .apikey-card {
+    background: var(--surface);
+    border-radius: var(--radius);
+    padding: 32px 24px;
+    width: 100%;
+    max-width: 380px;
+    box-shadow: var(--shadow-lg);
+    border: 1.5px solid var(--border);
+  }
+
+  .apikey-icon { font-size: 48px; text-align: center; margin-bottom: 16px; }
+  .apikey-title {
+    font-family: 'Nunito', sans-serif;
+    font-size: 22px;
+    font-weight: 800;
+    color: var(--text);
+    text-align: center;
+    margin-bottom: 8px;
+  }
+  .apikey-desc {
+    font-size: 14px;
+    color: var(--text-muted);
+    text-align: center;
+    line-height: 1.6;
+    margin-bottom: 24px;
+  }
+
+  .apikey-input {
+    width: 100%;
+    border: 1.5px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 14px 16px;
+    font-family: 'Nunito Sans', sans-serif;
+    font-size: 14px;
+    color: var(--text);
+    outline: none;
+    margin-bottom: 16px;
+    transition: border-color 0.15s;
+    font-family: monospace;
+  }
+  .apikey-input:focus { border-color: var(--brand); }
+
+  .apikey-note {
+    font-size: 12px;
+    color: var(--text-muted);
+    line-height: 1.5;
+    margin-top: 12px;
+    padding: 12px;
+    background: var(--surface2);
+    border-radius: var(--radius-sm);
+  }
+
+  .error-msg {
+    background: var(--accent-light);
+    color: var(--accent);
+    border-radius: var(--radius-sm);
+    padding: 10px 14px;
+    font-size: 13px;
+    font-weight: 600;
+    margin-top: 8px;
+    display: none;
+  }
+  .error-msg.show { display: block; }
+
+  /* Markdown in bubbles */
+  .bubble strong { font-weight: 700; }
+  .bubble em { font-style: italic; }
+
+  /* New chat button */
+  .btn-new {
+    background: var(--surface2);
+    border: none;
+    border-radius: 20px;
+    padding: 6px 12px;
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--text-muted);
+    cursor: pointer;
+    font-family: 'Nunito', sans-serif;
+    margin-left: auto;
+    transition: background 0.1s;
+  }
+  .btn-new:active { background: var(--border); }
+
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #13111F;
+      --surface: #1E1B30;
+      --surface2: #28243D;
+      --text: #F0EEF8;
+      --text-muted: #9B98B8;
+      --border: #342F50;
+      --brand-light: #1A1640;
+      --accent-light: #2D1A1A;
+      --success-light: #0D2218;
+      --shadow: 0 4px 24px rgba(0,0,0,0.3);
+      --shadow-lg: 0 8px 40px rgba(0,0,0,0.4);
+    }
+    .btn-outline { background: var(--surface); }
+    #screen-home { background: linear-gradient(155deg, #1A1640 0%, #13111F 60%, #2D1A1A 100%); }
+    #screen-apikey { background: linear-gradient(155deg, #1A1640 0%, #13111F 100%); }
+    .upload-zone { background: var(--surface); }
+  }
+</style>
+</head>
+<body>
+
+<!-- API KEY SCREEN -->
+<div id="screen-apikey" class="screen active">
+  <div class="apikey-card">
+    <div class="apikey-icon">🔑</div>
+    <div class="apikey-title">Eenmalige instelling</div>
+    <div class="apikey-desc">Voer je Anthropic API-sleutel in om de Huiswerk Helper te gebruiken. Deze wordt alleen lokaal opgeslagen.</div>
+    <input type="password" class="apikey-input" id="apikey-input" placeholder="sk-ant-..." autocomplete="off" spellcheck="false">
+    <button class="btn-primary" onclick="saveApiKey()">Opslaan & starten</button>
+    <div class="error-msg" id="apikey-error">Ongeldige API-sleutel. Probeer opnieuw.</div>
+    <div class="apikey-note">
+      💡 <strong>Hoe krijg ik een API-sleutel?</strong><br>
+      Ga naar <strong>console.anthropic.com</strong>, maak een account aan en maak een API-sleutel aan onder "API Keys". De sleutel begint met <code>sk-ant-</code>.
+    </div>
+  </div>
+</div>
+
+<!-- HOME SCREEN -->
+<div id="screen-home" class="screen">
+  <div class="home-logo">📚</div>
+  <h1 class="home-title">Huiswerk Helper</h1>
+  <p class="home-sub">Maak een foto van je opgave en ik help je stap voor stap het antwoord te ontdekken!</p>
+  
+  <div class="home-cards">
+    <div class="home-card"><span>🧮</span><span>Wiskunde</span><span class="card-label">Sommen & algebra</span></div>
+    <div class="home-card"><span>🔬</span><span>Wetenschap</span><span class="card-label">Natuur & scheikunde</span></div>
+    <div class="home-card"><span>🌍</span><span>Talen</span><span class="card-label">Duits, Frans & meer</span></div>
+    <div class="home-card"><span>📖</span><span>Alles</span><span class="card-label">Elk vak</span></div>
+  </div>
+
+  <button class="btn-primary" onclick="goTo('screen-capture')">📸 Begin met een foto</button>
+</div>
+
+<!-- CAPTURE SCREEN -->
+<div id="screen-capture" class="screen">
+  <div class="topbar">
+    <button class="btn-back" onclick="goTo('screen-home')">←</button>
+    <span class="topbar-title">Jouw opgave</span>
+  </div>
+  <div class="capture-body">
+
+    <div>
+      <div class="upload-zone" id="upload-zone" onclick="document.getElementById('file-camera').click()">
+        <div class="upload-icon" id="upload-icon">📷</div>
+        <div class="upload-text" id="upload-text">Tik om foto te maken</div>
+        <div class="upload-hint" id="upload-hint">of kies uit je galerij</div>
+        <img id="preview-img" class="preview" style="display:none;" alt="Voorbeeld van je opgave">
+      </div>
+      <input type="file" id="file-camera" accept="image/*" capture="environment" onchange="handleFile(this, 'camera')">
+      
+      <div class="upload-actions" style="margin-top: 10px;">
+        <button class="btn-outline" onclick="document.getElementById('file-camera').click()">📷 Camera</button>
+        <button class="btn-outline" onclick="document.getElementById('file-gallery').click()">🖼️ Galerij</button>
+      </div>
+      <input type="file" id="file-gallery" accept="image/*" onchange="handleFile(this, 'gallery')">
+    </div>
+
+    <div>
+      <div class="subject-label">Welk vak? (optioneel)</div>
+      <div class="subject-chips">
+        <div class="chip" onclick="selectChip(this)" data-subject="wiskunde">🧮 Wiskunde</div>
+        <div class="chip" onclick="selectChip(this)" data-subject="natuurkunde">⚡ Natuurkunde</div>
+        <div class="chip" onclick="selectChip(this)" data-subject="scheikunde">🧪 Scheikunde</div>
+        <div class="chip" onclick="selectChip(this)" data-subject="biologie">🌿 Biologie</div>
+        <div class="chip" onclick="selectChip(this)" data-subject="duits">🇩🇪 Duits</div>
+        <div class="chip" onclick="selectChip(this)" data-subject="Frans">🇫🇷 Frans</div>
+        <div class="chip" onclick="selectChip(this)" data-subject="Engels">🇬🇧 Engels</div>
+        <div class="chip" onclick="selectChip(this)" data-subject="geschiedenis">📜 Geschiedenis</div>
+        <div class="chip" onclick="selectChip(this)" data-subject="aardrijkskunde">🌍 Aardrijkskunde</div>
+      </div>
+    </div>
+
+    <div>
+      <div class="subject-label">Iets specifieks lastig? (optioneel)</div>
+      <textarea class="context-input" id="context-input" placeholder="Bijv: ik snap niet wat ik moet doen met de haakjes..." rows="3"></textarea>
+    </div>
+
+    <button class="btn-primary" id="btn-start" onclick="startChat()" disabled>
+      💬 Start hulp
+    </button>
+  </div>
+</div>
+
+<!-- CHAT SCREEN -->
+<div id="screen-chat" class="screen">
+  <div class="chat-topbar">
+    <button class="btn-back" onclick="goTo('screen-capture')">←</button>
+    <div class="tutor-avatar">🦉</div>
+    <div class="tutor-info">
+      <div class="tutor-name">Huiswerk Helper</div>
+      <div class="tutor-status">● Online</div>
+    </div>
+    <button class="btn-new" onclick="newChat()">Nieuw ↺</button>
+  </div>
+  <div class="progress-wrap">
+    <div class="progress-label"><span>Voortgang</span><span id="progress-text">Bezig...</span></div>
+    <div class="progress-bar"><div class="progress-fill" id="progress-fill" style="width: 10%"></div></div>
+  </div>
+  <div class="chat-messages" id="chat-messages"></div>
+  <div class="chat-input-area">
+    <textarea class="chat-input" id="chat-input" placeholder="Typ je antwoord..." rows="1" onkeydown="handleKey(event)" oninput="autoResize(this)"></textarea>
+    <button class="btn-send" id="btn-send" onclick="sendMessage()">
+      <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M2 21L23 12 2 3v7l15 2-15 2z"/></svg>
+    </button>
+  </div>
+</div>
+
+<script>
+let API_KEY = '';
+let imageBase64 = '';
+let imageMimeType = 'image/jpeg';
+let selectedSubject = '';
+let conversationHistory = [];
+let isThinking = false;
+let progress = 10;
+let solved = false;
+
+const SYSTEM_PROMPT = `Je bent een vriendelijke, geduldige huiswerk-tutor voor middelbare scholieren (12–18 jaar). Je spreekt altijd Nederlands.
+
+KERNREGEL: Geef NOOIT rechtstreeks het antwoord. Jouw taak is de leerling zelf te laten nadenken.
+
+Aanpak (Socratische methode):
+1. Begin met een warme begroeting en vraag wat de leerling al weet of heeft geprobeerd.
+2. Analyseer de opgave en identificeer de kern van het probleem.
+3. Stel gerichte vragen die de leerling stap voor stap richting het inzicht leiden.
+4. Geef hints als de leerling vastloopt – nooit het volledige antwoord.
+5. Bevestig elke correcte stap uitbundig ("Precies!", "Goed gedacht!", "Helemaal goed!").
+6. Als een antwoord fout is: corrigeer vriendelijk met een vraag ("Hmm, wat als je nog eens kijkt naar...?").
+7. Sluit af als de leerling het snapt met een compliment en leg uit waarom het werkt.
+
+Toon: enthousiast, geduldig, aanmoedigend. Gebruik emoji's spaarzaam (1-2 per bericht max).
+Lengte: houd berichten kort en behapbaar (max 3-4 zinnen).
+
+Voortgang bijhouden: sluit elk bericht af met een verborgen JSON-tag:
+<progress>{"pct": 40, "solved": false}</progress>
+waarbij pct een getal is van 10-100 dat aangeeft hoe dichtbij de leerling de oplossing is, en solved=true als de leerling het volledig begrepen heeft.`;
+
+// Init
+window.onload = () => {
+  const key = localStorage.getItem('hh_api_key');
+  if (key) {
+    API_KEY = key;
+    goTo('screen-home');
+  }
+};
+
+function saveApiKey() {
+  const val = document.getElementById('apikey-input').value.trim();
+  if (val.length < 10) {
+    document.getElementById('apikey-error').textContent = 'Vul een geldige API-sleutel in.';
+    document.getElementById('apikey-error').classList.add('show');
+    return;
+  }
+  API_KEY = val;
+  localStorage.setItem('hh_api_key', val);
+  goTo('screen-home');
+}
+
+function goTo(screenId) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById(screenId).classList.add('active');
+  window.scrollTo(0, 0);
+}
+
+function handleFile(input, source) {
+  const file = input.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    const dataUrl = e.target.result;
+    imageMimeType = file.type || "image/jpeg";
+    imageBase64 = dataUrl.split(',')[1];
+    const img = document.getElementById('preview-img');
+    img.src = dataUrl;
+    img.style.display = 'block';
+    document.getElementById('upload-icon').style.display = 'none';
+    document.getElementById('upload-text').style.display = 'none';
+    document.getElementById('upload-hint').style.display = 'none';
+    document.getElementById('btn-start').disabled = false;
+  };
+  reader.readAsDataURL(file);
+}
+
+function selectChip(el) {
+  document.querySelectorAll('.chip').forEach(c => c.classList.remove('selected'));
+  el.classList.add('selected');
+  selectedSubject = el.dataset.subject;
+}
+
+async function startChat() {
+  if (!imageBase64) return;
+  conversationHistory = [];
+  progress = 10;
+  solved = false;
+  document.getElementById('chat-messages').innerHTML = '';
+  goTo('screen-chat');
+
+  // Show the image
+  const msgDiv = document.getElementById('chat-messages');
+  const imgMsg = document.createElement('div');
+  imgMsg.className = 'image-preview-msg';
+  imgMsg.innerHTML = `<img src="data:${imageMimeType};base64,${imageBase64}" alt="Jouw opgave">`;
+  msgDiv.appendChild(imgMsg);
+
+  const context = document.getElementById('context-input').value.trim();
+  const subjectNote = selectedSubject ? ` Het vak is ${selectedSubject}.` : '';
+  const contextNote = context ? ` De leerling zegt: "${context}"` : '';
+  const firstUserMsg = `Bekijk deze opgave.${subjectNote}${contextNote} Help me begrijpen hoe ik dit moet aanpakken.`;
+
+  conversationHistory.push({
+    role: 'user',
+    content: [
+      { type: 'image', source: { type: 'base64', media_type: imageMimeType, data: imageBase64 } },
+      { type: 'text', text: firstUserMsg }
+    ]
+  });
+
+  await callAI();
+}
+
+async function sendMessage() {
+  const input = document.getElementById('chat-input');
+  const text = input.value.trim();
+  if (!text || isThinking) return;
+  input.value = '';
+  input.style.height = 'auto';
+
+  addBubble(text, 'user');
+  conversationHistory.push({ role: 'user', content: text });
+  await callAI();
+}
+
+async function callAI() {
+  isThinking = true;
+  document.getElementById('btn-send').disabled = true;
+
+  const thinkingEl = addThinking();
+
+  try {
+    const response = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'x-api-key': API_KEY, 'anthropic-version': '2023-06-01', 'anthropic-dangerous-direct-browser-access': 'true' },
+      body: JSON.stringify({
+        model: 'claude-haiku-4-5-20251001',
+        max_tokens: 600,
+        system: SYSTEM_PROMPT,
+        messages: conversationHistory
+      })
+    });
+
+    thinkingEl.remove();
+
+    if (!response.ok) {
+      const err = await response.json();
+      if (response.status === 401) {
+        localStorage.removeItem('hh_api_key');
+        alert('Fout 401: Anthropic weigert de sleutel.\n\nMogelijke oorzaken:\n• Nog geen krediet opgeladen (ga naar Billing in de Console)\n• Sleutel gekopieerd met spaties ervoor/erna\n\nJe gaat terug naar het invoerscherm.');
+        goTo('screen-apikey');
+        return;
+      }
+      if (response.status === 429) {
+        addBubble('Je hebt je limiet bereikt. Vraag een ouder om het budget te verhogen via console.anthropic.com → Billing.', 'tutor');
+        return;
+      }
+      addBubble('Fout ' + response.status + ': ' + (err.error?.message || 'Onbekende fout'), 'tutor');
+      return;
+    }
+
+    const data = await response.json();
+    const text = data.content[0].text;
+
+    // Extract progress
+    const progMatch = text.match(/<progress>([\s\S]*?)<\/progress>/);
+    let cleanText = text.replace(/<progress>[\s\S]*?<\/progress>/g, '').trim();
+    
+    if (progMatch) {
+      try {
+        const prog = JSON.parse(progMatch[1]);
+        updateProgress(prog.pct, prog.solved);
+      } catch(e) {}
+    }
+
+    conversationHistory.push({ role: 'assistant', content: cleanText });
+    addBubble(cleanText, 'tutor');
+
+    if (solved) {
+      addSolvedBanner();
+    } else {
+      addQuickReplies();
+    }
+
+  } catch (e) {
+    thinkingEl.remove();
+    addBubble('Fout: ' + (e?.message || String(e)), 'tutor');
+  } finally {
+    isThinking = false;
+    document.getElementById('btn-send').disabled = false;
+  }
+}
+
+function addBubble(text, type) {
+  const el = document.createElement('div');
+  el.className = `bubble ${type}`;
+  el.innerHTML = formatText(text);
+  document.getElementById('chat-messages').appendChild(el);
+  scrollToBottom();
+  return el;
+}
+
+function addThinking() {
+  const el = document.createElement('div');
+  el.className = 'bubble thinking';
+  el.innerHTML = '<div class="dot"></div><div class="dot"></div><div class="dot"></div>';
+  document.getElementById('chat-messages').appendChild(el);
+  scrollToBottom();
+  return el;
+}
+
+function addQuickReplies() {
+  const replies = [
+    { label: '💡 Geef een hint', msg: 'Kun je me een hint geven?' },
+    { label: '🤔 Snap het niet', msg: 'Ik snap het nog steeds niet, kun je het anders uitleggen?' },
+    { label: '✅ Ik snap het!', msg: 'Ik denk dat ik het nu snap!' },
+  ];
+  const wrap = document.createElement('div');
+  wrap.className = 'hint-chips';
+  replies.forEach(r => {
+    const chip = document.createElement('button');
+    chip.className = 'hint-chip';
+    chip.textContent = r.label;
+    chip.onclick = () => {
+      wrap.remove();
+      document.getElementById('chat-input').value = r.msg;
+      sendMessage();
+    };
+    wrap.appendChild(chip);
+  });
+  document.getElementById('chat-messages').appendChild(wrap);
+  scrollToBottom();
+}
+
+function addSolvedBanner() {
+  const el = document.createElement('div');
+  el.className = 'solved-banner';
+  el.innerHTML = '🎉 Super gedaan! Je hebt het zelf opgelost!';
+  document.getElementById('chat-messages').appendChild(el);
+  scrollToBottom();
+}
+
+function updateProgress(pct, isSolved) {
+  progress = Math.max(progress, Math.min(100, pct));
+  solved = isSolved;
+  document.getElementById('progress-fill').style.width = progress + '%';
+  document.getElementById('progress-text').textContent = 
+    solved ? '🎉 Opgelost!' : progress < 30 ? 'Aan het begin' : progress < 60 ? 'Goed bezig!' : progress < 90 ? 'Bijna!' : 'Zo goed als klaar!';
+}
+
+function formatText(text) {
+  return text
+    .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+    .replace(/\*(.*?)\*/g, '<em>$1</em>')
+    .replace(/\n/g, '<br>');
+}
+
+function scrollToBottom() {
+  const msgs = document.getElementById('chat-messages');
+  setTimeout(() => msgs.scrollTop = msgs.scrollHeight, 50);
+}
+
+function handleKey(e) {
+  if (e.key === 'Enter' && !e.shiftKey) {
+    e.preventDefault();
+    sendMessage();
+  }
+}
+
+function autoResize(el) {
+  el.style.height = 'auto';
+  el.style.height = Math.min(el.scrollHeight, 120) + 'px';
+}
+
+function newChat() {
+  imageBase64 = '';
+  selectedSubject = '';
+  conversationHistory = [];
+  document.getElementById('preview-img').style.display = 'none';
+  document.getElementById('upload-icon').style.display = '';
+  document.getElementById('upload-text').style.display = '';
+  document.getElementById('upload-hint').style.display = '';
+  document.getElementById('btn-start').disabled = true;
+  document.getElementById('context-input').value = '';
+  document.querySelectorAll('.chip').forEach(c => c.classList.remove('selected'));
+  document.getElementById('file-camera').value = '';
+  document.getElementById('file-gallery').value = '';
+  goTo('screen-capture');
+}
+</script>
+</body>
+</html>
