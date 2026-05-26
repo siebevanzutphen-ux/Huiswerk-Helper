@@ -84,6 +84,57 @@
   .icon-sm { width: 16px; height: 16px; }
   .icon-lg { width: 52px; height: 52px; stroke-width: 1.5; }
 
+  /* Robot mascot — illustration, not a line-icon (no stroke overrides) */
+  .robot {
+    pointer-events: none;
+    fill: inherit;
+    stroke: none;
+    width: 100%;
+    height: 100%;
+    display: block;
+    animation: robotAppear 0.32s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  .robot .robot-eye {
+    transform-origin: center;
+    transform-box: fill-box;
+    animation: robotBlink 5.5s infinite;
+  }
+  @keyframes robotBlink {
+    0%, 93%, 100% { transform: scaleY(1); }
+    96% { transform: scaleY(0.08); }
+  }
+  /* Cute "boop" when a new emotion appears */
+  @keyframes robotAppear {
+    0%   { transform: scale(0.7); opacity: 0.4; }
+    60%  { transform: scale(1.12); opacity: 1; }
+    100% { transform: scale(1); }
+  }
+  /* Mood-specific extras */
+  .robot[data-mood="excited"], .robot[data-mood="happy"] {
+    animation: robotBounce 0.6s ease-out, robotAppear 0.32s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  @keyframes robotBounce {
+    0%   { transform: translateY(0); }
+    30%  { transform: translateY(-4px) rotate(-3deg); }
+    60%  { transform: translateY(0) rotate(2deg); }
+    100% { transform: translateY(0); }
+  }
+  .robot[data-mood="sad"] {
+    animation: robotDroop 0.5s ease-out;
+  }
+  @keyframes robotDroop {
+    0%   { transform: translateY(-3px); opacity: 0.6; }
+    100% { transform: translateY(0); opacity: 1; }
+  }
+  .robot[data-mood="thinking"] {
+    animation: robotTilt 0.5s ease-out;
+  }
+  @keyframes robotTilt {
+    0%   { transform: rotate(0); }
+    50%  { transform: rotate(-6deg); }
+    100% { transform: rotate(-3deg); }
+  }
+
   /* ===== Header ===== */
   header {
     background: rgba(13, 13, 26, 0.7);
@@ -413,7 +464,7 @@
     margin-top: 22px;
     flex-wrap: wrap;
   }
-  #fileInput, #cameraInput { display: none; }
+  #fileInput, #cameraInput, #learnFileInput, #learnCameraInput { display: none; }
 
   /* ===== Buttons ===== */
   .primary-btn {
@@ -924,6 +975,322 @@
     text-align: center;
   }
 
+  /* ===== Learn mode (study from photos: vocab / formulas) ===== */
+  .learn-entry-card {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    background: linear-gradient(135deg, #1c1c33 0%, #2a2a4a 100%);
+    border: 1.5px solid var(--accent);
+    border-radius: var(--radius-lg);
+    padding: 18px 20px;
+    cursor: pointer;
+    transition: all 0.22s;
+    font-family: inherit;
+    text-align: left;
+    box-shadow: var(--shadow-glow);
+    position: relative;
+    overflow: hidden;
+    margin-bottom: 8px;
+  }
+  .learn-entry-card::before {
+    content: '';
+    position: absolute;
+    top: -30px; right: -30px;
+    width: 140px; height: 140px;
+    background: var(--accent-gradient);
+    opacity: 0.18;
+    border-radius: 50%;
+    transition: transform 0.4s;
+  }
+  .learn-entry-card:hover {
+    transform: translateY(-2px);
+    border-color: var(--accent-2);
+    box-shadow: 0 14px 36px rgba(167, 139, 250, 0.4);
+  }
+  .learn-entry-card:hover::before { transform: scale(1.2); }
+  .learn-entry-card-icon {
+    width: 50px;
+    height: 50px;
+    border-radius: 14px;
+    background: var(--accent-gradient);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    position: relative;
+    z-index: 1;
+  }
+  .learn-entry-card-icon .icon { width: 26px; height: 26px; color: white; }
+  .learn-entry-card-body { flex: 1; min-width: 0; position: relative; z-index: 1; }
+  .learn-entry-card-title {
+    font-size: 17px;
+    font-weight: 800;
+    color: var(--text);
+    letter-spacing: -0.01em;
+    margin-bottom: 3px;
+  }
+  .learn-entry-card-desc {
+    font-size: 13.5px;
+    color: var(--text-soft);
+    line-height: 1.45;
+  }
+  .learn-entry-card-arrow {
+    color: var(--accent);
+    position: relative;
+    z-index: 1;
+    flex-shrink: 0;
+  }
+
+  /* Learn view (own page like subjectView) */
+  .learn-hero {
+    background: linear-gradient(140deg, #6366f1 0%, #a78bfa 50%, #f472b6 100%) !important;
+    box-shadow: 0 18px 50px -12px rgba(167, 139, 250, 0.55) !important;
+  }
+
+  /* Multi-photo thumbnails */
+  .learn-thumbnails {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
+    gap: 10px;
+    margin-top: 4px;
+  }
+  .learn-thumb {
+    position: relative;
+    aspect-ratio: 1 / 1;
+    border-radius: var(--radius-sm);
+    overflow: hidden;
+    border: 1px solid var(--border);
+    background: var(--bg-2);
+  }
+  .learn-thumb img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+  }
+  .learn-thumb-remove {
+    position: absolute;
+    top: 4px;
+    right: 4px;
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    background: rgba(15, 15, 30, 0.85);
+    border: none;
+    color: white;
+    font-size: 14px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    line-height: 1;
+    font-family: inherit;
+    transition: all 0.15s;
+  }
+  .learn-thumb-remove:hover { background: #ef4444; }
+  .learn-thumb-add {
+    aspect-ratio: 1 / 1;
+    border-radius: var(--radius-sm);
+    border: 2px dashed var(--border-strong);
+    background: transparent;
+    color: var(--muted);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 26px;
+    font-family: inherit;
+    transition: all 0.15s;
+  }
+  .learn-thumb-add:hover {
+    border-color: var(--accent);
+    color: var(--accent);
+  }
+
+  .learn-description {
+    width: 100%;
+    padding: 12px 14px;
+    border: 1.5px solid var(--border-strong);
+    border-radius: var(--radius-sm);
+    background: var(--bg-2);
+    color: var(--text);
+    font-family: inherit;
+    font-size: 15px;
+    resize: vertical;
+    min-height: 56px;
+    line-height: 1.45;
+  }
+  .learn-description::placeholder { color: var(--muted); }
+  .learn-description:focus {
+    outline: none;
+    border-color: var(--accent);
+    box-shadow: 0 0 0 4px rgba(167, 139, 250, 0.16);
+  }
+
+  /* Library action sheet — choose what to do with a saved deck */
+  .deck-action-list {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-top: 6px;
+  }
+  .deck-action {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    background: var(--bg-2);
+    border: 1.5px solid var(--border-strong);
+    color: var(--text);
+    padding: 14px 16px;
+    border-radius: var(--radius-md);
+    cursor: pointer;
+    font-family: inherit;
+    text-align: left;
+    transition: all 0.18s;
+    min-height: 64px;
+    width: 100%;
+  }
+  .deck-action:hover {
+    border-color: var(--accent);
+    transform: translateY(-1px);
+    background: var(--card-hover);
+  }
+  .deck-action-icon {
+    width: 40px;
+    height: 40px;
+    border-radius: 11px;
+    background: var(--accent-gradient);
+    color: white;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    font-size: 19px;
+    font-weight: 800;
+  }
+  .deck-action-icon .icon { width: 22px; height: 22px; }
+  .deck-action-body {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    min-width: 0;
+  }
+  .deck-action-title {
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--text);
+  }
+  .deck-action-sub {
+    font-size: 12.5px;
+    color: var(--muted);
+    line-height: 1.35;
+  }
+  .deck-action-arrow {
+    color: var(--muted);
+    flex-shrink: 0;
+  }
+
+  /* Library — saved decks from past learn sessions */
+  .library-section { display: none; margin-top: 12px; }
+  .library-section.active { display: block; }
+  .library-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+    gap: 12px;
+    margin-top: 8px;
+  }
+  .library-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    padding: 14px 14px 12px;
+    cursor: pointer;
+    font-family: inherit;
+    text-align: left;
+    position: relative;
+    transition: all 0.18s;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    min-height: 110px;
+  }
+  .library-card:hover {
+    transform: translateY(-2px);
+    border-color: var(--accent);
+    box-shadow: var(--shadow-md);
+  }
+  .library-card-head {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .library-card-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    background: var(--accent-gradient);
+    color: white;
+    padding: 3px 9px;
+    border-radius: 999px;
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+  .library-card-count {
+    color: var(--muted);
+    font-size: 12px;
+    font-weight: 500;
+    margin-left: auto;
+  }
+  .library-card-title {
+    color: var(--text);
+    font-size: 14px;
+    font-weight: 600;
+    line-height: 1.35;
+    flex: 1;
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+  .library-card-date {
+    color: var(--muted);
+    font-size: 11.5px;
+  }
+  .library-card-remove {
+    position: absolute;
+    top: 6px;
+    right: 6px;
+    background: var(--bg-2);
+    border: 1px solid var(--border);
+    color: var(--muted);
+    width: 26px;
+    height: 26px;
+    border-radius: 50%;
+    cursor: pointer;
+    font-size: 14px;
+    line-height: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: inherit;
+    opacity: 0;
+    transition: all 0.15s;
+  }
+  .library-card:hover .library-card-remove,
+  .library-card:focus-within .library-card-remove {
+    opacity: 1;
+  }
+  .library-card-remove:hover { background: #ef4444; color: white; border-color: #ef4444; }
+  @media (max-width: 720px) {
+    .library-card-remove { opacity: 0.85; }
+    .library-grid { grid-template-columns: 1fr 1fr; gap: 10px; }
+  }
+
   /* Subject view (separate "page" per subject) */
   .back-bar {
     display: flex;
@@ -1024,6 +1391,388 @@
     opacity: 0.95;
   }
 
+  /* ===== Intro / landing pitch (full-screen onboarding for new visitors) ===== */
+  .intro-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 200;
+    background: var(--bg);
+    background-image:
+      radial-gradient(ellipse 80% 60% at 20% 0%, rgba(167, 139, 250, 0.25) 0px, transparent 60%),
+      radial-gradient(ellipse 60% 50% at 85% 30%, rgba(244, 114, 182, 0.20) 0px, transparent 60%),
+      radial-gradient(ellipse 70% 60% at 50% 100%, rgba(59, 130, 246, 0.18) 0px, transparent 60%);
+    display: none;
+    flex-direction: column;
+    overflow: hidden;
+  }
+  .intro-overlay.active { display: flex; }
+
+  .intro-top {
+    display: flex;
+    justify-content: flex-end;
+    padding: 16px 20px;
+    padding-top: calc(16px + var(--safe-top));
+  }
+  .intro-skip {
+    background: none;
+    border: none;
+    color: var(--muted);
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    font-family: inherit;
+    padding: 8px 12px;
+    border-radius: 8px;
+    transition: color 0.18s;
+  }
+  .intro-skip:hover { color: var(--text); }
+
+  .intro-stage {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    overflow-y: auto;
+  }
+  .intro-slide {
+    max-width: 640px;
+    width: 100%;
+    text-align: center;
+    animation: introSlideIn 0.45s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  @keyframes introSlideIn {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  .intro-eyebrow {
+    display: inline-block;
+    color: var(--accent);
+    font-size: 13px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    margin-bottom: 14px;
+  }
+  .intro-headline {
+    font-size: 44px;
+    font-weight: 900;
+    letter-spacing: -0.035em;
+    line-height: 1.05;
+    margin-bottom: 18px;
+    color: var(--text);
+  }
+  .intro-headline .gradient {
+    background: var(--accent-gradient);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+  .intro-subhead {
+    font-size: 18px;
+    color: var(--text-soft);
+    max-width: 520px;
+    margin: 0 auto 32px;
+    line-height: 1.55;
+  }
+  .intro-logo-big {
+    width: 84px;
+    height: 84px;
+    border-radius: 22px;
+    background: var(--accent-gradient);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 22px;
+    box-shadow: 0 20px 60px rgba(167, 139, 250, 0.45);
+    animation: logoFloat 3s ease-in-out infinite;
+  }
+  .intro-logo-big .icon { width: 44px; height: 44px; color: white; }
+  @keyframes logoFloat {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-6px); }
+  }
+
+  /* Comparison cards on slide 2 */
+  .compare-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 14px;
+    margin: 14px 0 8px;
+    text-align: left;
+  }
+  .compare-card {
+    background: var(--card);
+    border: 1.5px solid var(--border);
+    border-radius: var(--radius-md);
+    padding: 22px 20px;
+    position: relative;
+  }
+  .compare-card.bad {
+    border-color: rgba(239, 68, 68, 0.4);
+    background: rgba(239, 68, 68, 0.06);
+  }
+  .compare-card.good {
+    border-color: var(--accent);
+    background: linear-gradient(135deg, rgba(167, 139, 250, 0.12), rgba(244, 114, 182, 0.10));
+    box-shadow: var(--shadow-glow);
+  }
+  .compare-tag {
+    display: inline-block;
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    padding: 4px 10px;
+    border-radius: 999px;
+    margin-bottom: 12px;
+  }
+  .compare-card.bad .compare-tag {
+    background: rgba(239, 68, 68, 0.2);
+    color: #fca5a5;
+  }
+  .compare-card.good .compare-tag {
+    background: var(--accent-gradient);
+    color: white;
+  }
+  .compare-title {
+    font-size: 17px;
+    font-weight: 700;
+    margin-bottom: 10px;
+    color: var(--text);
+  }
+  .compare-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    font-size: 14px;
+    color: var(--text-soft);
+    line-height: 1.5;
+  }
+  .compare-list li {
+    padding-left: 22px;
+    margin-bottom: 6px;
+    position: relative;
+  }
+  .compare-card.bad .compare-list li::before {
+    content: '✕';
+    position: absolute;
+    left: 0;
+    color: #ef4444;
+    font-weight: 700;
+  }
+  .compare-card.good .compare-list li::before {
+    content: '✓';
+    position: absolute;
+    left: 0;
+    color: #4ade80;
+    font-weight: 700;
+  }
+
+  /* Feature grid on slide 3 */
+  .feature-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px;
+    margin: 18px 0 8px;
+    text-align: left;
+  }
+  .feature-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    padding: 18px 16px;
+    transition: all 0.2s;
+  }
+  .feature-card:hover {
+    transform: translateY(-2px);
+    border-color: var(--border-strong);
+    box-shadow: var(--shadow-md);
+  }
+  .feature-card-icon {
+    width: 38px;
+    height: 38px;
+    border-radius: 10px;
+    background: var(--accent-gradient);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 10px;
+    color: white;
+    font-size: 18px;
+    font-weight: 800;
+  }
+  .feature-card-icon .icon { width: 20px; height: 20px; }
+  .feature-card-title {
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--text);
+    margin-bottom: 4px;
+  }
+  .feature-card-desc {
+    font-size: 13px;
+    color: var(--muted);
+    line-height: 1.5;
+  }
+
+  /* Steps on slide 4 */
+  .steps-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    margin: 18px 0 8px;
+    text-align: left;
+  }
+  .step-row {
+    display: flex;
+    gap: 16px;
+    align-items: center;
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    padding: 16px 18px;
+  }
+  .step-row-num {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: var(--accent-gradient);
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 800;
+    font-size: 17px;
+    flex-shrink: 0;
+  }
+  .step-row-text {
+    color: var(--text);
+    font-size: 15px;
+    line-height: 1.4;
+  }
+  .step-row-text strong { font-weight: 700; }
+
+  .intro-cta {
+    margin-top: 24px;
+    padding: 18px 40px;
+    font-size: 17px;
+    min-height: 58px;
+  }
+  .intro-cta-hint {
+    color: var(--muted);
+    font-size: 13px;
+    margin-top: 14px;
+  }
+
+  /* Intro nav — dots on top, large prominent "Next" button centered, subtle "Prev" on the side */
+  .intro-bottom {
+    padding: 18px 20px;
+    padding-bottom: calc(20px + var(--safe-bottom));
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 14px;
+    border-top: 1px solid var(--border);
+    background: rgba(13, 13, 26, 0.65);
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
+  }
+  .intro-dots {
+    display: flex;
+    gap: 6px;
+    justify-content: center;
+  }
+  .intro-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--border-strong);
+    transition: all 0.25s;
+    cursor: pointer;
+    border: none;
+    padding: 0;
+  }
+  .intro-dot.active {
+    background: var(--accent);
+    width: 28px;
+    border-radius: 4px;
+  }
+  /* The "Volgende" button is the hero of the bottom bar */
+  .intro-bottom-row {
+    display: grid;
+    grid-template-columns: 1fr auto 1fr;
+    align-items: center;
+    gap: 12px;
+    width: 100%;
+    max-width: 540px;
+  }
+  .intro-nav-btn-prev {
+    justify-self: start;
+    background: none;
+    border: none;
+    color: var(--muted);
+    padding: 10px 6px;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    font-family: inherit;
+    transition: color 0.18s;
+  }
+  .intro-nav-btn-prev:hover:not(:disabled) { color: var(--text); }
+  .intro-nav-btn-prev:disabled { opacity: 0; pointer-events: none; }
+  .intro-nav-btn-next {
+    background: var(--accent-gradient);
+    color: white;
+    border: none;
+    padding: 14px 36px;
+    border-radius: 999px;
+    font-size: 16px;
+    font-weight: 700;
+    cursor: pointer;
+    font-family: inherit;
+    min-height: 52px;
+    min-width: 180px;
+    box-shadow: var(--shadow-glow);
+    transition: all 0.2s;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    letter-spacing: -0.01em;
+    animation: introNextPulse 2.6s ease-in-out infinite;
+  }
+  .intro-nav-btn-next:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 16px 40px rgba(167, 139, 250, 0.5);
+    animation: none;
+  }
+  .intro-nav-btn-next:active { transform: translateY(0); }
+  .intro-nav-btn-next.hidden { visibility: hidden; }
+  /* A subtle pulse to invite the click — stops on hover */
+  @keyframes introNextPulse {
+    0%, 100% { box-shadow: 0 10px 28px rgba(167, 139, 250, 0.32); }
+    50%      { box-shadow: 0 14px 38px rgba(167, 139, 250, 0.55), 0 0 0 8px rgba(167, 139, 250, 0.10); }
+  }
+  /* Right spacer so the next button stays truly centered */
+  .intro-nav-btn-spacer { justify-self: end; min-width: 1px; }
+
+  @media (max-width: 480px) {
+    .intro-nav-btn-next { padding: 14px 28px; min-width: 0; width: 100%; }
+    .intro-bottom-row { grid-template-columns: auto 1fr auto; }
+    .intro-nav-btn-prev { padding: 10px 4px; font-size: 13px; }
+  }
+
+  @media (max-width: 720px) {
+    .intro-headline { font-size: 30px; }
+    .intro-subhead { font-size: 15px; }
+    .intro-logo-big { width: 68px; height: 68px; border-radius: 18px; }
+    .intro-logo-big .icon { width: 36px; height: 36px; }
+    .compare-grid { grid-template-columns: 1fr; }
+    .feature-grid { grid-template-columns: 1fr; }
+    .intro-cta { width: 100%; padding: 17px 24px; }
+    .intro-nav-btn { padding: 10px 12px; font-size: 13px; }
+  }
+
   /* Help modal — explainer content */
   .help-modal { max-width: 540px; }
   .help-body { color: var(--text-soft); font-size: 14.5px; line-height: 1.65; }
@@ -1074,6 +1823,610 @@
   }
   .profile-summary strong { color: var(--text); font-weight: 600; }
   .profile-summary .muted { color: var(--muted); font-style: italic; }
+
+  /* ===== Game overlays (Match + Tijdrace) — shared base ===== */
+  .game-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 160;
+    background: var(--bg);
+    background-image:
+      radial-gradient(ellipse 80% 60% at 20% 0%, rgba(167, 139, 250, 0.18) 0px, transparent 60%),
+      radial-gradient(ellipse 60% 50% at 85% 100%, rgba(244, 114, 182, 0.14) 0px, transparent 60%);
+    display: none;
+    flex-direction: column;
+    padding: 14px;
+    padding-top: calc(14px + var(--safe-top));
+    padding-bottom: calc(14px + var(--safe-bottom));
+  }
+  .game-overlay.active { display: flex; }
+  .game-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 14px;
+  }
+  .game-info {
+    display: flex;
+    gap: 10px;
+    flex: 1;
+  }
+  .game-counter, .game-timer {
+    background: var(--card);
+    border: 1px solid var(--border);
+    color: var(--text);
+    padding: 8px 14px;
+    border-radius: 999px;
+    font-size: 14px;
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .game-timer { color: var(--accent); }
+  .game-timer.warning { color: #fb923c; }
+  .game-timer.danger { color: #ef4444; animation: timerPulse 0.5s infinite alternate; }
+  @keyframes timerPulse { from { opacity: 1; } to { opacity: 0.55; } }
+
+  /* Trophy chip — shows current personal record */
+  .game-record {
+    background: rgba(250, 204, 21, 0.12);
+    border: 1px solid rgba(250, 204, 21, 0.35);
+    color: #fbbf24;
+    padding: 8px 12px;
+    border-radius: 999px;
+    font-size: 13.5px;
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+  }
+  .game-record::before { content: '🏆'; font-size: 13px; }
+  .game-record.empty { opacity: 0.55; }
+  .game-record.empty::before { filter: grayscale(1) brightness(1.3); opacity: 0.5; }
+
+  /* "Nieuw record!" banner shown above the summary score */
+  .new-record-banner {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: linear-gradient(135deg, #facc15 0%, #f97316 100%);
+    color: #1a1a2e;
+    padding: 10px 20px;
+    border-radius: 999px;
+    font-size: 15px;
+    font-weight: 800;
+    margin-bottom: 8px;
+    box-shadow: 0 10px 30px rgba(250, 204, 21, 0.45);
+    animation: recordPop 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
+  }
+  .new-record-banner.hidden { display: none; }
+  .new-record-banner::before { content: '🏆'; font-size: 17px; }
+  @keyframes recordPop {
+    0%   { transform: scale(0.3) rotate(-10deg); opacity: 0; }
+    60%  { transform: scale(1.15) rotate(3deg); opacity: 1; }
+    100% { transform: scale(1) rotate(0); }
+  }
+  /* Subtitle under summary score when there's an old record being shown */
+  .game-summary-old-record {
+    color: var(--muted);
+    font-size: 13px;
+    margin-top: -8px;
+    margin-bottom: 14px;
+  }
+  .game-stage {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 6px 0;
+  }
+  .game-summary {
+    text-align: center;
+    padding: 40px 20px;
+    max-width: 480px;
+    margin: 0 auto;
+  }
+  .game-summary h2 {
+    font-size: 30px;
+    font-weight: 900;
+    margin-bottom: 8px;
+    letter-spacing: -0.02em;
+  }
+  .game-summary-score {
+    font-size: 56px;
+    font-weight: 900;
+    background: var(--accent-gradient);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    margin: 14px 0 8px;
+    letter-spacing: -0.03em;
+    line-height: 1;
+  }
+  .game-summary p { color: var(--text-soft); font-size: 15px; margin-bottom: 22px; }
+  .game-summary .summary-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    max-width: 320px;
+    margin: 0 auto;
+  }
+
+  /* ===== Match game (Quizlet-style pair matching) ===== */
+  .match-board {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+    gap: 10px;
+    width: 100%;
+    max-width: 720px;
+    margin: 0 auto;
+  }
+  .match-tile {
+    background: var(--card);
+    border: 2px solid var(--border-strong);
+    border-radius: var(--radius-md);
+    color: var(--text);
+    padding: 18px 12px;
+    min-height: 84px;
+    font-size: 15px;
+    font-weight: 600;
+    cursor: pointer;
+    font-family: inherit;
+    text-align: center;
+    line-height: 1.3;
+    transition: all 0.18s;
+    word-break: break-word;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .match-tile:hover:not(.matched):not(.selected) {
+    border-color: var(--accent);
+    transform: translateY(-2px);
+  }
+  .match-tile.selected {
+    background: var(--accent-gradient);
+    border-color: transparent;
+    color: white;
+    transform: scale(1.04);
+    box-shadow: var(--shadow-glow);
+  }
+  .match-tile.matched {
+    animation: matchPop 0.45s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+  }
+  @keyframes matchPop {
+    0%   { transform: scale(1.04); opacity: 1; }
+    40%  { transform: scale(1.15); }
+    100% { transform: scale(0.4); opacity: 0; visibility: hidden; }
+  }
+  .match-tile.wrong {
+    background: rgba(239, 68, 68, 0.2);
+    border-color: #ef4444;
+    color: #fff;
+    animation: matchShake 0.4s;
+  }
+  @keyframes matchShake {
+    0%, 100% { transform: translateX(0); }
+    25% { transform: translateX(-5px); }
+    75% { transform: translateX(5px); }
+  }
+
+  /* ===== Tijdrace (60s speed quiz) ===== */
+  .tijdrace-stage {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 24px;
+    padding: 20px 12px;
+    width: 100%;
+    max-width: 560px;
+    margin: 0 auto;
+  }
+  .tijdrace-question {
+    background: var(--accent-gradient);
+    color: white;
+    padding: 36px 28px;
+    border-radius: var(--radius-lg);
+    font-size: 30px;
+    font-weight: 800;
+    text-align: center;
+    width: 100%;
+    box-shadow: var(--shadow-glow);
+    letter-spacing: -0.02em;
+    min-height: 110px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    line-height: 1.2;
+    word-break: break-word;
+  }
+  .tijdrace-options {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    width: 100%;
+  }
+  .tijdrace-option {
+    background: var(--card);
+    border: 2px solid var(--border-strong);
+    color: var(--text);
+    padding: 18px 14px;
+    border-radius: var(--radius-md);
+    font-size: 15px;
+    font-weight: 600;
+    cursor: pointer;
+    font-family: inherit;
+    text-align: center;
+    line-height: 1.3;
+    min-height: 70px;
+    transition: all 0.15s;
+    word-break: break-word;
+  }
+  .tijdrace-option:hover {
+    border-color: var(--accent);
+    transform: translateY(-1px);
+  }
+  .tijdrace-option.correct {
+    background: rgba(34, 197, 94, 0.25);
+    border-color: #22c55e;
+    color: #fff;
+    animation: optionPop 0.3s;
+  }
+  .tijdrace-option.wrong {
+    background: rgba(239, 68, 68, 0.25);
+    border-color: #ef4444;
+    color: #fff;
+    animation: matchShake 0.4s;
+  }
+  @keyframes optionPop {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.08); }
+  }
+  .tijdrace-feedback {
+    color: var(--accent);
+    font-size: 22px;
+    font-weight: 800;
+    height: 24px;
+    text-align: center;
+  }
+  .tijdrace-feedback.pop {
+    animation: feedbackPop 0.6s;
+  }
+  @keyframes feedbackPop {
+    0%   { transform: translateY(0) scale(1); opacity: 1; }
+    100% { transform: translateY(-20px) scale(1.4); opacity: 0; }
+  }
+
+  @media (max-width: 480px) {
+    .tijdrace-question { font-size: 24px; padding: 28px 18px; min-height: 90px; }
+    .tijdrace-options { grid-template-columns: 1fr; }
+    .match-board { grid-template-columns: repeat(2, 1fr); }
+  }
+
+  /* ===== Flashcards (Quizlet-style flip cards) ===== */
+  .flashcards-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 150;
+    background: var(--bg);
+    background-image:
+      radial-gradient(ellipse 80% 60% at 20% 0%, rgba(167, 139, 250, 0.18) 0px, transparent 60%),
+      radial-gradient(ellipse 60% 50% at 85% 100%, rgba(244, 114, 182, 0.14) 0px, transparent 60%);
+    display: none;
+    flex-direction: column;
+    padding: 16px;
+    padding-top: calc(16px + var(--safe-top));
+    padding-bottom: calc(16px + var(--safe-bottom));
+  }
+  .flashcards-overlay.active { display: flex; }
+
+  .flashcards-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 12px;
+  }
+  .flashcards-counter {
+    background: var(--card);
+    border: 1px solid var(--border);
+    color: var(--text-soft);
+    padding: 8px 14px;
+    border-radius: 999px;
+    font-size: 13.5px;
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+  }
+  .flashcards-grading-toggle {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: var(--card);
+    border: 1px solid var(--border);
+    padding: 6px 10px 6px 14px;
+    border-radius: 999px;
+    cursor: pointer;
+    font-size: 13px;
+    color: var(--text-soft);
+    font-family: inherit;
+    user-select: none;
+  }
+  .flashcards-grading-toggle input[type="checkbox"] {
+    width: 36px;
+    height: 20px;
+    appearance: none;
+    -webkit-appearance: none;
+    background: var(--bg-2);
+    border: 1px solid var(--border-strong);
+    border-radius: 999px;
+    cursor: pointer;
+    position: relative;
+    transition: all 0.2s;
+    margin: 0;
+  }
+  .flashcards-grading-toggle input[type="checkbox"]::before {
+    content: '';
+    position: absolute;
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    background: var(--muted);
+    top: 2px;
+    left: 2px;
+    transition: all 0.2s;
+  }
+  .flashcards-grading-toggle input[type="checkbox"]:checked {
+    background: var(--accent-gradient);
+    border-color: transparent;
+  }
+  .flashcards-grading-toggle input[type="checkbox"]:checked::before {
+    background: #fff;
+    left: 18px;
+  }
+  .flashcards-close {
+    background: var(--card);
+    border: 1px solid var(--border);
+    color: var(--text-soft);
+    width: 38px;
+    height: 38px;
+    border-radius: 50%;
+    cursor: pointer;
+    font-size: 20px;
+    line-height: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: inherit;
+    transition: all 0.15s;
+  }
+  .flashcards-close:hover { background: var(--card-hover); color: var(--text); }
+
+  .flashcards-stage {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 8px 0;
+  }
+  .flashcard-stack {
+    perspective: 1600px;
+    width: 100%;
+    max-width: 480px;
+    margin: 0 auto;
+  }
+  .flashcard {
+    position: relative;
+    width: 100%;
+    aspect-ratio: 5 / 3;
+    transform-style: preserve-3d;
+    transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+    cursor: pointer;
+    user-select: none;
+  }
+  .flashcard.flipped { transform: rotateY(180deg); }
+  .flashcard-face {
+    position: absolute;
+    inset: 0;
+    backface-visibility: hidden;
+    -webkit-backface-visibility: hidden;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    border-radius: var(--radius-lg);
+    padding: 28px 22px;
+    text-align: center;
+    box-shadow: var(--shadow-lg);
+    overflow: hidden;
+  }
+  .flashcard-front {
+    background: var(--accent-gradient);
+    color: white;
+  }
+  .flashcard-back {
+    background: linear-gradient(135deg, #1e1e3a 0%, #2a2a4a 100%);
+    color: white;
+    border: 2px solid var(--accent);
+    transform: rotateY(180deg);
+  }
+  .flashcard-content {
+    font-size: 28px;
+    font-weight: 700;
+    line-height: 1.3;
+    letter-spacing: -0.01em;
+    word-break: break-word;
+    overflow-wrap: anywhere;
+    max-height: 100%;
+    overflow: auto;
+  }
+  .flashcard-hint {
+    position: absolute;
+    bottom: 16px;
+    left: 50%;
+    transform: translateX(-50%);
+    font-size: 12px;
+    font-weight: 500;
+    opacity: 0.75;
+    text-transform: uppercase;
+    letter-spacing: 1.2px;
+  }
+  .flashcard-back .flashcard-hint { color: var(--text-soft); }
+
+  .flashcards-nav {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    margin-top: 18px;
+    max-width: 480px;
+    margin-left: auto;
+    margin-right: auto;
+    width: 100%;
+  }
+  .grade-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+  }
+  .grade-row.hidden { display: none; }
+  .grade-btn {
+    padding: 14px 16px;
+    border-radius: var(--radius-md);
+    font-size: 15px;
+    font-weight: 700;
+    cursor: pointer;
+    font-family: inherit;
+    border: 2px solid;
+    transition: all 0.18s;
+    min-height: 52px;
+  }
+  .grade-btn.wrong {
+    background: rgba(239, 68, 68, 0.1);
+    border-color: rgba(239, 68, 68, 0.4);
+    color: #fca5a5;
+  }
+  .grade-btn.wrong:hover { background: rgba(239, 68, 68, 0.2); border-color: #ef4444; color: #fff; }
+  .grade-btn.right {
+    background: rgba(34, 197, 94, 0.1);
+    border-color: rgba(34, 197, 94, 0.4);
+    color: #86efac;
+  }
+  .grade-btn.right:hover { background: rgba(34, 197, 94, 0.2); border-color: #22c55e; color: #fff; }
+
+  .nav-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+  }
+  .flash-nav-btn {
+    background: var(--card);
+    border: 1px solid var(--border-strong);
+    color: var(--text-soft);
+    padding: 12px 16px;
+    border-radius: var(--radius-md);
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    font-family: inherit;
+    min-height: 48px;
+    transition: all 0.15s;
+  }
+  .flash-nav-btn:hover:not(:disabled) {
+    background: var(--card-hover);
+    color: var(--text);
+  }
+  .flash-nav-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+
+  /* Summary screen at end of deck */
+  .flashcards-summary {
+    text-align: center;
+    padding: 40px 20px;
+    max-width: 480px;
+    margin: 0 auto;
+  }
+  .flashcards-summary h2 {
+    font-size: 28px;
+    font-weight: 800;
+    margin-bottom: 14px;
+    letter-spacing: -0.02em;
+  }
+  .flashcards-summary-score {
+    font-size: 44px;
+    font-weight: 900;
+    background: var(--accent-gradient);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    margin: 18px 0;
+    letter-spacing: -0.03em;
+  }
+  .flashcards-summary p {
+    color: var(--text-soft);
+    font-size: 15px;
+    margin-bottom: 20px;
+  }
+  .flashcards-summary .summary-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  @media (max-width: 720px) {
+    .flashcard-content { font-size: 24px; }
+    .flashcards-grading-toggle { font-size: 12px; padding: 5px 8px 5px 12px; }
+  }
+
+  /* Tap-to-pick choice buttons under an AI message */
+  .choice-buttons {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin: 6px 0 6px 44px;
+    max-width: calc(88% - 44px);
+    animation: bubbleIn 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  .choice-btn {
+    background: var(--card);
+    border: 1.5px solid var(--accent);
+    color: var(--accent);
+    padding: 10px 16px;
+    border-radius: 999px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    font-family: inherit;
+    transition: all 0.18s;
+    min-height: 40px;
+    text-align: left;
+    line-height: 1.3;
+  }
+  .choice-btn:hover:not(:disabled) {
+    background: var(--accent);
+    color: white;
+    transform: translateY(-1px);
+  }
+  .choice-btn:active:not(:disabled) {
+    transform: translateY(0);
+  }
+  .choice-btn:disabled {
+    cursor: not-allowed;
+    opacity: 0.4;
+  }
+  .choice-btn.chosen {
+    background: var(--accent-gradient);
+    color: white;
+    border-color: transparent;
+    opacity: 1;
+  }
+  @media (max-width: 720px) {
+    .choice-buttons { margin-left: 44px; max-width: calc(92% - 44px); }
+    .choice-btn { padding: 11px 14px; font-size: 13.5px; }
+  }
 
   /* ===== Difficult terms (clickable) ===== */
   .term {
@@ -1292,6 +2645,167 @@
       <path d="M22 10v6"/>
       <path d="M6 12.5V16a6 3 0 0 0 12 0v-3.5"/>
     </symbol>
+    <!-- Robot mascot v4 — actual robot: head with bolts, ear panels, visor, speaker mouth.
+         Only the visor contents change per emotion; head silhouette stays identical. -->
+    <!-- NEUTRAL -->
+    <symbol id="i-robot" viewBox="0 0 64 64">
+      <!-- Antenna -->
+      <line x1="32" y1="4" x2="32" y2="11" stroke="#fff" stroke-width="2" stroke-linecap="round"/>
+      <circle cx="32" cy="3" r="2" fill="#fff"/>
+      <!-- Ear / side panels -->
+      <rect x="4" y="28" width="4.5" height="10" rx="1.5" fill="#cbd5e1"/>
+      <rect x="55.5" y="28" width="4.5" height="10" rx="1.5" fill="#cbd5e1"/>
+      <!-- Head body (light, contrasts the gradient bg) -->
+      <rect x="9" y="11" width="46" height="40" rx="9" fill="#e2e8f0"/>
+      <!-- Corner bolts -->
+      <circle cx="13.5" cy="15.5" r="1.4" fill="#94a3b8"/>
+      <circle cx="50.5" cy="15.5" r="1.4" fill="#94a3b8"/>
+      <circle cx="13.5" cy="46.5" r="1.4" fill="#94a3b8"/>
+      <circle cx="50.5" cy="46.5" r="1.4" fill="#94a3b8"/>
+      <!-- Visor inset -->
+      <rect x="13" y="20" width="38" height="14" rx="3" fill="#1a1a2e"/>
+      <!-- Eye pixels -->
+      <circle class="robot-eye" cx="23" cy="27" r="3" fill="#fff"/>
+      <circle class="robot-eye" cx="41" cy="27" r="3" fill="#fff"/>
+      <circle cx="23" cy="27" r="1.3" fill="#a78bfa"/>
+      <circle cx="41" cy="27" r="1.3" fill="#a78bfa"/>
+      <!-- Speaker mouth grill -->
+      <rect x="25" y="40" width="14" height="3" rx="1" fill="#94a3b8"/>
+      <line x1="28" y1="40" x2="28" y2="43" stroke="#1a1a2e" stroke-width="0.6"/>
+      <line x1="32" y1="40" x2="32" y2="43" stroke="#1a1a2e" stroke-width="0.6"/>
+      <line x1="36" y1="40" x2="36" y2="43" stroke="#1a1a2e" stroke-width="0.6"/>
+    </symbol>
+
+    <!-- HAPPY — visor smiles -->
+    <symbol id="i-robot-happy" viewBox="0 0 64 64">
+      <line x1="32" y1="4" x2="32" y2="11" stroke="#fff" stroke-width="2" stroke-linecap="round"/>
+      <circle cx="32" cy="3" r="2" fill="#fff"/>
+      <circle cx="32" cy="3" r="3.5" fill="#fff" opacity="0.3"/>
+      <rect x="4" y="28" width="4.5" height="10" rx="1.5" fill="#cbd5e1"/>
+      <rect x="55.5" y="28" width="4.5" height="10" rx="1.5" fill="#cbd5e1"/>
+      <rect x="9" y="11" width="46" height="40" rx="9" fill="#e2e8f0"/>
+      <circle cx="13.5" cy="15.5" r="1.4" fill="#94a3b8"/>
+      <circle cx="50.5" cy="15.5" r="1.4" fill="#94a3b8"/>
+      <circle cx="13.5" cy="46.5" r="1.4" fill="#94a3b8"/>
+      <circle cx="50.5" cy="46.5" r="1.4" fill="#94a3b8"/>
+      <rect x="13" y="20" width="38" height="14" rx="3" fill="#1a1a2e"/>
+      <!-- ^_^ eyes -->
+      <path d="M 19 28 Q 23 23 27 28" fill="none" stroke="#fff" stroke-width="2.4" stroke-linecap="round"/>
+      <path d="M 37 28 Q 41 23 45 28" fill="none" stroke="#fff" stroke-width="2.4" stroke-linecap="round"/>
+      <!-- Wider mouth bar (smile) -->
+      <path d="M 23 40 Q 32 45 41 40" fill="none" stroke="#94a3b8" stroke-width="2.6" stroke-linecap="round"/>
+    </symbol>
+
+    <!-- SAD — droopy antenna, downturned eyes, frown -->
+    <symbol id="i-robot-sad" viewBox="0 0 64 64">
+      <path d="M 32 7 Q 36 8 37 12" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" opacity="0.7"/>
+      <circle cx="37" cy="12" r="2" fill="#fff" opacity="0.7"/>
+      <rect x="4" y="28" width="4.5" height="10" rx="1.5" fill="#cbd5e1" opacity="0.85"/>
+      <rect x="55.5" y="28" width="4.5" height="10" rx="1.5" fill="#cbd5e1" opacity="0.85"/>
+      <rect x="9" y="11" width="46" height="40" rx="9" fill="#e2e8f0"/>
+      <circle cx="13.5" cy="15.5" r="1.4" fill="#94a3b8"/>
+      <circle cx="50.5" cy="15.5" r="1.4" fill="#94a3b8"/>
+      <circle cx="13.5" cy="46.5" r="1.4" fill="#94a3b8"/>
+      <circle cx="50.5" cy="46.5" r="1.4" fill="#94a3b8"/>
+      <rect x="13" y="20" width="38" height="14" rx="3" fill="#1a1a2e"/>
+      <!-- Eyes look down -->
+      <circle class="robot-eye" cx="23" cy="29" r="3" fill="#fff"/>
+      <circle class="robot-eye" cx="41" cy="29" r="3" fill="#fff"/>
+      <circle cx="23" cy="30.5" r="1.3" fill="#60a5fa"/>
+      <circle cx="41" cy="30.5" r="1.3" fill="#60a5fa"/>
+      <!-- Frown mouth -->
+      <path d="M 25 44 Q 32 39 39 44" fill="none" stroke="#94a3b8" stroke-width="2.4" stroke-linecap="round"/>
+      <!-- Tear drop on cheek -->
+      <path d="M 12 32 Q 12.5 35 13 37 Q 13.5 35 13 32 Z" fill="#60a5fa"/>
+    </symbol>
+
+    <!-- EXCITED — star eyes, open speaker mouth, bright antenna -->
+    <symbol id="i-robot-excited" viewBox="0 0 64 64">
+      <line x1="32" y1="4" x2="32" y2="11" stroke="#facc15" stroke-width="2" stroke-linecap="round"/>
+      <circle cx="32" cy="3" r="2.2" fill="#facc15"/>
+      <circle cx="32" cy="3" r="4.5" fill="#facc15" opacity="0.4"/>
+      <rect x="4" y="28" width="4.5" height="10" rx="1.5" fill="#cbd5e1"/>
+      <rect x="55.5" y="28" width="4.5" height="10" rx="1.5" fill="#cbd5e1"/>
+      <rect x="9" y="11" width="46" height="40" rx="9" fill="#e2e8f0"/>
+      <circle cx="13.5" cy="15.5" r="1.4" fill="#94a3b8"/>
+      <circle cx="50.5" cy="15.5" r="1.4" fill="#94a3b8"/>
+      <circle cx="13.5" cy="46.5" r="1.4" fill="#94a3b8"/>
+      <circle cx="50.5" cy="46.5" r="1.4" fill="#94a3b8"/>
+      <rect x="13" y="20" width="38" height="14" rx="3" fill="#1a1a2e"/>
+      <!-- Star eyes -->
+      <path d="M 23 23 l 0.9 2.2 l 2.3 0.3 l -1.7 1.6 l 0.5 2.3 l -2 -1.2 l -2 1.2 l 0.5 -2.3 l -1.7 -1.6 l 2.3 -0.3 z" fill="#facc15"/>
+      <path d="M 41 23 l 0.9 2.2 l 2.3 0.3 l -1.7 1.6 l 0.5 2.3 l -2 -1.2 l -2 1.2 l 0.5 -2.3 l -1.7 -1.6 l 2.3 -0.3 z" fill="#facc15"/>
+      <!-- Open speaker mouth -->
+      <rect x="23" y="39" width="18" height="5" rx="1.5" fill="#1a1a2e"/>
+      <rect x="25" y="40" width="14" height="3" rx="0.5" fill="#facc15"/>
+    </symbol>
+
+    <!-- THINKING — line eye, processing dots -->
+    <symbol id="i-robot-thinking" viewBox="0 0 64 64">
+      <line x1="32" y1="4" x2="32" y2="11" stroke="#fff" stroke-width="2" stroke-linecap="round"/>
+      <circle cx="32" cy="3" r="2" fill="#fff"/>
+      <rect x="4" y="28" width="4.5" height="10" rx="1.5" fill="#cbd5e1"/>
+      <rect x="55.5" y="28" width="4.5" height="10" rx="1.5" fill="#cbd5e1"/>
+      <rect x="9" y="11" width="46" height="40" rx="9" fill="#e2e8f0"/>
+      <circle cx="13.5" cy="15.5" r="1.4" fill="#94a3b8"/>
+      <circle cx="50.5" cy="15.5" r="1.4" fill="#94a3b8"/>
+      <circle cx="13.5" cy="46.5" r="1.4" fill="#94a3b8"/>
+      <circle cx="50.5" cy="46.5" r="1.4" fill="#94a3b8"/>
+      <rect x="13" y="20" width="38" height="14" rx="3" fill="#1a1a2e"/>
+      <!-- Left eye dimmed line, right eye looking up -->
+      <line x1="19" y1="27" x2="27" y2="27" stroke="#fff" stroke-width="2.2" stroke-linecap="round"/>
+      <circle class="robot-eye" cx="41" cy="27" r="3" fill="#fff"/>
+      <circle cx="41" cy="25.5" r="1.3" fill="#a78bfa"/>
+      <!-- Small flat mouth -->
+      <line x1="28" y1="41" x2="36" y2="41" stroke="#94a3b8" stroke-width="2.2" stroke-linecap="round"/>
+      <!-- Processing dots floating above -->
+      <circle cx="49" cy="10" r="1.2" fill="#fff" opacity="0.6"/>
+      <circle cx="53" cy="7" r="1.6" fill="#fff" opacity="0.8"/>
+      <circle cx="57" cy="3.5" r="2" fill="#fff" opacity="0.95"/>
+    </symbol>
+
+    <!-- WINK — one open eye, one ^ -->
+    <symbol id="i-robot-wink" viewBox="0 0 64 64">
+      <line x1="32" y1="4" x2="32" y2="11" stroke="#fff" stroke-width="2" stroke-linecap="round"/>
+      <circle cx="32" cy="3" r="2" fill="#fff"/>
+      <circle cx="32" cy="3" r="3.5" fill="#fff" opacity="0.25"/>
+      <rect x="4" y="28" width="4.5" height="10" rx="1.5" fill="#cbd5e1"/>
+      <rect x="55.5" y="28" width="4.5" height="10" rx="1.5" fill="#cbd5e1"/>
+      <rect x="9" y="11" width="46" height="40" rx="9" fill="#e2e8f0"/>
+      <circle cx="13.5" cy="15.5" r="1.4" fill="#94a3b8"/>
+      <circle cx="50.5" cy="15.5" r="1.4" fill="#94a3b8"/>
+      <circle cx="13.5" cy="46.5" r="1.4" fill="#94a3b8"/>
+      <circle cx="50.5" cy="46.5" r="1.4" fill="#94a3b8"/>
+      <rect x="13" y="20" width="38" height="14" rx="3" fill="#1a1a2e"/>
+      <!-- Left open eye, right winked -->
+      <circle cx="23" cy="27" r="3" fill="#fff"/>
+      <circle cx="23" cy="27" r="1.3" fill="#a78bfa"/>
+      <path d="M 37 28 Q 41 23 45 28" fill="none" stroke="#fff" stroke-width="2.4" stroke-linecap="round"/>
+      <!-- Smirk mouth -->
+      <path d="M 24 41 Q 32 44 40 40" fill="none" stroke="#94a3b8" stroke-width="2.4" stroke-linecap="round"/>
+    </symbol>
+
+    <!-- SURPRISED — wide eyes, "o" mouth -->
+    <symbol id="i-robot-surprised" viewBox="0 0 64 64">
+      <line x1="32" y1="4" x2="32" y2="11" stroke="#fff" stroke-width="2" stroke-linecap="round"/>
+      <circle cx="32" cy="3" r="2" fill="#fff"/>
+      <circle cx="32" cy="3" r="4" fill="#fff" opacity="0.3"/>
+      <rect x="4" y="28" width="4.5" height="10" rx="1.5" fill="#cbd5e1"/>
+      <rect x="55.5" y="28" width="4.5" height="10" rx="1.5" fill="#cbd5e1"/>
+      <rect x="9" y="11" width="46" height="40" rx="9" fill="#e2e8f0"/>
+      <circle cx="13.5" cy="15.5" r="1.4" fill="#94a3b8"/>
+      <circle cx="50.5" cy="15.5" r="1.4" fill="#94a3b8"/>
+      <circle cx="13.5" cy="46.5" r="1.4" fill="#94a3b8"/>
+      <circle cx="50.5" cy="46.5" r="1.4" fill="#94a3b8"/>
+      <rect x="13" y="20" width="38" height="14" rx="3" fill="#1a1a2e"/>
+      <!-- Wide eyes -->
+      <circle cx="23" cy="27" r="4" fill="#fff"/>
+      <circle cx="41" cy="27" r="4" fill="#fff"/>
+      <circle cx="23" cy="27" r="1.8" fill="#a78bfa"/>
+      <circle cx="41" cy="27" r="1.8" fill="#a78bfa"/>
+      <!-- O mouth (small dark circle) -->
+      <circle cx="32" cy="42" r="2.6" fill="#1a1a2e"/>
+    </symbol>
     <symbol id="i-sliders" viewBox="0 0 24 24">
       <line x1="4" y1="21" x2="4" y2="14"/><line x1="4" y1="10" x2="4" y2="3"/>
       <line x1="12" y1="21" x2="12" y2="12"/><line x1="12" y1="8" x2="12" y2="3"/>
@@ -1392,7 +2906,7 @@
 
 <header>
   <h1>
-    <span class="logo-mark"><svg class="icon"><use href="#i-cap"/></svg></span>
+    <span class="logo-mark"><svg class="robot"><use href="#i-robot"/></svg></span>
     <span class="brand-text" data-i18n="app_name">Huiswerk helper</span>
     <span class="user-greeting" id="userGreeting"></span>
   </h1>
@@ -1418,7 +2932,7 @@
 
   <section id="step-subject">
     <h2 class="step-label">
-      <span class="step-num">1</span>
+      <span class="step-num"></span>
       <span data-i18n="step1">Welk vak?</span>
     </h2>
 
@@ -1538,6 +3052,23 @@
         </div>
       </button>
     </div>
+
+    <!-- Learn-mode entry: prominent card BELOW all subjects, for the second focus on the page -->
+    <div class="subject-category" data-i18n="learn_section_label">Of leer iets uit je hoofd</div>
+    <button type="button" class="learn-entry-card" id="openLearnModeBtn">
+      <span class="learn-entry-card-icon"><svg class="icon"><use href="#i-book"/></svg></span>
+      <span class="learn-entry-card-body">
+        <span class="learn-entry-card-title" data-i18n="learn_entry_title">Leermodus — uit je hoofd leren</span>
+        <span class="learn-entry-card-desc" data-i18n="learn_entry_desc">Stuur foto's van woordjes of formules. Max overhoort je met flitskaarten of spelletjes.</span>
+      </span>
+      <span class="learn-entry-card-arrow"><svg class="icon"><use href="#i-arrow-right"/></svg></span>
+    </button>
+
+    <!-- Library: saved decks from previous learn sessions; shows only when there are any -->
+    <div class="library-section" id="librarySection">
+      <div class="subject-category" data-i18n="library_label">Jouw bibliotheek</div>
+      <div class="library-grid" id="libraryGrid"></div>
+    </div>
   </section>
 
   <!-- Subject view: shown after a subject card is clicked. Contains hero, photo upload, chat. -->
@@ -1610,6 +3141,82 @@
     </div>
   </section>
   </section><!-- /subjectView -->
+
+  <!-- Learn mode view: photo-of-vocab/formulas + Max as quiz master -->
+  <section id="learnView" class="hidden" style="display: flex; flex-direction: column; gap: 24px;">
+    <div class="back-bar">
+      <button type="button" class="back-link" id="backFromLearnBtn">
+        <svg class="icon"><use href="#i-arrow-right"/></svg>
+        <span data-i18n="btn_back_home">Terug naar home</span>
+      </button>
+    </div>
+
+    <div class="subject-hero learn-hero">
+      <div class="subject-hero-inner">
+        <div class="subject-hero-icon"><svg class="robot"><use href="#i-robot"/></svg></div>
+        <div>
+          <div class="subject-hero-title" id="learnHeroTitle" data-i18n="learn_hero_title">Hoi! Leermodus aan.</div>
+          <div class="subject-hero-text" data-i18n="learn_hero_text">Stuur foto's van woordjes of formules. Vertel me hoe je ze wilt leren, dan ga ik je overhoren.</div>
+        </div>
+      </div>
+    </div>
+
+    <section id="learnSetup" style="display: flex; flex-direction: column; gap: 24px;">
+      <div>
+        <h2 class="step-label">
+          <span class="step-num">1</span>
+          <span data-i18n="learn_step1">Wat wil je leren?</span>
+        </h2>
+        <div class="pill-picker" id="learnModePicker">
+          <button type="button" class="opt-pill" data-learn-mode="words" data-i18n="learn_mode_words">Woordjes</button>
+          <button type="button" class="opt-pill" data-learn-mode="terms" data-i18n="learn_mode_terms">Termen</button>
+          <button type="button" class="opt-pill" data-learn-mode="formulas" data-i18n="learn_mode_formulas">Formules</button>
+        </div>
+      </div>
+
+      <div>
+        <h2 class="step-label">
+          <span class="step-num">2</span>
+          <span data-i18n="learn_step2">Stuur foto's (mag meer dan één)</span>
+        </h2>
+        <div class="upload-zone" id="learnUploadZone">
+          <div id="learnUploadPrompt">
+            <div class="upload-icon-wrap"><svg class="icon icon-lg"><use href="#i-camera"/></svg></div>
+            <p><strong data-i18n="learn_upload_main">Klik om foto's te kiezen</strong></p>
+            <p data-i18n="learn_upload_sub">Meerdere foto's in één keer is prima</p>
+            <div class="upload-actions">
+              <button class="secondary-btn" onclick="event.stopPropagation(); document.getElementById('learnCameraInput').click()">
+                <svg class="icon"><use href="#i-camera"/></svg> <span data-i18n="btn_camera">Camera</span>
+              </button>
+              <button class="secondary-btn" onclick="event.stopPropagation(); document.getElementById('learnFileInput').click()">
+                <svg class="icon"><use href="#i-image"/></svg> <span data-i18n="btn_gallery">Uit galerij</span>
+              </button>
+            </div>
+          </div>
+          <div id="learnThumbnails" class="learn-thumbnails hidden"></div>
+        </div>
+        <input type="file" id="learnFileInput" accept="image/*" multiple>
+        <input type="file" id="learnCameraInput" accept="image/*" capture="environment" multiple>
+      </div>
+
+      <div>
+        <h2 class="step-label">
+          <span class="step-num">3</span>
+          <span data-i18n="learn_step3">Toelichting (optioneel)</span>
+        </h2>
+        <textarea id="learnDescription" class="learn-description" rows="2"
+          data-i18n-placeholder="learn_desc_placeholder"
+          placeholder="Bijv. 'alleen NL → EN, niet andersom' of 'sla hoofdstuk 1 over'"></textarea>
+      </div>
+
+      <div style="text-align: center;">
+        <button class="primary-btn" id="startLearnBtn" disabled>
+          <span data-i18n="learn_start">Begin met overhoren</span>
+          <svg class="icon icon-sm"><use href="#i-arrow-right"/></svg>
+        </button>
+      </div>
+    </section>
+  </section><!-- /learnView -->
 </main>
 
 <!-- Welcome Modal (multi-step onboarding) -->
@@ -1619,7 +3226,7 @@
     <!-- STEP 1 — name + language -->
     <div class="welcome-step" id="welcomeStep1">
       <div class="welcome-header">
-        <div class="welcome-icon"><svg class="icon"><use href="#i-cap"/></svg></div>
+        <div class="welcome-icon"><svg class="robot"><use href="#i-robot"/></svg></div>
         <h2 data-i18n="welcome_title">Welkom!</h2>
         <p data-i18n="welcome_intro">Vul je naam in en kies je taal, dan stellen we daarna nog een paar korte vragen.</p>
       </div>
@@ -1641,7 +3248,7 @@
     <!-- STEP 2 — student profile -->
     <div class="welcome-step hidden" id="welcomeStep2">
       <div class="welcome-header">
-        <div class="welcome-icon"><svg class="icon"><use href="#i-cap"/></svg></div>
+        <div class="welcome-icon"><svg class="robot"><use href="#i-robot"/></svg></div>
         <h2 data-i18n="profile_title">Vertel iets over jezelf</h2>
         <p data-i18n="profile_intro">Zo kunnen we de uitleg op jouw niveau afstemmen.</p>
       </div>
@@ -1687,6 +3294,264 @@
       </div>
     </div>
 
+  </div>
+</div>
+
+<!-- Flashcards overlay (Quizlet-style flip cards) -->
+<div class="flashcards-overlay" id="flashcardsOverlay">
+  <div class="flashcards-header">
+    <button type="button" class="back-link" id="flashcardsCloseBtn">
+      <svg class="icon"><use href="#i-arrow-right"/></svg>
+      <span data-i18n="btn_back">Terug</span>
+    </button>
+    <div class="flashcards-counter" id="flashcardsCounter">1 / 1</div>
+    <label class="flashcards-grading-toggle" id="flashcardsGradingToggle">
+      <span data-i18n="flash_grade_label">Met scoren</span>
+      <input type="checkbox" id="flashcardsGradingCheck" checked>
+    </label>
+  </div>
+
+  <div class="flashcards-stage" id="flashcardsStage">
+    <div class="flashcard-stack">
+      <div class="flashcard" id="flashcardEl">
+        <div class="flashcard-face flashcard-front">
+          <div class="flashcard-content" id="flashcardFront"></div>
+          <span class="flashcard-hint" data-i18n="flash_tap_to_flip">Tik om te draaien</span>
+        </div>
+        <div class="flashcard-face flashcard-back">
+          <div class="flashcard-content" id="flashcardBack"></div>
+          <span class="flashcard-hint" data-i18n="flash_tap_to_flip_back">Tik om terug te draaien</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="flashcards-nav">
+    <div class="grade-row" id="flashGradeRow">
+      <button type="button" class="grade-btn wrong" id="flashWrongBtn"><span data-i18n="flash_wrong">✕ Wist ik niet</span></button>
+      <button type="button" class="grade-btn right" id="flashRightBtn"><span data-i18n="flash_right">✓ Wist ik wel</span></button>
+    </div>
+    <div class="nav-row">
+      <button type="button" class="flash-nav-btn" id="flashPrevBtn" data-i18n="flash_prev">← Vorige</button>
+      <button type="button" class="flash-nav-btn" id="flashNextBtn" data-i18n="flash_next">Volgende →</button>
+    </div>
+  </div>
+
+  <div class="flashcards-summary hidden" id="flashcardsSummary">
+    <h2 data-i18n="flash_done_title">Klaar!</h2>
+    <div class="flashcards-summary-score" id="flashSummaryScore">0 / 0</div>
+    <p id="flashSummaryText"></p>
+    <div class="summary-actions">
+      <button type="button" class="primary-btn" id="flashRetryWrongBtn" data-i18n="flash_retry_wrong">Doe de fouten opnieuw</button>
+      <button type="button" class="secondary-btn" id="flashRestartAllBtn" data-i18n="flash_restart_all">Hele set opnieuw</button>
+      <button type="button" class="secondary-btn" id="flashBackToChatBtn" data-i18n="flash_back_to_chat">Terug naar Max</button>
+    </div>
+  </div>
+</div>
+
+<!-- MATCH game overlay (Quizlet-style pair matching) -->
+<div class="game-overlay" id="matchOverlay">
+  <div class="game-header">
+    <button type="button" class="back-link" id="matchCloseBtn">
+      <svg class="icon"><use href="#i-arrow-right"/></svg>
+      <span data-i18n="btn_back">Terug</span>
+    </button>
+    <div class="game-info">
+      <div class="game-counter" id="matchProgress">0 / 0</div>
+      <div class="game-timer" id="matchTimer">0:00</div>
+      <div class="game-record empty" id="matchRecord">—</div>
+    </div>
+  </div>
+  <div class="game-stage" id="matchStage">
+    <div class="match-board" id="matchBoard"></div>
+  </div>
+  <div class="game-summary hidden" id="matchSummary">
+    <div class="new-record-banner hidden" id="matchNewRecord" data-i18n="new_record">Nieuw record!</div>
+    <h2 data-i18n="match_done">Klaar!</h2>
+    <div class="game-summary-score" id="matchFinalTime">0:00</div>
+    <div class="game-summary-old-record" id="matchOldRecord"></div>
+    <p data-i18n="match_done_text">Tijd om alle paren te vinden</p>
+    <div class="summary-actions">
+      <button type="button" class="primary-btn" id="matchRestartBtn" data-i18n="match_restart">Nog een keer</button>
+      <button type="button" class="secondary-btn" id="matchBackBtn" data-i18n="flash_back_to_chat">Terug naar Max</button>
+    </div>
+  </div>
+</div>
+
+<!-- TIJDRACE overlay (60s speed quiz) -->
+<div class="game-overlay" id="tijdraceOverlay">
+  <div class="game-header">
+    <button type="button" class="back-link" id="tijdraceCloseBtn">
+      <svg class="icon"><use href="#i-arrow-right"/></svg>
+      <span data-i18n="btn_back">Terug</span>
+    </button>
+    <div class="game-info">
+      <div class="game-counter" id="tijdraceScore">0</div>
+      <div class="game-timer" id="tijdraceTimer">1:00</div>
+      <div class="game-record empty" id="tijdraceRecord">—</div>
+    </div>
+  </div>
+  <div class="tijdrace-stage" id="tijdraceStage">
+    <div class="tijdrace-question" id="tijdraceQuestion"></div>
+    <div class="tijdrace-feedback" id="tijdraceFeedback"></div>
+    <div class="tijdrace-options" id="tijdraceOptions"></div>
+  </div>
+  <div class="game-summary hidden" id="tijdraceSummary">
+    <div class="new-record-banner hidden" id="tijdraceNewRecord" data-i18n="new_record">Nieuw record!</div>
+    <h2 data-i18n="tijdrace_done">Tijd is om!</h2>
+    <div class="game-summary-score" id="tijdraceFinalScore">0</div>
+    <div class="game-summary-old-record" id="tijdraceOldRecord"></div>
+    <p data-i18n="tijdrace_done_text">punten in 60 seconden</p>
+    <div class="summary-actions">
+      <button type="button" class="primary-btn" id="tijdraceRestartBtn" data-i18n="tijdrace_restart">Opnieuw racen</button>
+      <button type="button" class="secondary-btn" id="tijdraceBackBtn" data-i18n="flash_back_to_chat">Terug naar Max</button>
+    </div>
+  </div>
+</div>
+
+<!-- Intro / sales pitch (full-screen, shown on first ever visit) -->
+<div class="intro-overlay" id="introOverlay">
+  <div class="intro-top">
+    <button class="intro-skip" id="introSkipBtn" data-i18n="intro_skip">Overslaan →</button>
+  </div>
+
+  <div class="intro-stage">
+    <!-- Slide 0: Hero -->
+    <div class="intro-slide" id="introSlide0">
+      <div class="intro-logo-big"><svg class="robot"><use href="#i-robot"/></svg></div>
+      <div class="intro-eyebrow" data-i18n="intro0_eyebrow">Huiswerk helper</div>
+      <h1 class="intro-headline" data-i18n-html="intro0_headline">Snap je huiswerk. <span class="gradient">Niet alleen overschrijven.</span></h1>
+      <p class="intro-subhead" data-i18n="intro0_sub">Een AI-begeleider die je vragen stelt in plaats van antwoorden geeft — zodat je het écht leert, niet alleen kopieert.</p>
+    </div>
+
+    <!-- Slide 1: vergelijking -->
+    <div class="intro-slide" id="introSlide1" style="display: none;">
+      <div class="intro-eyebrow" data-i18n="intro1_eyebrow">De aanpak</div>
+      <h1 class="intro-headline" data-i18n="intro1_headline">Anders dan ChatGPT.</h1>
+      <p class="intro-subhead" data-i18n="intro1_sub">ChatGPT geeft je een antwoord. Morgen ben je het kwijt. Hier krijg je vragen en hints, zodat je het echt begrijpt.</p>
+      <div class="compare-grid">
+        <div class="compare-card bad">
+          <span class="compare-tag" data-i18n="intro1_bad_tag">Andere AI</span>
+          <div class="compare-title" data-i18n="intro1_bad_title">Geeft het antwoord</div>
+          <ul class="compare-list">
+            <li data-i18n="intro1_bad_1">Klaar in 5 seconden</li>
+            <li data-i18n="intro1_bad_2">Je leert niks</li>
+            <li data-i18n="intro1_bad_3">Volgende toets onvoldoende</li>
+          </ul>
+        </div>
+        <div class="compare-card good">
+          <span class="compare-tag" data-i18n="intro1_good_tag">Huiswerk helper</span>
+          <div class="compare-title" data-i18n="intro1_good_title">Leert je het zélf</div>
+          <ul class="compare-list">
+            <li data-i18n="intro1_good_1">Vragen en hints</li>
+            <li data-i18n="intro1_good_2">Je snapt het écht</li>
+            <li data-i18n="intro1_good_3">Beter cijfer + onthouden</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <!-- Slide 2: features -->
+    <div class="intro-slide" id="introSlide2" style="display: none;">
+      <div class="intro-eyebrow" data-i18n="intro2_eyebrow">Wat zit erin</div>
+      <h1 class="intro-headline" data-i18n-html="intro2_headline">Alles wat je nodig hebt. <span class="gradient">Op één plek.</span></h1>
+      <div class="feature-grid">
+        <div class="feature-card">
+          <div class="feature-card-icon"><svg class="icon"><use href="#i-cap"/></svg></div>
+          <div class="feature-card-title" data-i18n="intro2_f1_title">15 vakken</div>
+          <div class="feature-card-desc" data-i18n="intro2_f1_desc">Wiskunde, talen, scheikunde, geschiedenis... allemaal met een eigen begeleider.</div>
+        </div>
+        <div class="feature-card">
+          <div class="feature-card-icon"><svg class="icon"><use href="#i-camera"/></svg></div>
+          <div class="feature-card-title" data-i18n="intro2_f2_title">Foto van opdracht</div>
+          <div class="feature-card-desc" data-i18n="intro2_f2_desc">Geen overtypen — gewoon een foto van je werkboek en de begeleider leest het.</div>
+        </div>
+        <div class="feature-card">
+          <div class="feature-card-icon"><svg class="icon"><use href="#i-help"/></svg></div>
+          <div class="feature-card-title" data-i18n="intro2_f3_title">Klikbare uitleg</div>
+          <div class="feature-card-desc" data-i18n="intro2_f3_desc">Moeilijke termen worden gekleurd. Tik erop voor een korte uitleg.</div>
+        </div>
+        <div class="feature-card">
+          <div class="feature-card-icon"><svg class="icon"><use href="#i-sliders"/></svg></div>
+          <div class="feature-card-title" data-i18n="intro2_f4_title">Onthoudt je niveau</div>
+          <div class="feature-card-desc" data-i18n="intro2_f4_desc">Past uitleg aan op of je in groep 7, vwo 5 of universiteit zit. Onthoudt wat je al kunt.</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Slide 3: CTA -->
+    <div class="intro-slide" id="introSlide3" style="display: none;">
+      <div class="intro-eyebrow" data-i18n="intro3_eyebrow">In 30 seconden begonnen</div>
+      <h1 class="intro-headline" data-i18n-html="intro3_headline">Klaar om <span class="gradient">écht te leren?</span></h1>
+      <div class="steps-grid">
+        <div class="step-row">
+          <div class="step-row-num">1</div>
+          <div class="step-row-text" data-i18n-html="intro3_step1"><strong>Kies een vak</strong> uit de 15 beschikbare</div>
+        </div>
+        <div class="step-row">
+          <div class="step-row-num">2</div>
+          <div class="step-row-text" data-i18n-html="intro3_step2"><strong>Maak een foto</strong> van je opdracht</div>
+        </div>
+        <div class="step-row">
+          <div class="step-row-num">3</div>
+          <div class="step-row-text" data-i18n-html="intro3_step3"><strong>Denk samen mee</strong> en los het zelf op</div>
+        </div>
+      </div>
+      <button class="primary-btn intro-cta" id="introStartBtn">
+        <span data-i18n="intro3_cta">Begin gratis</span>
+        <svg class="icon icon-sm"><use href="#i-arrow-right"/></svg>
+      </button>
+      <p class="intro-cta-hint" data-i18n="intro3_hint">Geen creditcard nodig. Direct beginnen.</p>
+    </div>
+  </div>
+
+  <div class="intro-bottom">
+    <div class="intro-dots" id="introDots"></div>
+    <div class="intro-bottom-row">
+      <button type="button" class="intro-nav-btn-prev" id="introPrevBtn" data-i18n="intro_prev">← Vorige</button>
+      <button type="button" class="intro-nav-btn-next" id="introNextBtn">
+        <span data-i18n="intro_next">Volgende</span>
+        <svg class="icon icon-sm"><use href="#i-arrow-right"/></svg>
+      </button>
+      <span class="intro-nav-btn-spacer"></span>
+    </div>
+  </div>
+</div>
+
+<!-- Library deck action sheet — pick what to do with a saved deck -->
+<div class="modal-overlay" id="deckActionModal">
+  <div class="modal">
+    <h2 id="deckActionTitle" data-i18n="deck_action_title">Wat wil je doen?</h2>
+    <p id="deckActionSubtitle" style="color: var(--muted); font-size: 13px; margin-bottom: 12px;"></p>
+    <div class="deck-action-list">
+      <button type="button" class="deck-action" id="deckActionFlashcards">
+        <span class="deck-action-icon">🃏</span>
+        <span class="deck-action-body">
+          <span class="deck-action-title" data-i18n="deck_action_flashcards">Flashcards</span>
+          <span class="deck-action-sub" data-i18n="deck_action_flashcards_sub">Doorbladeren of zelf scoren</span>
+        </span>
+        <svg class="icon deck-action-arrow"><use href="#i-arrow-right"/></svg>
+      </button>
+      <button type="button" class="deck-action" id="deckActionMatch">
+        <span class="deck-action-icon">🎯</span>
+        <span class="deck-action-body">
+          <span class="deck-action-title" data-i18n="deck_action_match">Match</span>
+          <span class="deck-action-sub" data-i18n="deck_action_match_sub">Paren matchen op tijd</span>
+        </span>
+        <svg class="icon deck-action-arrow"><use href="#i-arrow-right"/></svg>
+      </button>
+      <button type="button" class="deck-action" id="deckActionTijdrace">
+        <span class="deck-action-icon">⏱</span>
+        <span class="deck-action-body">
+          <span class="deck-action-title" data-i18n="deck_action_tijdrace">Tijdrace</span>
+          <span class="deck-action-sub" data-i18n="deck_action_tijdrace_sub">60s speed quiz met multiple choice</span>
+        </span>
+        <svg class="icon deck-action-arrow"><use href="#i-arrow-right"/></svg>
+      </button>
+    </div>
+    <div class="modal-actions">
+      <button type="button" class="secondary-btn" id="deckActionCancelBtn" data-i18n="btn_cancel">Annuleren</button>
+    </div>
   </div>
 </div>
 
@@ -1749,6 +3614,10 @@
       <button type="button" class="secondary-btn" id="editProfileBtn" style="margin-top: 8px; width: 100%; justify-content: center;">
         <svg class="icon icon-sm"><use href="#i-sliders"/></svg>
         <span data-i18n="btn_edit_profile">Profiel aanpassen</span>
+      </button>
+      <button type="button" class="secondary-btn" id="showIntroBtn" style="margin-top: 8px; width: 100%; justify-content: center;">
+        <svg class="icon icon-sm"><use href="#i-help"/></svg>
+        <span data-i18n="btn_show_intro">Bekijk intro opnieuw</span>
       </button>
     </div>
 
@@ -1828,9 +3697,10 @@ const TRANSLATIONS = {
     skills_hint: 'De begeleider onthoudt automatisch wat je goed beheerst. Hier kun je het zien en eventueel weghalen.',
     skills_empty: 'Nog niets onthouden — terwijl je leert, vult dit zich vanzelf.',
     skills_forget: 'Vergeten',
-    welcome_intro: 'Vul je naam in en kies je taal, dan stellen we daarna nog een paar korte vragen.',
-    profile_title: 'Vertel iets over jezelf',
-    profile_intro: 'Zo kunnen we de uitleg op jouw niveau afstemmen.',
+    welcome_title: 'Hoi, ik ben Max!',
+    welcome_intro: 'Ik ben jouw robotje. Voordat we beginnen — hoe heet jij, en in welke taal wil je liefst praten?',
+    profile_title: 'Top! Nog twee dingen.',
+    profile_intro: 'Op welk niveau zit je? Dan stem ik mijn uitleg precies op jou af.',
     label_education: 'Wat voor onderwijs volg je?',
     label_school_level: 'Welk niveau?',
     label_grade_year: 'Welk leerjaar?',
@@ -1850,13 +3720,107 @@ const TRANSLATIONS = {
     profile_empty: 'Nog geen profiel ingevuld.',
     btn_edit_profile: 'Profiel aanpassen',
     btn_back_subjects: 'Andere vak',
-    intro_title: 'Hoi {name}! Ik ben de {subjLower}bot.',
+    intro_title: 'Hoi {name}! Ik ben Max — vandaag je {subjLower}-buddy.',
     intro_text: 'Ik help je met {topics} en meer. Maak hieronder een foto van je opdracht — dan gaan we samen aan de slag.',
     btn_help: 'Help',
     btn_close: 'Begrepen',
     help_title: 'Hoe werkt de Huiswerk helper?',
     help_demo_term: 'discriminant',
     help_body_html: '<h3><span class="help-icon">1</span>Geen kant-en-klaar antwoord</h3><p>De begeleider werkt <strong>Socratisch</strong>: in plaats van een antwoord krijg je vragen en hints die je helpen het zélf op te lossen. Ook als je erom smeekt — hij blijft vragen stellen. Zo leer je het écht.</p><h3><span class="help-icon">2</span>Hoe begin je?</h3><p>Kies een vak op het startscherm → maak of upload een foto van je opdracht → klik op "Begin met uitleg". De begeleider analyseert de foto en vraagt eerst hoever je al bent.</p><h3><span class="help-icon">3</span>Klikbare moeilijke termen</h3><p>Komt er een vakterm langs zoals {demoTerm}? Tik erop voor een korte uitleg in een popup. Handig voor jargon dat je nog niet kent.</p><h3><span class="help-icon">4</span>De begeleider onthoudt je</h3><p>Als je iets goed beheerst (bijvoorbeeld Duitse naamvallen), onthoudt de app dat automatisch. De volgende keer slaat hij de uitleg over. Bij <strong>Instellingen → "Wat ken je al"</strong> zie je het overzicht en kun je dingen weghalen.</p><h3><span class="help-icon">5</span>Elk vak een eigen begeleider</h3><p>Wiskunde, Natuurkunde, Frans, Geschiedenis ... elk vak heeft zijn eigen aanpak en kleur. Klik op "<strong>← Andere vak</strong>" boven een vak-pagina om te wisselen.</p><h3><span class="help-icon">6</span>Aanpassen</h3><p>Klik op <strong>Instellingen</strong> rechtsboven om je naam, taal, niveau, profiel of API key aan te passen.</p>',
+    intro_skip: 'Overslaan →',
+    intro_prev: '← Vorige',
+    intro_next: 'Volgende →',
+    intro0_eyebrow: 'Maak kennis met Max',
+    intro0_headline: 'Snap je huiswerk. <span class="gradient">Niet alleen overschrijven.</span>',
+    intro0_sub: 'Hoi! Ik ben Max, jouw kleine AI-robotje. Ik stel je vragen in plaats van antwoorden te geven — zo leer je het écht, niet alleen kopiëren.',
+    intro1_eyebrow: 'De aanpak',
+    intro1_headline: 'Anders dan ChatGPT.',
+    intro1_sub: 'ChatGPT geeft je een antwoord. Morgen ben je het kwijt. Hier krijg je vragen en hints, zodat je het echt begrijpt.',
+    intro1_bad_tag: 'Andere AI',
+    intro1_bad_title: 'Geeft het antwoord',
+    intro1_bad_1: 'Klaar in 5 seconden',
+    intro1_bad_2: 'Je leert er niks van',
+    intro1_bad_3: 'Volgende toets weer een onvoldoende',
+    intro1_good_tag: 'Huiswerk helper',
+    intro1_good_title: 'Leert je het zélf',
+    intro1_good_1: 'Vragen en hints op jouw tempo',
+    intro1_good_2: 'Je snapt het écht',
+    intro1_good_3: 'Beter cijfer + je onthoudt het',
+    intro2_eyebrow: 'Wat zit erin',
+    intro2_headline: 'Alles wat je nodig hebt. <span class="gradient">Op één plek.</span>',
+    intro2_f1_title: '15 vakken',
+    intro2_f1_desc: 'Wiskunde, talen, scheikunde, geschiedenis ... allemaal met een eigen begeleider per vak.',
+    intro2_f2_title: 'Foto van je opdracht',
+    intro2_f2_desc: 'Geen overtypen — gewoon een foto van je werkboek en de begeleider leest het.',
+    intro2_f3_title: 'Klikbare uitleg',
+    intro2_f3_desc: 'Moeilijke termen worden gekleurd. Tik erop voor een korte uitleg in een popup.',
+    intro2_f4_title: 'Onthoudt je niveau',
+    intro2_f4_desc: 'Past uitleg aan op groep 7, vwo 5 of universiteit — en onthoudt wat je al kunt.',
+    intro3_eyebrow: 'In 30 seconden begonnen',
+    intro3_headline: 'Klaar om <span class="gradient">écht te leren?</span>',
+    intro3_step1: '<strong>Kies een vak</strong> uit de 15 beschikbare',
+    intro3_step2: '<strong>Maak een foto</strong> van je opdracht',
+    intro3_step3: '<strong>Denk samen mee</strong> en los het zelf op',
+    intro3_cta: 'Begin gratis',
+    intro3_hint: 'Geen creditcard nodig. Direct beginnen.',
+    btn_show_intro: 'Bekijk intro opnieuw',
+    learn_section_label: 'Of leer iets uit je hoofd',
+    learn_entry_title: 'Leermodus — uit je hoofd leren',
+    learn_entry_desc: 'Stuur foto’s van woordjes of formules. Max overhoort je met flitskaarten of spelletjes.',
+    learn_hero_title: 'Hoi! Leermodus aan.',
+    learn_hero_text: 'Stuur foto’s van wat je moet leren, vertel hoe je het wilt leren, dan ga ik je overhoren.',
+    learn_step1: 'Wat wil je leren?',
+    learn_step2: 'Stuur foto’s (mag meer dan één)',
+    learn_step3: 'Toelichting (optioneel)',
+    learn_mode_words: 'Woordjes',
+    learn_mode_terms: 'Termen',
+    learn_mode_formulas: 'Formules',
+    learn_upload_main: 'Klik om foto’s te kiezen',
+    learn_upload_sub: 'Meerdere foto’s in één keer is prima',
+    learn_desc_placeholder: 'Bijv. "alleen NL → EN, niet andersom" of "sla hoofdstuk 1 over"',
+    learn_start: 'Begin met overhoren',
+    learn_add_more: 'Meer toevoegen',
+    learn_chat_title: 'Leermodus met Max',
+    learn_kickoff_msg: 'Hier is mijn materiaal. Help me dit uit mijn hoofd leren.',
+    btn_back_home: 'Terug naar home',
+    flash_grade_label: 'Met scoren',
+    flash_tap_to_flip: 'Tik om te draaien',
+    flash_tap_to_flip_back: 'Tik om terug te draaien',
+    flash_wrong: '✕ Wist ik niet',
+    flash_right: '✓ Wist ik wel',
+    flash_prev: '← Vorige',
+    flash_next: 'Volgende →',
+    flash_done_title: 'Klaar!',
+    flash_retry_wrong: 'Doe de fouten opnieuw',
+    flash_restart_all: 'Hele set opnieuw',
+    flash_back_to_chat: 'Terug naar Max',
+    flash_summary_no_grade: 'Je hebt alle {total} kaarten doorgenomen.',
+    flash_summary_perfect: 'Alles goed! 🎉',
+    flash_summary_some: 'Je had {right} van de {total} goed. {wrong} te oefenen.',
+    match_done: 'Klaar!',
+    match_done_text: 'Tijd om alle paren te vinden',
+    match_restart: 'Nog een keer',
+    tijdrace_done: 'Tijd is om!',
+    tijdrace_done_text: 'punten in 60 seconden',
+    tijdrace_restart: 'Opnieuw racen',
+    new_record: 'Nieuw record!',
+    record_previous: 'Vorig record: {time}',
+    record_first: 'Je allereerste record — sla het maar op!',
+    record_yours: 'Jouw record: {time}',
+    library_label: 'Jouw bibliotheek',
+    library_untitled: '{n} kaarten',
+    library_confirm_delete: 'Deze set verwijderen uit je bibliotheek?',
+    deck_action_title: 'Wat wil je doen?',
+    deck_action_flashcards: 'Flashcards',
+    deck_action_flashcards_sub: 'Doorbladeren of zelf scoren',
+    deck_action_match: 'Match',
+    deck_action_match_sub: 'Paren matchen op tijd',
+    deck_action_tijdrace: 'Tijdrace',
+    deck_action_tijdrace_sub: '60s speed quiz met multiple choice',
+    time_now: 'net nu',
+    time_min_ago: '{n}m geleden',
+    time_hr_ago: '{n}u geleden',
+    time_day_ago: '{n}d geleden',
   },
   en: {
     app_name: 'Homework helper',
@@ -1919,9 +3883,10 @@ const TRANSLATIONS = {
     skills_hint: 'The tutor automatically remembers what you have mastered. You can review and remove items here.',
     skills_empty: 'Nothing remembered yet — this fills up as you learn.',
     skills_forget: 'Forget',
-    welcome_intro: 'Enter your name and pick your language. Then a few quick questions about you.',
-    profile_title: 'Tell us about you',
-    profile_intro: 'So we can match the explanations to your level.',
+    welcome_title: 'Hi, I’m Max!',
+    welcome_intro: 'I’m your little robot. Before we start — what’s your name, and which language do you prefer?',
+    profile_title: 'Nice! Two more things.',
+    profile_intro: 'What level are you at? Then I can tune my explanations exactly to you.',
     label_education: 'What kind of education are you in?',
     label_school_level: 'Which level?',
     label_grade_year: 'Which year?',
@@ -1941,13 +3906,107 @@ const TRANSLATIONS = {
     profile_empty: 'No profile filled in yet.',
     btn_edit_profile: 'Edit profile',
     btn_back_subjects: 'Other subject',
-    intro_title: 'Hi {name}! I’m the {subj} bot.',
+    intro_title: 'Hi {name}! I’m Max — your {subj} buddy today.',
     intro_text: 'I help with {topics} and more. Upload a photo of your assignment below — let’s tackle it together.',
     btn_help: 'Help',
     btn_close: 'Got it',
     help_title: 'How does Homework helper work?',
     help_demo_term: 'discriminant',
     help_body_html: '<h3><span class="help-icon">1</span>No ready answers, just guidance</h3><p>The tutor works <strong>Socratically</strong>: instead of a finished answer, you get questions and hints that help you figure it out yourself. Even if you beg — it keeps asking. That is how you actually learn.</p><h3><span class="help-icon">2</span>How to start</h3><p>Pick a subject on the home screen → take or upload a photo of your assignment → click "Start explanation". The tutor reads the photo and first asks how far you have got.</p><h3><span class="help-icon">3</span>Tappable difficult terms</h3><p>See a specialised word like {demoTerm}? Tap it for a short pop-up explanation. Handy for jargon you do not know yet.</p><h3><span class="help-icon">4</span>The tutor remembers you</h3><p>When you have clearly mastered something (for example German cases), the app remembers automatically. Next time it skips the recap. Under <strong>Settings → "What you already know"</strong> you can review and remove items.</p><h3><span class="help-icon">5</span>Each subject is its own bot</h3><p>Maths, physics, French, history... every subject has its own approach and colour. Use "<strong>← Other subject</strong>" at the top of a subject page to switch.</p><h3><span class="help-icon">6</span>Customising</h3><p>Click <strong>Settings</strong> in the top right to change your name, language, education level, profile or API key.</p>',
+    intro_skip: 'Skip →',
+    intro_prev: '← Previous',
+    intro_next: 'Next →',
+    intro0_eyebrow: 'Meet Max',
+    intro0_headline: 'Understand your homework. <span class="gradient">Don’t just copy it.</span>',
+    intro0_sub: 'Hi! I’m Max, your little AI robot. I ask you questions instead of giving answers — so you actually learn, not just copy.',
+    intro1_eyebrow: 'The approach',
+    intro1_headline: 'Different from ChatGPT.',
+    intro1_sub: 'ChatGPT hands you an answer. Tomorrow it’s gone. Here you get questions and hints, so you actually understand.',
+    intro1_bad_tag: 'Other AI',
+    intro1_bad_title: 'Hands you the answer',
+    intro1_bad_1: 'Done in 5 seconds',
+    intro1_bad_2: 'You learn nothing',
+    intro1_bad_3: 'Next test still a fail',
+    intro1_good_tag: 'Homework helper',
+    intro1_good_title: 'Teaches you to do it',
+    intro1_good_1: 'Questions and hints at your pace',
+    intro1_good_2: 'You actually get it',
+    intro1_good_3: 'Better grades + you remember it',
+    intro2_eyebrow: 'What’s inside',
+    intro2_headline: 'Everything you need. <span class="gradient">In one place.</span>',
+    intro2_f1_title: '15 subjects',
+    intro2_f1_desc: 'Maths, languages, chemistry, history... each with its own tutor.',
+    intro2_f2_title: 'Photo of your assignment',
+    intro2_f2_desc: 'No retyping — just snap your workbook and the tutor reads it.',
+    intro2_f3_title: 'Tappable explanations',
+    intro2_f3_desc: 'Difficult terms are highlighted. Tap them for a short pop-up explanation.',
+    intro2_f4_title: 'Knows your level',
+    intro2_f4_desc: 'Adapts to year 7 primary, secondary, or university — and remembers what you know.',
+    intro3_eyebrow: 'Up and running in 30 seconds',
+    intro3_headline: 'Ready to <span class="gradient">actually learn?</span>',
+    intro3_step1: '<strong>Pick a subject</strong> from the 15 available',
+    intro3_step2: '<strong>Take a photo</strong> of your assignment',
+    intro3_step3: '<strong>Think it through together</strong> and solve it yourself',
+    intro3_cta: 'Start free',
+    intro3_hint: 'No credit card needed. Start right away.',
+    btn_show_intro: 'Watch intro again',
+    learn_section_label: 'Or memorise something',
+    learn_entry_title: 'Learn mode — memorise stuff',
+    learn_entry_desc: 'Send photos of vocab or formulas. Max quizzes you with flashcards or games.',
+    learn_hero_title: 'Hi! Learn mode on.',
+    learn_hero_text: 'Send photos of what you have to learn, tell me how you want to study it, and I’ll quiz you.',
+    learn_step1: 'What do you want to learn?',
+    learn_step2: 'Send photos (more than one is fine)',
+    learn_step3: 'Note (optional)',
+    learn_mode_words: 'Vocabulary',
+    learn_mode_terms: 'Terms',
+    learn_mode_formulas: 'Formulas',
+    learn_upload_main: 'Click to pick photos',
+    learn_upload_sub: 'You can send multiple at once',
+    learn_desc_placeholder: 'E.g. "only EN → NL, not the other way" or "skip chapter 1"',
+    learn_start: 'Start quizzing',
+    learn_add_more: 'Add more',
+    learn_chat_title: 'Learn mode with Max',
+    learn_kickoff_msg: 'Here is my material. Help me memorise this.',
+    btn_back_home: 'Back to home',
+    flash_grade_label: 'With grading',
+    flash_tap_to_flip: 'Tap to flip',
+    flash_tap_to_flip_back: 'Tap to flip back',
+    flash_wrong: '✕ Didn’t know',
+    flash_right: '✓ Knew it',
+    flash_prev: '← Previous',
+    flash_next: 'Next →',
+    flash_done_title: 'Done!',
+    flash_retry_wrong: 'Retry the wrong ones',
+    flash_restart_all: 'Restart whole set',
+    flash_back_to_chat: 'Back to Max',
+    flash_summary_no_grade: 'You went through all {total} cards.',
+    flash_summary_perfect: 'All correct! 🎉',
+    flash_summary_some: '{right} out of {total} right. {wrong} to practice.',
+    match_done: 'Done!',
+    match_done_text: 'time to match all pairs',
+    match_restart: 'Play again',
+    tijdrace_done: 'Time’s up!',
+    tijdrace_done_text: 'points in 60 seconds',
+    tijdrace_restart: 'Race again',
+    new_record: 'New record!',
+    record_previous: 'Previous best: {time}',
+    record_first: 'Your very first record — beat it next time!',
+    record_yours: 'Your best: {time}',
+    library_label: 'Your library',
+    library_untitled: '{n} cards',
+    library_confirm_delete: 'Remove this set from your library?',
+    deck_action_title: 'What do you want to do?',
+    deck_action_flashcards: 'Flashcards',
+    deck_action_flashcards_sub: 'Flip through or self-grade',
+    deck_action_match: 'Match',
+    deck_action_match_sub: 'Pair-matching against the clock',
+    deck_action_tijdrace: 'Speed race',
+    deck_action_tijdrace_sub: '60-second multiple-choice quiz',
+    time_now: 'just now',
+    time_min_ago: '{n}m ago',
+    time_hr_ago: '{n}h ago',
+    time_day_ago: '{n}d ago',
   },
   de: {
     app_name: 'Hausaufgaben-Helfer',
@@ -2010,9 +4069,10 @@ const TRANSLATIONS = {
     skills_hint: 'Der Tutor merkt sich automatisch, was du schon beherrschst. Hier kannst du es einsehen und entfernen.',
     skills_empty: 'Noch nichts gespeichert — das füllt sich, während du lernst.',
     skills_forget: 'Vergessen',
-    welcome_intro: 'Gib deinen Namen ein und wähle deine Sprache. Danach noch ein paar kurze Fragen.',
-    profile_title: 'Erzähl etwas über dich',
-    profile_intro: 'So können wir die Erklärungen an dein Niveau anpassen.',
+    welcome_title: 'Hallo, ich bin Max!',
+    welcome_intro: 'Ich bin dein kleiner Roboter. Bevor es losgeht — wie heißt du, und welche Sprache magst du am liebsten?',
+    profile_title: 'Super! Noch zwei Sachen.',
+    profile_intro: 'Auf welchem Niveau lernst du? So passe ich meine Erklärungen genau an dich an.',
     label_education: 'Welche Schulart besuchst du?',
     label_school_level: 'Welches Niveau?',
     label_grade_year: 'Welche Klasse / welches Jahr?',
@@ -2032,13 +4092,107 @@ const TRANSLATIONS = {
     profile_empty: 'Noch kein Profil ausgefüllt.',
     btn_edit_profile: 'Profil bearbeiten',
     btn_back_subjects: 'Anderes Fach',
-    intro_title: 'Hallo {name}! Ich bin der {subj}-Bot.',
+    intro_title: 'Hallo {name}! Ich bin Max — heute dein {subj}-Buddy.',
     intro_text: 'Ich helfe dir mit {topics} und mehr. Lade unten ein Foto deiner Aufgabe hoch — dann lösen wir es zusammen.',
     btn_help: 'Hilfe',
     btn_close: 'Verstanden',
     help_title: 'Wie funktioniert der Hausaufgaben-Helfer?',
     help_demo_term: 'Diskriminante',
     help_body_html: '<h3><span class="help-icon">1</span>Keine fertigen Antworten, nur Hilfe</h3><p>Der Tutor arbeitet <strong>sokratisch</strong>: statt einer fertigen Antwort bekommst du Fragen und Hinweise, die dir helfen, es selbst zu lösen. Auch wenn du bettelst — er stellt weiter Fragen. So lernst du wirklich.</p><h3><span class="help-icon">2</span>So fängst du an</h3><p>Wähle ein Fach auf dem Startbildschirm → mache oder lade ein Foto deiner Aufgabe hoch → klicke auf "Erklärung starten". Der Tutor liest das Foto und fragt erst, wie weit du schon bist.</p><h3><span class="help-icon">3</span>Anklickbare Fachbegriffe</h3><p>Siehst du ein Fachwort wie {demoTerm}? Tippe darauf für eine kurze Erklärung in einem Pop-up. Praktisch für Begriffe, die du noch nicht kennst.</p><h3><span class="help-icon">4</span>Der Tutor merkt sich dich</h3><p>Wenn du etwas sicher beherrschst (zum Beispiel die deutschen Fälle), merkt sich die App das automatisch. Beim nächsten Mal überspringt er die Wiederholung. Unter <strong>Einstellungen → "Was du schon kannst"</strong> siehst du die Übersicht und kannst Einträge entfernen.</p><h3><span class="help-icon">5</span>Jedes Fach ein eigener Bot</h3><p>Mathematik, Physik, Französisch, Geschichte ... jedes Fach hat seinen eigenen Ansatz und seine eigene Farbe. Mit "<strong>← Anderes Fach</strong>" oben auf einer Fachseite kannst du wechseln.</p><h3><span class="help-icon">6</span>Anpassen</h3><p>Klicke oben rechts auf <strong>Einstellungen</strong>, um deinen Namen, deine Sprache, dein Niveau, dein Profil oder deinen API key zu ändern.</p>',
+    intro_skip: 'Überspringen →',
+    intro_prev: '← Zurück',
+    intro_next: 'Weiter →',
+    intro0_eyebrow: 'Lerne Max kennen',
+    intro0_headline: 'Versteh deine Hausaufgaben. <span class="gradient">Nicht nur abschreiben.</span>',
+    intro0_sub: 'Hi! Ich bin Max, dein kleiner KI-Roboter. Ich stelle dir Fragen, statt Antworten zu geben — damit du es wirklich lernst, nicht nur kopierst.',
+    intro1_eyebrow: 'Der Ansatz',
+    intro1_headline: 'Anders als ChatGPT.',
+    intro1_sub: 'ChatGPT gibt dir die Antwort. Morgen ist sie weg. Hier bekommst du Fragen und Hinweise, damit du es wirklich verstehst.',
+    intro1_bad_tag: 'Andere KI',
+    intro1_bad_title: 'Gibt die Antwort',
+    intro1_bad_1: 'In 5 Sekunden fertig',
+    intro1_bad_2: 'Du lernst nichts',
+    intro1_bad_3: 'Nächste Klausur wieder schlecht',
+    intro1_good_tag: 'Hausaufgaben-Helfer',
+    intro1_good_title: 'Bringt es dir bei',
+    intro1_good_1: 'Fragen und Hinweise in deinem Tempo',
+    intro1_good_2: 'Du verstehst es wirklich',
+    intro1_good_3: 'Bessere Noten + du behältst es',
+    intro2_eyebrow: 'Was drin steckt',
+    intro2_headline: 'Alles was du brauchst. <span class="gradient">An einem Ort.</span>',
+    intro2_f1_title: '15 Fächer',
+    intro2_f1_desc: 'Mathe, Sprachen, Chemie, Geschichte ... jedes Fach hat seinen eigenen Tutor.',
+    intro2_f2_title: 'Foto deiner Aufgabe',
+    intro2_f2_desc: 'Kein Abschreiben — einfach ein Foto deines Arbeitsheftes und der Tutor liest es.',
+    intro2_f3_title: 'Anklickbare Erklärungen',
+    intro2_f3_desc: 'Schwierige Begriffe werden hervorgehoben. Tippe darauf für eine kurze Pop-up-Erklärung.',
+    intro2_f4_title: 'Kennt dein Niveau',
+    intro2_f4_desc: 'Passt sich an Grundschule, Gymnasium oder Uni an — und merkt sich, was du schon kannst.',
+    intro3_eyebrow: 'In 30 Sekunden loslegen',
+    intro3_headline: 'Bereit, <span class="gradient">wirklich zu lernen?</span>',
+    intro3_step1: '<strong>Wähle ein Fach</strong> aus den 15 verfügbaren',
+    intro3_step2: '<strong>Mache ein Foto</strong> deiner Aufgabe',
+    intro3_step3: '<strong>Denkt zusammen nach</strong> und löse es selbst',
+    intro3_cta: 'Kostenlos starten',
+    intro3_hint: 'Keine Kreditkarte nötig. Sofort loslegen.',
+    btn_show_intro: 'Intro nochmal ansehen',
+    learn_section_label: 'Oder lerne etwas auswendig',
+    learn_entry_title: 'Lernmodus — auswendig lernen',
+    learn_entry_desc: 'Schicke Fotos von Vokabeln oder Formeln. Max fragt dich mit Karteikarten oder Spielen ab.',
+    learn_hero_title: 'Hallo! Lernmodus an.',
+    learn_hero_text: 'Schicke Fotos von dem, was du lernen musst, sag mir wie — dann frage ich dich ab.',
+    learn_step1: 'Was möchtest du lernen?',
+    learn_step2: 'Schicke Fotos (mehrere sind ok)',
+    learn_step3: 'Hinweis (optional)',
+    learn_mode_words: 'Vokabeln',
+    learn_mode_terms: 'Begriffe',
+    learn_mode_formulas: 'Formeln',
+    learn_upload_main: 'Klicke, um Fotos zu wählen',
+    learn_upload_sub: 'Mehrere Fotos auf einmal sind ok',
+    learn_desc_placeholder: 'Z.B. "nur DE → EN, nicht umgekehrt" oder "Kapitel 1 überspringen"',
+    learn_start: 'Abfrage starten',
+    learn_add_more: 'Mehr hinzufügen',
+    learn_chat_title: 'Lernmodus mit Max',
+    learn_kickoff_msg: 'Hier ist mein Material. Hilf mir, das auswendig zu lernen.',
+    btn_back_home: 'Zurück zur Startseite',
+    flash_grade_label: 'Mit Bewertung',
+    flash_tap_to_flip: 'Tippen zum Umdrehen',
+    flash_tap_to_flip_back: 'Tippen zum Zurückdrehen',
+    flash_wrong: '✕ Wusste ich nicht',
+    flash_right: '✓ Wusste ich',
+    flash_prev: '← Zurück',
+    flash_next: 'Weiter →',
+    flash_done_title: 'Fertig!',
+    flash_retry_wrong: 'Falsche nochmal',
+    flash_restart_all: 'Alles neu starten',
+    flash_back_to_chat: 'Zurück zu Max',
+    flash_summary_no_grade: 'Du hast alle {total} Karten durchgearbeitet.',
+    flash_summary_perfect: 'Alles richtig! 🎉',
+    flash_summary_some: '{right} von {total} richtig. {wrong} zu üben.',
+    match_done: 'Fertig!',
+    match_done_text: 'um alle Paare zu finden',
+    match_restart: 'Nochmal',
+    tijdrace_done: 'Zeit vorbei!',
+    tijdrace_done_text: 'Punkte in 60 Sekunden',
+    tijdrace_restart: 'Nochmal rennen',
+    new_record: 'Neuer Rekord!',
+    record_previous: 'Vorheriger Rekord: {time}',
+    record_first: 'Dein erster Rekord — schlag ihn nächstes Mal!',
+    record_yours: 'Dein Rekord: {time}',
+    library_label: 'Deine Bibliothek',
+    library_untitled: '{n} Karten',
+    library_confirm_delete: 'Dieses Set aus deiner Bibliothek entfernen?',
+    deck_action_title: 'Was möchtest du tun?',
+    deck_action_flashcards: 'Karteikarten',
+    deck_action_flashcards_sub: 'Durchblättern oder selbst bewerten',
+    deck_action_match: 'Match',
+    deck_action_match_sub: 'Paare finden auf Zeit',
+    deck_action_tijdrace: 'Speedrun',
+    deck_action_tijdrace_sub: '60-Sekunden Multiple-Choice Quiz',
+    time_now: 'gerade eben',
+    time_min_ago: 'vor {n}m',
+    time_hr_ago: 'vor {n}h',
+    time_day_ago: 'vor {n}T',
   },
   fr: {
     app_name: 'Aide aux devoirs',
@@ -2101,9 +4255,10 @@ const TRANSLATIONS = {
     skills_hint: 'Le tuteur retient automatiquement ce que tu maîtrises. Tu peux consulter et supprimer les éléments ici.',
     skills_empty: 'Rien retenu pour l’instant — cela se remplit au fur et à mesure.',
     skills_forget: 'Oublier',
-    welcome_intro: 'Entre ton prénom et choisis ta langue. Ensuite quelques courtes questions sur toi.',
-    profile_title: 'Parle-nous de toi',
-    profile_intro: 'Pour adapter les explications à ton niveau.',
+    welcome_title: 'Salut, je suis Max !',
+    welcome_intro: 'Je suis ton petit robot. Avant de commencer — comment tu t’appelles, et dans quelle langue tu préfères parler ?',
+    profile_title: 'Super ! Encore deux choses.',
+    profile_intro: 'À quel niveau es-tu ? Comme ça j’adapte mes explications juste pour toi.',
     label_education: 'Quel type d’enseignement suis-tu ?',
     label_school_level: 'Quel niveau ?',
     label_grade_year: 'Quelle année ?',
@@ -2123,13 +4278,107 @@ const TRANSLATIONS = {
     profile_empty: 'Pas encore de profil rempli.',
     btn_edit_profile: 'Modifier le profil',
     btn_back_subjects: 'Autre matière',
-    intro_title: 'Salut {name} ! Je suis le bot de {subjLower}.',
+    intro_title: 'Salut {name} ! Je suis Max — ton compagnon pour {subjLower} aujourd’hui.',
     intro_text: 'Je t’aide avec {topics} et plus encore. Charge une photo de ton exercice ci-dessous — on s’y attaque ensemble.',
     btn_help: 'Aide',
     btn_close: 'Compris',
     help_title: 'Comment fonctionne Aide aux devoirs ?',
     help_demo_term: 'discriminant',
     help_body_html: '<h3><span class="help-icon">1</span>Pas de réponse toute faite, juste de l’aide</h3><p>Le tuteur fonctionne de manière <strong>socratique</strong> : au lieu d’une réponse, tu reçois des questions et des indices qui t’aident à trouver la solution toi-même. Même si tu insistes — il continue à poser des questions. C’est comme ça qu’on apprend vraiment.</p><h3><span class="help-icon">2</span>Comment démarrer</h3><p>Choisis une matière sur l’écran d’accueil → prends ou télécharge une photo de ton exercice → clique sur "Lancer l’explication". Le tuteur lit la photo et te demande d’abord où tu en es.</p><h3><span class="help-icon">3</span>Termes difficiles cliquables</h3><p>Tu vois un mot spécialisé comme {demoTerm} ? Tape dessus pour une explication courte dans une pop-up. Pratique pour le jargon que tu ne connais pas encore.</p><h3><span class="help-icon">4</span>Le tuteur se souvient de toi</h3><p>Quand tu maîtrises clairement quelque chose (par exemple les cas allemands), l’appli s’en souvient automatiquement. La prochaine fois, il saute le rappel. Dans <strong>Paramètres → "Ce que tu sais déjà"</strong>, tu vois la liste et tu peux supprimer des éléments.</p><h3><span class="help-icon">5</span>Chaque matière a son propre bot</h3><p>Maths, physique, anglais, histoire ... chaque matière a sa propre approche et sa propre couleur. Utilise "<strong>← Autre matière</strong>" en haut d’une page de matière pour changer.</p><h3><span class="help-icon">6</span>Personnaliser</h3><p>Clique sur <strong>Paramètres</strong> en haut à droite pour modifier ton prénom, ta langue, ton niveau, ton profil ou ta clé API.</p>',
+    intro_skip: 'Passer →',
+    intro_prev: '← Précédent',
+    intro_next: 'Suivant →',
+    intro0_eyebrow: 'Rencontre Max',
+    intro0_headline: 'Comprends tes devoirs. <span class="gradient">Ne les recopie pas.</span>',
+    intro0_sub: 'Salut ! Je suis Max, ton petit robot IA. Je te pose des questions au lieu de te donner des réponses — pour que tu apprennes vraiment, pas seulement copier.',
+    intro1_eyebrow: 'L’approche',
+    intro1_headline: 'Différent de ChatGPT.',
+    intro1_sub: 'ChatGPT te donne une réponse. Demain elle est oubliée. Ici tu reçois des questions et des indices, pour comprendre vraiment.',
+    intro1_bad_tag: 'Autre IA',
+    intro1_bad_title: 'Donne la réponse',
+    intro1_bad_1: 'Fini en 5 secondes',
+    intro1_bad_2: 'Tu n’apprends rien',
+    intro1_bad_3: 'Encore un échec au prochain contrôle',
+    intro1_good_tag: 'Aide aux devoirs',
+    intro1_good_title: 'T’apprend à le faire',
+    intro1_good_1: 'Questions et indices à ton rythme',
+    intro1_good_2: 'Tu comprends vraiment',
+    intro1_good_3: 'Meilleures notes + tu retiens',
+    intro2_eyebrow: 'Ce qu’il y a dedans',
+    intro2_headline: 'Tout ce qu’il te faut. <span class="gradient">Au même endroit.</span>',
+    intro2_f1_title: '15 matières',
+    intro2_f1_desc: 'Maths, langues, chimie, histoire ... chacune avec son propre tuteur.',
+    intro2_f2_title: 'Photo de ton exercice',
+    intro2_f2_desc: 'Pas besoin de retaper — prends juste une photo et le tuteur la lit.',
+    intro2_f3_title: 'Explications cliquables',
+    intro2_f3_desc: 'Les termes difficiles sont mis en évidence. Tape pour une explication courte.',
+    intro2_f4_title: 'Connaît ton niveau',
+    intro2_f4_desc: 'S’adapte à l’école primaire, au lycée ou à l’université — et retient ce que tu sais.',
+    intro3_eyebrow: 'Prêt en 30 secondes',
+    intro3_headline: 'Prêt à <span class="gradient">vraiment apprendre ?</span>',
+    intro3_step1: '<strong>Choisis une matière</strong> parmi les 15 disponibles',
+    intro3_step2: '<strong>Prends une photo</strong> de ton exercice',
+    intro3_step3: '<strong>Réfléchis ensemble</strong> et trouve toi-même',
+    intro3_cta: 'Commencer gratuitement',
+    intro3_hint: 'Pas de carte bancaire. Commence tout de suite.',
+    btn_show_intro: 'Revoir l’intro',
+    learn_section_label: 'Ou apprends quelque chose par cœur',
+    learn_entry_title: 'Mode d’apprentissage — apprendre par cœur',
+    learn_entry_desc: 'Envoie des photos de vocabulaire ou de formules. Max te fait réciter avec des cartes ou des jeux.',
+    learn_hero_title: 'Salut ! Mode apprentissage activé.',
+    learn_hero_text: 'Envoie des photos de ce que tu dois apprendre, dis-moi comment, et je te fais réciter.',
+    learn_step1: 'Que veux-tu apprendre ?',
+    learn_step2: 'Envoie des photos (plusieurs c’est ok)',
+    learn_step3: 'Précision (optionnel)',
+    learn_mode_words: 'Vocabulaire',
+    learn_mode_terms: 'Termes',
+    learn_mode_formulas: 'Formules',
+    learn_upload_main: 'Clique pour choisir des photos',
+    learn_upload_sub: 'Plusieurs photos en même temps, pas de souci',
+    learn_desc_placeholder: 'Ex. "uniquement FR → EN, pas l’inverse" ou "saute le chapitre 1"',
+    learn_start: 'Commencer à réciter',
+    learn_add_more: 'Ajouter',
+    learn_chat_title: 'Mode apprentissage avec Max',
+    learn_kickoff_msg: 'Voici mon matériel. Aide-moi à le retenir.',
+    btn_back_home: 'Retour à l’accueil',
+    flash_grade_label: 'Avec score',
+    flash_tap_to_flip: 'Tape pour retourner',
+    flash_tap_to_flip_back: 'Tape pour revenir',
+    flash_wrong: '✕ Pas su',
+    flash_right: '✓ Je savais',
+    flash_prev: '← Précédent',
+    flash_next: 'Suivant →',
+    flash_done_title: 'Terminé !',
+    flash_retry_wrong: 'Refaire les faux',
+    flash_restart_all: 'Tout recommencer',
+    flash_back_to_chat: 'Retour à Max',
+    flash_summary_no_grade: 'Tu as parcouru les {total} cartes.',
+    flash_summary_perfect: 'Tout juste ! 🎉',
+    flash_summary_some: '{right} sur {total} corrects. {wrong} à revoir.',
+    match_done: 'Terminé !',
+    match_done_text: 'pour trouver toutes les paires',
+    match_restart: 'Encore',
+    tijdrace_done: 'Temps écoulé !',
+    tijdrace_done_text: 'points en 60 secondes',
+    tijdrace_restart: 'Refaire la course',
+    new_record: 'Nouveau record !',
+    record_previous: 'Record précédent : {time}',
+    record_first: 'Ton tout premier record — bats-le la prochaine fois !',
+    record_yours: 'Ton record : {time}',
+    library_label: 'Ta bibliothèque',
+    library_untitled: '{n} cartes',
+    library_confirm_delete: 'Supprimer ce paquet de ta bibliothèque ?',
+    deck_action_title: 'Que veux-tu faire ?',
+    deck_action_flashcards: 'Flashcards',
+    deck_action_flashcards_sub: 'Parcourir ou t’évaluer toi-même',
+    deck_action_match: 'Match',
+    deck_action_match_sub: 'Apparier les paires contre la montre',
+    deck_action_tijdrace: 'Course chrono',
+    deck_action_tijdrace_sub: 'Quiz à choix multiples en 60 secondes',
+    time_now: 'à l’instant',
+    time_min_ago: 'il y a {n}m',
+    time_hr_ago: 'il y a {n}h',
+    time_day_ago: 'il y a {n}j',
   },
   es: {
     app_name: 'Ayudante de deberes',
@@ -2192,9 +4441,10 @@ const TRANSLATIONS = {
     skills_hint: 'El tutor recuerda automáticamente lo que ya dominas. Aquí puedes verlo y eliminarlo.',
     skills_empty: 'Nada recordado todavía — se irá llenando mientras aprendes.',
     skills_forget: 'Olvidar',
-    welcome_intro: 'Escribe tu nombre y elige tu idioma. Después unas preguntas cortas sobre ti.',
-    profile_title: 'Cuéntanos sobre ti',
-    profile_intro: 'Así podemos ajustar las explicaciones a tu nivel.',
+    welcome_title: '¡Hola, soy Max!',
+    welcome_intro: 'Soy tu pequeño robot. Antes de empezar — ¿cómo te llamas, y en qué idioma prefieres hablar?',
+    profile_title: '¡Genial! Dos cosas más.',
+    profile_intro: '¿En qué nivel estás? Así ajusto mis explicaciones justo para ti.',
     label_education: '¿Qué tipo de educación sigues?',
     label_school_level: '¿Qué nivel?',
     label_grade_year: '¿Qué curso/año?',
@@ -2214,13 +4464,107 @@ const TRANSLATIONS = {
     profile_empty: 'Aún no hay perfil.',
     btn_edit_profile: 'Editar perfil',
     btn_back_subjects: 'Otra asignatura',
-    intro_title: '¡Hola {name}! Soy el bot de {subjLower}.',
+    intro_title: '¡Hola {name}! Soy Max — hoy tu compañero de {subjLower}.',
     intro_text: 'Te ayudo con {topics} y más. Sube una foto de tu tarea abajo — la resolvemos juntos.',
     btn_help: 'Ayuda',
     btn_close: 'Entendido',
     help_title: '¿Cómo funciona el Ayudante de deberes?',
     help_demo_term: 'discriminante',
     help_body_html: '<h3><span class="help-icon">1</span>Sin respuestas hechas, solo ayuda</h3><p>El tutor funciona de forma <strong>socrática</strong>: en lugar de una respuesta, recibes preguntas y pistas que te ayudan a encontrarla tú mismo. Aunque insistas, sigue preguntando. Así se aprende de verdad.</p><h3><span class="help-icon">2</span>Cómo empezar</h3><p>Elige una asignatura en la pantalla de inicio → haz o sube una foto de tu tarea → pulsa "Empezar explicación". El tutor lee la foto y primero te pregunta hasta dónde has llegado.</p><h3><span class="help-icon">3</span>Términos difíciles clicables</h3><p>¿Ves una palabra especializada como {demoTerm}? Tócala para una explicación corta en una ventana emergente. Útil para la jerga que aún no conoces.</p><h3><span class="help-icon">4</span>El tutor se acuerda de ti</h3><p>Cuando dominas algo claramente (por ejemplo los casos alemanes), la app lo recuerda automáticamente. La próxima vez se salta el repaso. En <strong>Configuración → "Lo que ya sabes"</strong> ves la lista y puedes eliminar elementos.</p><h3><span class="help-icon">5</span>Cada asignatura, su propio bot</h3><p>Matemáticas, física, francés, historia ... cada asignatura tiene su enfoque y su color. Usa "<strong>← Otra asignatura</strong>" arriba de una página de asignatura para cambiar.</p><h3><span class="help-icon">6</span>Personalizar</h3><p>Pulsa <strong>Configuración</strong> arriba a la derecha para cambiar tu nombre, idioma, nivel, perfil o clave API.</p>',
+    intro_skip: 'Saltar →',
+    intro_prev: '← Anterior',
+    intro_next: 'Siguiente →',
+    intro0_eyebrow: 'Conoce a Max',
+    intro0_headline: 'Entiende tus deberes. <span class="gradient">No los copies sin más.</span>',
+    intro0_sub: '¡Hola! Soy Max, tu pequeño robot IA. Te hago preguntas en lugar de darte respuestas — para que aprendas de verdad, no solo copies.',
+    intro1_eyebrow: 'El enfoque',
+    intro1_headline: 'Diferente de ChatGPT.',
+    intro1_sub: 'ChatGPT te da la respuesta. Mañana se te olvida. Aquí recibes preguntas y pistas para que lo entiendas de verdad.',
+    intro1_bad_tag: 'Otra IA',
+    intro1_bad_title: 'Te da la respuesta',
+    intro1_bad_1: 'Listo en 5 segundos',
+    intro1_bad_2: 'No aprendes nada',
+    intro1_bad_3: 'Próximo examen, suspenso otra vez',
+    intro1_good_tag: 'Ayudante de deberes',
+    intro1_good_title: 'Te enseña a hacerlo',
+    intro1_good_1: 'Preguntas y pistas a tu ritmo',
+    intro1_good_2: 'Lo entiendes de verdad',
+    intro1_good_3: 'Mejor nota + lo recuerdas',
+    intro2_eyebrow: 'Qué incluye',
+    intro2_headline: 'Todo lo que necesitas. <span class="gradient">En un solo sitio.</span>',
+    intro2_f1_title: '15 asignaturas',
+    intro2_f1_desc: 'Mates, idiomas, química, historia ... cada una con su propio tutor.',
+    intro2_f2_title: 'Foto de tu tarea',
+    intro2_f2_desc: 'Sin copiar — haz una foto de tu libro y el tutor la lee.',
+    intro2_f3_title: 'Explicaciones clicables',
+    intro2_f3_desc: 'Los términos difíciles se resaltan. Tócalos para una explicación corta.',
+    intro2_f4_title: 'Conoce tu nivel',
+    intro2_f4_desc: 'Se adapta a primaria, secundaria o universidad — y recuerda lo que ya sabes.',
+    intro3_eyebrow: 'Listo en 30 segundos',
+    intro3_headline: '¿Listo para <span class="gradient">aprender de verdad?</span>',
+    intro3_step1: '<strong>Elige una asignatura</strong> de las 15 disponibles',
+    intro3_step2: '<strong>Haz una foto</strong> de tu tarea',
+    intro3_step3: '<strong>Piénsalo en conjunto</strong> y resuélvelo tú',
+    intro3_cta: 'Empezar gratis',
+    intro3_hint: 'Sin tarjeta de crédito. Empieza ya.',
+    btn_show_intro: 'Ver la intro otra vez',
+    learn_section_label: 'O memoriza algo',
+    learn_entry_title: 'Modo aprender — memorizar de memoria',
+    learn_entry_desc: 'Envía fotos de vocabulario o fórmulas. Max te examina con tarjetas o juegos.',
+    learn_hero_title: '¡Hola! Modo aprender activado.',
+    learn_hero_text: 'Envía fotos de lo que tienes que aprender, dime cómo, y te haré las preguntas.',
+    learn_step1: '¿Qué quieres aprender?',
+    learn_step2: 'Envía fotos (varias está bien)',
+    learn_step3: 'Nota (opcional)',
+    learn_mode_words: 'Vocabulario',
+    learn_mode_terms: 'Términos',
+    learn_mode_formulas: 'Fórmulas',
+    learn_upload_main: 'Haz clic para elegir fotos',
+    learn_upload_sub: 'Varias fotos a la vez está bien',
+    learn_desc_placeholder: 'Ej. "solo ES → EN, no al revés" o "salta el capítulo 1"',
+    learn_start: 'Empezar a examinar',
+    learn_add_more: 'Añadir más',
+    learn_chat_title: 'Modo aprender con Max',
+    learn_kickoff_msg: 'Aquí está mi material. Ayúdame a memorizarlo.',
+    btn_back_home: 'Volver al inicio',
+    flash_grade_label: 'Con puntuación',
+    flash_tap_to_flip: 'Toca para girar',
+    flash_tap_to_flip_back: 'Toca para volver',
+    flash_wrong: '✕ No sabía',
+    flash_right: '✓ Lo sabía',
+    flash_prev: '← Anterior',
+    flash_next: 'Siguiente →',
+    flash_done_title: '¡Listo!',
+    flash_retry_wrong: 'Repetir los fallados',
+    flash_restart_all: 'Empezar de nuevo',
+    flash_back_to_chat: 'Volver a Max',
+    flash_summary_no_grade: 'Has visto las {total} cartas.',
+    flash_summary_perfect: '¡Todo correcto! 🎉',
+    flash_summary_some: '{right} de {total} bien. {wrong} para practicar.',
+    match_done: '¡Listo!',
+    match_done_text: 'para encontrar todos los pares',
+    match_restart: 'Otra vez',
+    tijdrace_done: '¡Se acabó el tiempo!',
+    tijdrace_done_text: 'puntos en 60 segundos',
+    tijdrace_restart: 'Carrera otra vez',
+    new_record: '¡Nuevo récord!',
+    record_previous: 'Récord anterior: {time}',
+    record_first: '¡Tu primer récord — supéralo la próxima vez!',
+    record_yours: 'Tu récord: {time}',
+    library_label: 'Tu biblioteca',
+    library_untitled: '{n} cartas',
+    library_confirm_delete: '¿Eliminar este set de tu biblioteca?',
+    deck_action_title: '¿Qué quieres hacer?',
+    deck_action_flashcards: 'Tarjetas',
+    deck_action_flashcards_sub: 'Hojear o puntuarte tú mismo',
+    deck_action_match: 'Match',
+    deck_action_match_sub: 'Emparejar contra el reloj',
+    deck_action_tijdrace: 'Contrarreloj',
+    deck_action_tijdrace_sub: 'Quiz de opción múltiple en 60 segundos',
+    time_now: 'ahora',
+    time_min_ago: 'hace {n}m',
+    time_hr_ago: 'hace {n}h',
+    time_day_ago: 'hace {n}d',
   },
 };
 
@@ -3182,7 +5526,9 @@ COACHING:
   },
 };
 
-const SYSTEM_PROMPT = (subject, name, languageName, subjectStyle, studentProfile, profileContext) => `You are a patient, friendly homework tutor for a student named ${name}. The subject is ${subject}.
+const SYSTEM_PROMPT = (subject, name, languageName, subjectStyle, studentProfile, profileContext) => `You are Max — a small, friendly robot mascot, the soul of the "Huiswerk helper" app. You are tutoring a student named ${name}. Today's subject is ${subject}.
+
+You may occasionally refer to yourself as Max ("Max denkt dat je bijna goed zit", "ik (Max) heb een hint voor je") but don't overdo it — once every ~5-10 messages is enough. Your personality: warm, curious, a bit playful, never condescending.
 
 CRITICAL LANGUAGE RULE: Respond ONLY in ${languageName}. Never switch to another language, even if asked. Every message you write must be in ${languageName}.
 
@@ -3244,6 +5590,47 @@ Rules for marking:
 - The marker is invisible to ${name} — it just updates the profile silently.
 - Do NOT announce the marker ("I'll remember this" etc.) — just emit it at the end.
 
+ROBOT MOOD — show emotion so the student feels they have a real little buddy.
+Add a mood marker at the END of any message where the student deserves a reaction. The marker is invisible — it just changes the robot's face.
+
+[[MOOD: happy]]      — student gave a CORRECT answer / made a good insight
+[[MOOD: excited]]    — student finished the whole assignment OR made a BIG breakthrough
+[[MOOD: sad]]        — student gave a WRONG answer (still gentle — sad WITH them, not at them)
+[[MOOD: thinking]]   — when YOU are presenting a tough hint or asking them to think hard
+[[MOOD: wink]]       — when you give an encouraging nudge ("je kan dit", "probeer maar")
+[[MOOD: surprised]]  — student found an unexpectedly clever approach
+[[MOOD: neutral]]    — default; use only if you explicitly want to reset after an emotional moment
+
+USE THESE OFTEN — aim for a mood marker on 60-80% of your messages. The robot is the soul of this app; emotion makes it feel alive. A static face is boring.
+
+Rules:
+- Only ONE mood marker per response.
+- Place at the very end of your message, on its own line.
+- If no marker is given, the robot stays in its previous mood.
+
+MULTIPLE CHOICE BUTTONS — save the student from typing.
+When the student needs to pick from a clear set of options, end your message with a marker:
+[[CHOICE: Optie A | Optie B | Optie C]]
+
+The app turns it into tap-buttons under your message. When the student taps one, that button's text becomes their next message — they don't have to type.
+
+ALWAYS use [[CHOICE:...]] in these situations:
+1. FIRST message after the photo, IF the photo shows MULTIPLE assignments / opdrachten. Example:
+   "Ik zie meerdere opdrachten op de foto, ${name}. Welke wil je doen? [[CHOICE: Opdracht 1 | Opdracht 2 | Opdracht 3]]"
+2. When an assignment has SUB-QUESTIONS (a, b, c) and the student hasn't said which one. Example:
+   "Deze opdracht heeft drie deelvragen. Met welke begin je? [[CHOICE: a) ... | b) ... | c) ...]]"
+3. When you ask a simple binary or short-answer question with obvious options. Examples:
+   "Snap je dit tot nu toe? [[CHOICE: Ja, helder | Nog niet helemaal]]"
+   "Welke formule denk je dat hier past? [[CHOICE: Pythagoras | Cosinusregel | Sinusregel | Geen idee]]"
+
+DO NOT use [[CHOICE:...]] when the student needs to think through a real, open answer (like "wat is x?", "leg uit waarom", "wat heb je tot nu toe gedaan?"). Those need free typing.
+
+Rules:
+- Max 6 buttons per CHOICE.
+- Each button label SHORT and CONCRETE (1-8 words). E.g. "Opdracht 1", not "Opdracht 1 op pagina 42".
+- Place the marker at the very END of your message, on its own line.
+- Only one [[CHOICE:...]] per response.
+
 DIFFICULT TERMS — IMPORTANT FORMATTING RULE:
 When you use a specialized or technical term that a high school student may not immediately know, wrap it in double square brackets like this: [[term]]. The student can then tap that term to get a separate explanation.
 - Only wrap genuinely technical / specialised words (e.g. [[discriminant]], [[stoichiometrie]], [[ablativus]], [[feodaliteit]], [[ser vs estar]]).
@@ -3273,6 +5660,190 @@ NEVER write fractions as "1/2" in plain text when LaTeX would render them proper
 
 START NOW: look at the photo, name the topic in one sentence, then ask ${name} where they are in solving it (in ${languageName}).`;
 
+// ============ LEARN MODE prompt ============
+// A separate persona for Max when used as a study buddy / quizmaster.
+const LEARN_PROMPT = (name, languageName, learnMode, description, profileContext) => `You are Max — a small, friendly robot mascot, the soul of the "Huiswerk helper" app. You are now in LEARN MODE, helping ${name} memorise study material.
+
+CRITICAL LANGUAGE RULE: Respond ONLY in ${languageName}. Every word you write must be in ${languageName} (with the obvious exception of foreign-language vocabulary the student is studying).
+
+STUDENT: ${name}.
+LEARN-MODE TYPE: ${learnMode === 'words' ? 'VOCABULARY WORDS (woordjes — usually two languages to translate between)' : learnMode === 'formulas' ? 'FORMULAS (wiskunde / natuurkunde / scheikunde / economie formules om uit het hoofd te leren)' : learnMode === 'terms' ? 'TERMS / CONCEPTS (vaktermen, begrippen — words with a meaning to study, like "fotosynthese", "Verlichting", "discriminant", "feodaliteit")' : 'AUTO — figure out from the photos whether it is vocabulary, terms, or formulas'}.
+EXTRA INSTRUCTIONS FROM ${name}: "${description || '(none — use your judgement)'}".
+
+${profileContext}
+
+THE PHOTOS:
+You have received ONE OR MORE photos of the material to learn. First step ALWAYS:
+1. Read all the photos carefully and extract the complete list of items (words / formulas).
+2. Briefly confirm to ${name} what you found: e.g. "Ik zie 24 Engelse woorden met de Nederlandse vertaling" or "Ik zie 5 natuurkundige formules over kinematica". Keep this short.
+3. If they specified a direction or filter in the EXTRA INSTRUCTIONS, respect it strictly.
+
+THEN OFFER A METHOD using a [[CHOICE:...]] marker:
+- For VOCABULARY: [[CHOICE: Multiple choice | Zelf typen | Flashcards | Spelletje]]
+- For FORMULAS:   [[CHOICE: Invul-spel (blanco's) | Schrijf uit je hoofd | Quiz door elkaar]]
+- For TERMS:      FIRST ask the depth, THEN the direction, THEN offer methods (see section G — flashcards is one option).
+
+FLASHCARDS MODE (Quizlet-stijl, both vocab and terms):
+When the student picks "Flashcards", DO NOT ask further. Instead:
+1. Briefly say: "Top, ik maak de flashcards klaar." [[MOOD:happy]]
+2. Output the COMPLETE deck as a [[CARDS:...]] marker on its own paragraph, formatted like:
+
+[[CARDS:
+front side text | back side text
+front side text | back side text
+front side text | back side text
+]]
+
+  - One card per line. Front and back separated by a SINGLE pipe ( | ).
+  - For VOCAB: front = source word, back = translation. Direction follows student's description (if "alleen NL → EN", front = Dutch word, back = English word).
+  - For TERMS: front = the side they answer FROM, back = the side they need to recall. Respect chosen direction:
+     • Term → betekenis: front = term, back = definition (at chosen depth)
+     • Betekenis → term: front = definition, back = term
+     • Door elkaar: alternate lines, half each direction
+  - Keep both sides SHORT (each fits on a card). For long definitions, condense to 1-2 sentences.
+  - Output ALL items from the photos (don't truncate).
+  - No emojis, no markdown inside cards. Plain text works best (KaTeX inside backs IS allowed for formula definitions).
+
+The app reads the [[CARDS:...]] marker and opens a dedicated flip-card UI. After the marker, do NOT keep chatting — the student goes into the flashcard view. You'll see them again in chat when they close it.
+
+TWO MAIN MODES — applies to BOTH vocabulary and terms:
+1. MULTIPLE CHOICE: ALWAYS provide 4 tap-buttons via [[CHOICE: a | b | c | d]]. One is correct; the other three should be plausible distractors (similar meaning, same category, common confusion). Student taps — no typing.
+2. ZELF TYPEN: NEVER provide choice buttons. Just ask the question, the student types the answer. NEVER reveal the correct answer until the student tries at least once (preferably twice). After 2 wrong attempts, you may reveal — but only then.
+
+HINT SYSTEM (only in typing modes — Zelf typen, Beschrijven & raden, Schrijf uit je hoofd):
+The student can ASK for a hint at any time. Triggers: "hint", "tip", "help", "geef een hint", "ik weet het niet". When they ask:
+  • 1st hint = give the FIRST LETTER of the answer with the rest blanked out as underscores. E.g. answer "appel" → write "a _ _ _ _" (5 letters total visible as letter + spaces with underscores).
+  • 2nd hint = show the LENGTH as visible dots/underscores WITHOUT any letters. E.g. "appel" → write "_ _ _ _ _" (5 dots). For multi-word answers, show word boundaries: "fotosynthese reactie" → "_ _ _ _ _ _ _ _ _ _ _ _   _ _ _ _ _ _ _".
+  • After 2 hints used, no more. Student must guess. On their next wrong attempt, reveal the answer.
+NEVER offer hints proactively — only when explicitly asked. After a hint, [[MOOD:wink]] is a nice touch.
+At the start of every typing-mode session, mention once: "Tip: je kunt altijd 'hint' typen als je vastloopt."
+
+THE METHODS:
+
+A) MULTIPLE CHOICE (vocabulary, button-only — no typing needed):
+   - Show ONE word at a time in the source language.
+   - ALWAYS offer 4 translation options via [[CHOICE: optie 1 | optie 2 | optie 3 | optie 4]]. One is correct.
+   - The 3 distractors should be PLAUSIBLE: similar meaning, same word family, or common mistakes — never random.
+   - On correct: [[MOOD:happy]] + next card.
+   - On wrong: [[MOOD:sad]] + reveal the correct answer briefly, then next card.
+   - Track score; after every 5: short progress "${name}, 4 van de 5 goed". At end: full summary + revisit the wrong ones once more.
+
+B) ZELF TYPEN (vocabulary, free typing — no MC buttons):
+   - Show ONE word at a time. Student TYPES the translation. NO [[CHOICE:...]] buttons.
+   - At the very first card, mention once: "Tip: typ 'hint' als je vastloopt."
+   - Wait for their answer.
+   - Student may ask for hints — follow the HINT SYSTEM above (1st = first letter + dots; 2nd = full length as dots).
+   - On WRONG (1st attempt, no hint asked): [[MOOD:thinking]] "Bijna! Probeer nog eens, of typ 'hint'."
+   - On WRONG (2nd attempt OR after 2 hints used): [[MOOD:sad]] — reveal the correct answer.
+   - On CORRECT: [[MOOD:happy]] + next card. If they used hints, [[MOOD:wink]] "Met een tip telt 'm half mee".
+   - This is the STRICT mode — push the student to recall, not recognise.
+
+C) SPELLETJE (vocabulary, gamified — opens a real game in a separate overlay):
+   When student picks "Spelletje", ALWAYS first offer the game type via:
+   [[CHOICE: Match (paren slepen) | Tijdrace (60s speed quiz)]]
+
+   Then when they pick one, ALWAYS respond with a GAME marker (no chat-based games anymore):
+
+   For MATCH (Quizlet-style pair matching):
+   Short intro: "Spel gestart! Klik snel de juiste paren bij elkaar." [[MOOD:excited]]
+   Then on its own paragraph:
+
+   [[GAME:match
+   front | back
+   front | back
+   front | back
+   ...
+   ]]
+
+   - Up to 6-8 pairs per round (the app shows them shuffled in a grid).
+
+   For TIJDRACE (60-second multiple-choice race):
+   Short intro: "60 seconden, zoveel mogelijk goed. Klaar?" [[MOOD:excited]]
+   Then:
+
+   [[GAME:tijdrace
+   front | back
+   front | back
+   front | back
+   ...
+   ]]
+
+   - Give ALL items so the game has plenty of MC distractors.
+
+   The app reads the marker and opens a dedicated game overlay (NOT a chat-based game). After the marker, do NOT keep playing in chat — the app handles it.
+
+D) INVUL-SPEL voor formules:
+   - Show the formula with one or more variables replaced by ?? — e.g. $E = \\ce{??} c^2$ (KaTeX renders properly!).
+   - Ask "wat hoort er op de ?? te staan?".
+   - Optionally tell them which formula it is the first time, then later ask blind.
+   - Vary which variable you blank out so they truly learn the structure.
+
+E) SCHRIJF UIT JE HOOFD (formulas):
+   - Ask them by name: "schrijf de formule voor kinetische energie".
+   - They type it; you check + give the canonical form.
+   - Walk through any mistakes.
+
+F) QUIZ DOOR ELKAAR (formulas):
+   - Mix of D and E — sometimes a blank, sometimes "schrijf uit je hoofd", sometimes "wat betekent E in $E=mc^2$?".
+
+G) TERMEN / BEGRIPPEN (study concepts and their meanings):
+
+   STAP 1 — definities verzamelen:
+   - If the photo shows BOTH terms AND definitions: use those definitions exactly.
+   - If the photo shows ONLY terms (no definitions): use your own knowledge to define them. You don't have live internet, but use your training to give an accurate definition. Be honest if unsure: "ik weet het niet 100% zeker, maar volgens mij..."
+   - If a term is ambiguous (e.g. "macht" — political power or mathematical exponent?), ask ${name} which context.
+
+   STAP 2 — ALWAYS ask the depth of explanation FIRST, before doing anything else:
+   "Op welk niveau wil je de uitleg, ${name}?" [[CHOICE: Makkelijke uitleg | Middelmatige uitleg | Moeilijke uitleg]]
+   - MAKKELIJK = short, plain words, concrete real-life example, like explaining to a child.
+   - MIDDELMATIG = standard schoolboek-level, normal vocabulary, one example.
+   - MOEILIJK = precise, academic, technical vocabulary, links to related concepts.
+   Remember the chosen depth and use it for ALL explanations this session.
+
+   STAP 3 — ask the DIRECTION of practice:
+   "Welke kant op wil je oefenen?" [[CHOICE: Term → betekenis | Betekenis → term | Door elkaar]]
+   Remember the chosen direction for the whole session.
+   - "Term → betekenis" = you show the TERM, ${name} produces the meaning.
+   - "Betekenis → term" = you show the MEANING (without the term), ${name} produces the term.
+   - "Door elkaar" = alternate randomly between both directions, ~50/50.
+
+   STAP 4 — offer ONE consistent set of methods (same for every direction):
+   [[CHOICE: Multiple choice | Zelf typen | Flashcards | Beschrijven & raden]]
+   (If they pick Flashcards, follow the FLASHCARDS MODE rules above — emit a [[CARDS:...]] block. Direction sets front/back as described.)
+
+   QUIZ-METHODES voor termen — RESPECT BOTH the DEPTH and the DIRECTION:
+
+   - "Multiple choice" (button-only, no typing): you show one side (term OR definition depending on direction), and offer 4 tap-buttons of the OTHER side via [[CHOICE: a | b | c | d]]. Only one matches; the other 3 are plausible distractors (same field, similar meaning, common mix-ups).
+     • TERM → BETEKENIS: you show the term, 4 definition snippets as buttons.
+     • BETEKENIS → TERM: you show the definition (at chosen depth), 4 term-buttons.
+     • DOOR ELKAAR: alternate.
+
+   - "Zelf typen" (strict mode, no buttons):
+     • Show the question side only. Student TYPES the answer. NEVER provide [[CHOICE:...]] buttons in this mode.
+     • At the first question, mention once: "Tip: typ 'hint' als je vastloopt."
+     • TERM → BETEKENIS: show term, student types the definition. Be lenient if the gist is right.
+     • BETEKENIS → TERM: show the definition, student types the term. Must be the right word.
+     • Student may ask for hints — follow the HINT SYSTEM above (1st = first letter + dots; 2nd = full length as dots). For "Term → betekenis" direction, hints apply to a KEY WORD in the expected definition, not the whole sentence.
+     • On 1st wrong attempt (no hint asked): [[MOOD:thinking]] "Probeer nog eens, of typ 'hint'."
+     • On 2nd wrong attempt OR after 2 hints used: [[MOOD:sad]] reveal the correct answer.
+
+   - "Beschrijven & raden" (gamified, BETEKENIS → TERM): describe the term without naming it ("Dit is een proces waarbij planten licht gebruiken om suikers te maken — wat ben ik?"). Student types the term. Student may also ask for hints — follow the HINT SYSTEM above. On 1st wrong attempt: prompt them to think again or ask for a hint. On 2nd wrong (or after 2 hints): reveal.
+
+   IMPORTANT: NEVER ask the student a question in the wrong direction. If they chose "Term → betekenis", do NOT switch to "Betekenis → term" mid-session unless they explicitly ask. If they chose "Door elkaar", clearly alternate so they get practice both ways.
+
+   Use moods heavily: [[MOOD:happy]] on correct, [[MOOD:sad]] on wrong (still warm — explain the right answer simply), [[MOOD:excited]] when finished. Sprinkle memory tips for hard terms ("ezelsbruggetje: ...").
+
+ALWAYS:
+- Use [[MOOD:...]] markers a LOT — celebrate correct answers, be gently sad on wrong ones, get excited at the end.
+- For formulas: use $\\frac{}{}$, $\\sqrt{}$, $\\ce{...}$ etc. — KaTeX + mhchem render them properly.
+- Keep messages SHORT and PUNCHY — this is a study session, not a lecture.
+- Track score privately and report at the end ("Je had 18 van 24 goed — die laatste 6 doen we opnieuw").
+- For wrong answers on REPEAT: be extra encouraging, give a memory tip if you can.
+- If ${name} wants to stop or change method mid-way, accept happily and offer [[CHOICE:...]] to switch.
+- Respect direction strictly. If "alleen NL → EN", NEVER ask EN → NL.
+
+START NOW: read the photos, count, confirm, then offer the method choice.`;
+
 const state = {
   subject: null,
   imageBase64: null,
@@ -3281,6 +5852,17 @@ const state = {
   apiKey: localStorage.getItem('claude_api_key') || null,
   name: localStorage.getItem('user_name') || null,
   language: localStorage.getItem('user_language') || 'nl',
+  learn: {
+    active: false,         // true while in learn mode
+    mode: null,            // 'words' | 'terms' | 'formulas'
+    description: '',       // student's extra hint
+    images: [],            // [{ base64, mediaType }, ...]
+  },
+  // Saved decks the student wants to revisit; lives in localStorage until deleted.
+  library: (() => {
+    try { return JSON.parse(localStorage.getItem('user_library') || '[]'); }
+    catch { return []; }
+  })(),
   skills: (() => {
     try { return JSON.parse(localStorage.getItem('user_skills') || '{}'); }
     catch { return {}; }
@@ -3331,6 +5913,19 @@ const subjectHeroTitle = $('subjectHeroTitle');
 const subjectHeroText = $('subjectHeroText');
 const backToSubjectsBtn = $('backToSubjectsBtn');
 const heroEl = document.querySelector('.hero');
+// Learn-mode refs
+const learnView = $('learnView');
+const openLearnModeBtn = $('openLearnModeBtn');
+const backFromLearnBtn = $('backFromLearnBtn');
+const learnModePicker = $('learnModePicker');
+const learnUploadZone = $('learnUploadZone');
+const learnUploadPrompt = $('learnUploadPrompt');
+const learnThumbnails = $('learnThumbnails');
+const learnFileInput = $('learnFileInput');
+const learnCameraInput = $('learnCameraInput');
+const learnDescription = $('learnDescription');
+const startLearnBtn = $('startLearnBtn');
+const learnSetup = $('learnSetup');
 const chatMessages = $('chatMessages');
 const chatInput = $('chatInput');
 const sendBtn = $('sendBtn');
@@ -3366,6 +5961,15 @@ const profileSummary = $('profileSummary');
 const editProfileBtn = $('editProfileBtn');
 
 function svgIcon(id) { return `<svg class="icon"><use href="#${id}"/></svg>`; }
+// The robot mascot has 7 moods. Default is neutral.
+const ROBOT_MOODS = ['neutral', 'happy', 'sad', 'excited', 'thinking', 'wink', 'surprised'];
+function robotSvg(mood) {
+  const m = (mood && ROBOT_MOODS.includes(mood)) ? mood : 'neutral';
+  const id = m === 'neutral' ? 'i-robot' : `i-robot-${m}`;
+  return `<svg class="robot" data-mood="${m}"><use href="#${id}"/></svg>`;
+}
+// Backwards-compat constant — the neutral robot, used in places where mood doesn't change (logo etc.)
+const ROBOT_SVG = robotSvg('neutral');
 function t(key) { return (TRANSLATIONS[state.language] || TRANSLATIONS.nl)[key] || key; }
 function getInitials(name) {
   if (!name) return '';
@@ -3381,6 +5985,9 @@ function applyLanguage() {
 
   document.querySelectorAll('[data-i18n]').forEach(el => {
     el.textContent = t(el.dataset.i18n);
+  });
+  document.querySelectorAll('[data-i18n-html]').forEach(el => {
+    el.innerHTML = t(el.dataset.i18nHtml);
   });
   document.querySelectorAll('[data-i18n-placeholder]').forEach(el => {
     el.placeholder = t(el.dataset.i18nPlaceholder);
@@ -3655,6 +6262,12 @@ editProfileBtn.addEventListener('click', () => {
   showWelcomeStep(2);
   welcomeModal.classList.add('active');
 });
+
+// Bekijk intro opnieuw vanuit instellingen
+$('showIntroBtn').addEventListener('click', () => {
+  closeSettingsModal();
+  openIntro();
+});
 function closeSettingsModal() { settingsModal.classList.remove('active'); }
 $('settingsBtn').addEventListener('click', openSettingsModal);
 $('settingsCancelBtn').addEventListener('click', () => {
@@ -3827,9 +6440,11 @@ function showSubjectView(subject) {
 
 function showHomeView() {
   state.subject = null;
+  if (state.learn) state.learn.active = false;
   resetSubjectWorkspace();
   subjectCards.forEach(c => c.classList.remove('active'));
   subjectView.classList.add('hidden');
+  if (learnView) learnView.classList.add('hidden');
   if (heroEl) heroEl.classList.remove('hidden');
   stepSubject.classList.remove('hidden');
   window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -3840,6 +6455,172 @@ subjectCards.forEach(card => {
 });
 
 backToSubjectsBtn.addEventListener('click', showHomeView);
+
+// ============ Learn mode ============
+function resetLearnWorkspace() {
+  state.learn.mode = null;
+  state.learn.description = '';
+  state.learn.images = [];
+  state.messages = [];
+  learnDescription.value = '';
+  learnModePicker.querySelectorAll('.opt-pill').forEach(p => p.classList.remove('active'));
+  learnFileInput.value = '';
+  learnCameraInput.value = '';
+  renderLearnThumbnails();
+  startLearnBtn.disabled = true;
+  learnSetup.classList.remove('hidden');
+  if (stepChat && stepChat.parentNode === learnView) {
+    // Move chat back to its original home in subjectView and hide it
+    subjectView.appendChild(stepChat);
+  }
+  stepChat.classList.add('hidden');
+  chatMessages.innerHTML = '';
+  chatInput.value = '';
+}
+
+function showLearnView() {
+  state.subject = null;
+  state.learn.active = true;
+  resetLearnWorkspace();
+  // Hide home + subject
+  if (heroEl) heroEl.classList.add('hidden');
+  stepSubject.classList.add('hidden');
+  subjectView.classList.add('hidden');
+  // Show learn view
+  learnView.classList.remove('hidden');
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function exitLearnView() {
+  state.learn.active = false;
+  resetLearnWorkspace();
+  learnView.classList.add('hidden');
+  showHomeView();
+}
+
+openLearnModeBtn.addEventListener('click', showLearnView);
+backFromLearnBtn.addEventListener('click', exitLearnView);
+
+// Mode picker
+learnModePicker.querySelectorAll('.opt-pill').forEach(btn => {
+  btn.addEventListener('click', () => {
+    state.learn.mode = btn.dataset.learnMode;
+    learnModePicker.querySelectorAll('.opt-pill').forEach(p =>
+      p.classList.toggle('active', p === btn)
+    );
+    updateLearnStartButton();
+  });
+});
+
+// Description input
+learnDescription.addEventListener('input', () => {
+  state.learn.description = learnDescription.value.trim();
+});
+
+// Multi-photo upload
+learnUploadZone.addEventListener('click', e => {
+  // Don't trigger when clicking a thumb/remove or the action buttons
+  if (e.target.closest('.learn-thumb') || e.target.closest('.secondary-btn') || e.target.closest('.learn-thumb-add')) return;
+  if (state.learn.images.length === 0) learnFileInput.click();
+});
+
+function handleLearnFiles(files) {
+  const promises = Array.from(files).map(file => new Promise(resolve => {
+    const r = new FileReader();
+    r.onload = ev => resolve({
+      base64: ev.target.result.split(',')[1],
+      mediaType: file.type,
+      dataUrl: ev.target.result,
+    });
+    r.readAsDataURL(file);
+  }));
+  Promise.all(promises).then(results => {
+    state.learn.images.push(...results);
+    renderLearnThumbnails();
+    updateLearnStartButton();
+  });
+}
+
+[learnFileInput, learnCameraInput].forEach(input => {
+  input.addEventListener('change', e => {
+    if (e.target.files && e.target.files.length) handleLearnFiles(e.target.files);
+    e.target.value = ''; // allow re-selecting same files
+  });
+});
+
+function renderLearnThumbnails() {
+  learnThumbnails.innerHTML = '';
+  if (state.learn.images.length === 0) {
+    learnThumbnails.classList.add('hidden');
+    learnUploadPrompt.classList.remove('hidden');
+    return;
+  }
+  learnThumbnails.classList.remove('hidden');
+  learnUploadPrompt.classList.add('hidden');
+  state.learn.images.forEach((img, idx) => {
+    const thumb = document.createElement('div');
+    thumb.className = 'learn-thumb';
+    thumb.innerHTML = `<img src="${img.dataUrl}" alt="">
+      <button type="button" class="learn-thumb-remove" aria-label="Verwijder" data-idx="${idx}">×</button>`;
+    learnThumbnails.appendChild(thumb);
+  });
+  // "+" tile to add more
+  const add = document.createElement('button');
+  add.type = 'button';
+  add.className = 'learn-thumb-add';
+  add.textContent = '+';
+  add.title = t('learn_add_more') || 'Meer toevoegen';
+  add.addEventListener('click', e => { e.stopPropagation(); learnFileInput.click(); });
+  learnThumbnails.appendChild(add);
+  // Wire removes
+  learnThumbnails.querySelectorAll('.learn-thumb-remove').forEach(btn => {
+    btn.addEventListener('click', e => {
+      e.stopPropagation();
+      const idx = parseInt(btn.dataset.idx, 10);
+      state.learn.images.splice(idx, 1);
+      renderLearnThumbnails();
+      updateLearnStartButton();
+    });
+  });
+}
+
+function updateLearnStartButton() {
+  const ok = state.learn.mode && state.learn.images.length > 0;
+  startLearnBtn.disabled = !ok;
+}
+
+// Start the quiz session
+startLearnBtn.addEventListener('click', async () => {
+  if (!state.apiKey) { openApiKeyModal(); return; }
+  if (!state.name) { openWelcomeModal(); return; }
+  if (!state.learn.mode || state.learn.images.length === 0) return;
+
+  // Configure chat header
+  chatHeaderAvatar.className = 'avatar';
+  chatHeaderAvatar.innerHTML = ROBOT_SVG;
+  chatHeaderTitle.textContent = t('learn_chat_title') || 'Leermodus';
+
+  // Move the shared chat DOM into the learn view, below the setup
+  learnView.appendChild(stepChat);
+  stepChat.classList.remove('hidden');
+  // Hide setup so chat takes focus
+  learnSetup.classList.add('hidden');
+  stepChat.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  startLearnBtn.disabled = true;
+
+  // First message: all images + a short kickoff text
+  const content = state.learn.images.map(img => ({
+    type: 'image',
+    source: { type: 'base64', media_type: img.mediaType, data: img.base64 },
+  }));
+  content.push({
+    type: 'text',
+    text: t('learn_kickoff_msg') || 'Hier is mijn materiaal. Help me dit uit mijn hoofd leren.',
+  });
+  state.messages = [{ role: 'user', content }];
+
+  await callClaude();
+});
 
 uploadZone.addEventListener('click', () => {
   if (!state.imageBase64) fileInput.click();
@@ -3870,7 +6651,7 @@ startBtn.addEventListener('click', async () => {
 
   const subjMeta = SUBJECTS[state.subject];
   chatHeaderAvatar.className = 'avatar ' + state.subject;
-  chatHeaderAvatar.innerHTML = svgIcon(subjMeta.icon);
+  chatHeaderAvatar.innerHTML = ROBOT_SVG;
   chatHeaderTitle.textContent = `${t('subj_' + subjMeta.key)} ${t('tutor_suffix')}`;
 
   stepChat.classList.remove('hidden');
@@ -3914,6 +6695,87 @@ function escapeHtml(s) {
     .replace(/>/g, '&gt;')
     .replace(/"/g, '&quot;')
     .replace(/'/g, '&#39;');
+}
+
+// Extract [[GAME:type \n front | back ...]] block from AI text. Returns { cleaned, game }.
+function parseGameMarker(text) {
+  const m = text.match(/\[\[GAME:\s*(match|tijdrace)\s*\n([\s\S]*?)\]\]/i);
+  if (!m) return { cleaned: text, game: null };
+  const type = m[1].toLowerCase();
+  const pairs = m[2].trim().split('\n').map(line => {
+    const i = line.indexOf('|');
+    if (i < 0) return null;
+    const front = line.slice(0, i).trim();
+    const back = line.slice(i + 1).trim();
+    if (!front || !back) return null;
+    return { front, back };
+  }).filter(Boolean);
+  const cleaned = text.replace(m[0], '').replace(/\n{2,}$/g, '').trim();
+  return { cleaned, game: pairs.length ? { type, pairs } : null };
+}
+
+// Extract [[CARDS: front | back \n front | back ... ]] block from AI text. Returns { cleaned, cards }.
+function parseCardsMarker(text) {
+  const m = text.match(/\[\[CARDS:\s*([\s\S]*?)\]\]/i);
+  if (!m) return { cleaned: text, cards: null };
+  const cards = m[1].trim().split('\n').map(line => {
+    const i = line.indexOf('|');
+    if (i < 0) return null;
+    const front = line.slice(0, i).trim();
+    const back = line.slice(i + 1).trim();
+    if (!front || !back) return null;
+    return { front, back };
+  }).filter(Boolean);
+  const cleaned = text.replace(m[0], '').replace(/\n{2,}$/g, '').trim();
+  return { cleaned, cards: cards.length ? cards : null };
+}
+
+// Extract [[MOOD:xxx]] marker from AI text. Returns { cleaned, mood }.
+function parseMoodMarker(text) {
+  const m = text.match(/\[\[MOOD:\s*(neutral|happy|sad|excited|thinking|wink|surprised)\s*\]\]/i);
+  if (!m) return { cleaned: text, mood: null };
+  const cleaned = text.replace(m[0], '').replace(/\n{2,}$/g, '').trim();
+  return { cleaned, mood: m[1].toLowerCase() };
+}
+
+// Extract [[CHOICE: a | b | c]] marker from AI text. Returns { cleaned, choices }.
+function parseChoiceMarker(text) {
+  const m = text.match(/\[\[CHOICE:([^\]]+?)\]\]/i);
+  if (!m) return { cleaned: text, choices: null };
+  const choices = m[1].split('|').map(s => s.trim()).filter(Boolean).slice(0, 6);
+  const cleaned = text.replace(m[0], '').replace(/\n{2,}$/g, '').trim();
+  return { cleaned, choices: choices.length ? choices : null };
+}
+
+// Render tap-to-pick buttons under an AI message; each button sends its label as the user's next message.
+function renderChoiceButtons(choices) {
+  if (!choices || !choices.length) return;
+  const wrap = document.createElement('div');
+  wrap.className = 'choice-buttons';
+  choices.forEach(label => {
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = 'choice-btn';
+    btn.textContent = label;
+    btn.addEventListener('click', () => {
+      if (state.isLoading) return;
+      // Disable all sibling buttons, mark the chosen one
+      wrap.querySelectorAll('.choice-btn').forEach(b => {
+        b.disabled = true;
+        if (b === btn) b.classList.add('chosen');
+      });
+      sendChoiceAsMessage(label);
+    });
+    wrap.appendChild(btn);
+  });
+  chatMessages.appendChild(wrap);
+  chatMessages.scrollTop = chatMessages.scrollHeight;
+}
+
+async function sendChoiceAsMessage(text) {
+  state.messages.push({ role: 'user', content: text });
+  renderMessage('user', text);
+  await callClaude();
 }
 
 // Convert [[term]] markers in AI text into clickable <span class="term">
@@ -4016,7 +6878,7 @@ function renderMessage(role, text) {
     avatar.textContent = getInitials(state.name) || '?';
   } else {
     avatar.className = 'avatar ' + (state.subject || '');
-    avatar.innerHTML = svgIcon(SUBJECTS[state.subject]?.icon || 'i-cap');
+    avatar.innerHTML = ROBOT_SVG;
   }
 
   const bubble = document.createElement('div');
@@ -4042,7 +6904,7 @@ function renderThinking() {
 
   const avatar = document.createElement('div');
   avatar.className = 'avatar ' + (state.subject || '');
-  avatar.innerHTML = svgIcon(SUBJECTS[state.subject]?.icon || 'i-cap');
+  avatar.innerHTML = ROBOT_SVG;
 
   const bubble = document.createElement('div');
   bubble.className = 'message thinking';
@@ -4061,6 +6923,55 @@ function showError(msg) {
   setTimeout(() => errorBox.classList.add('hidden'), 8000);
 }
 
+// ============ Slow typewriter for streaming responses ============
+// Buffers incoming chunks and reveals them at a readable pace (~60 chars/sec)
+// so the student can keep up while reading.
+const typewriter = {
+  bubble: null,
+  target: '',
+  displayed: '',
+  timer: null,
+};
+function typewriterReset(bubble) {
+  if (typewriter.timer) { clearInterval(typewriter.timer); typewriter.timer = null; }
+  typewriter.bubble = bubble;
+  typewriter.target = '';
+  typewriter.displayed = '';
+}
+function typewriterPush(chunk) {
+  typewriter.target += chunk;
+  if (!typewriter.timer && typewriter.bubble) {
+    typewriter.timer = setInterval(typewriterTick, 35);
+  }
+}
+function typewriterTick() {
+  if (!typewriter.bubble) return;
+  if (typewriter.displayed.length >= typewriter.target.length) return;
+  const lag = typewriter.target.length - typewriter.displayed.length;
+  // Default: 2 chars per ~35ms ≈ 57 cps. If we fall way behind (slow render),
+  // catch up gracefully so we never leave the user hanging forever.
+  let advance = 2;
+  if (lag > 400) advance = Math.ceil(lag / 80);
+  else if (lag > 150) advance = 4;
+  const next = typewriter.displayed.length + advance;
+  typewriter.displayed = typewriter.target.substring(0, next);
+  typewriter.bubble.textContent = typewriter.displayed;
+}
+function typewriterFlush() {
+  // Wait until everything received so far is displayed, then stop the timer.
+  return new Promise(resolve => {
+    const check = () => {
+      if (!typewriter.bubble || typewriter.displayed.length >= typewriter.target.length) {
+        if (typewriter.timer) { clearInterval(typewriter.timer); typewriter.timer = null; }
+        resolve();
+      } else {
+        setTimeout(check, 50);
+      }
+    };
+    check();
+  });
+}
+
 // Create an empty AI message bubble (used during streaming, before any text arrives)
 function createAiBubble() {
   const row = document.createElement('div');
@@ -4068,7 +6979,7 @@ function createAiBubble() {
 
   const avatar = document.createElement('div');
   avatar.className = 'avatar ' + (state.subject || '');
-  avatar.innerHTML = svgIcon(SUBJECTS[state.subject]?.icon || 'i-cap');
+  avatar.innerHTML = ROBOT_SVG;
 
   const bubble = document.createElement('div');
   bubble.className = 'message streaming';
@@ -4090,8 +7001,24 @@ async function callClaude() {
   let fullText = '';
 
   try {
-    const subjMeta = SUBJECTS[state.subject];
     const languageName = TRANSLATIONS[state.language].lang_name_en;
+    // Pick the right system prompt: learn mode (quiz master) vs subject tutor
+    let systemPrompt;
+    if (state.learn && state.learn.active) {
+      systemPrompt = LEARN_PROMPT(
+        state.name || 'the student',
+        languageName,
+        state.learn.mode || 'auto',
+        state.learn.description || '',
+        profileContextText()
+      );
+    } else {
+      const subjMeta = SUBJECTS[state.subject];
+      systemPrompt = SYSTEM_PROMPT(
+        subjMeta.en, state.name || 'the student', languageName,
+        subjMeta.style, studentProfileText(), profileContextText()
+      );
+    }
 
     const response = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
@@ -4103,8 +7030,8 @@ async function callClaude() {
       },
       body: JSON.stringify({
         model: 'claude-sonnet-4-6',
-        max_tokens: 500,
-        system: SYSTEM_PROMPT(subjMeta.en, state.name || 'the student', languageName, subjMeta.style, studentProfileText(), profileContextText()),
+        max_tokens: state.learn?.active ? 700 : 500,
+        system: systemPrompt,
         messages: state.messages,
         stream: true,
       }),
@@ -4146,11 +7073,11 @@ async function callClaude() {
             if (!messageBubble) {
               thinkingEl.remove();
               ({ bubble: messageBubble } = createAiBubble());
+              typewriterReset(messageBubble);
             }
             fullText += chunk;
-            // Update the visible text. Use textContent during streaming for safety —
-            // formulas and term-links render only once the full message has arrived.
-            messageBubble.textContent = fullText;
+            // Feed the typewriter; it renders the text at a readable pace.
+            typewriterPush(chunk);
             // Throttle scroll to bottom (don't trigger layout every keystroke)
             const now = performance.now();
             if (now - lastRender > 60) {
@@ -4165,11 +7092,40 @@ async function callClaude() {
     }
 
     if (messageBubble && fullText) {
-      // Stream finished: now do the full post-processing (KNOWS markers, [[term]] spans, KaTeX math)
+      // Wait for the typewriter to catch up so the student sees the full message
+      // before it morphs into the formatted version.
+      await typewriterFlush();
+      // Stream finished — full post-processing:
+      //   1) strip [[KNOWS:xxx]] memory markers
+      //   2) extract [[MOOD:xxx]] to set the robot's expression
+      //   3) extract [[CHOICE:...]] for tap-buttons
+      //   4) wrap [[term]] markers as clickable spans
+      //   5) render LaTeX/chemistry math
       messageBubble.classList.remove('streaming');
-      const cleaned = preprocessAiText(fullText);
+      const afterKnows = preprocessAiText(fullText);
+      const { cleaned: afterMood, mood } = parseMoodMarker(afterKnows);
+      const { cleaned: afterCards, cards } = parseCardsMarker(afterMood);
+      const { cleaned: afterGame, game } = parseGameMarker(afterCards);
+      const { cleaned, choices } = parseChoiceMarker(afterGame);
       messageBubble.innerHTML = parseTermMarkers(cleaned);
       renderMathIn(messageBubble);
+      // If an attachment marker came in, save the deck to the library AND open the dedicated overlay.
+      if (cards) {
+        addToLibrary(cards);
+        setTimeout(() => openFlashcards(cards), 350);
+      }
+      if (game) {
+        addToLibrary(game.pairs);
+        setTimeout(() => openGame(game), 350);
+      }
+      // Apply mood: update both THIS message's avatar and the chat-header avatar
+      if (mood) {
+        const row = messageBubble.closest('.message-row');
+        const av = row?.querySelector('.avatar');
+        if (av) av.innerHTML = robotSvg(mood);
+        if (chatHeaderAvatar) chatHeaderAvatar.innerHTML = robotSvg(mood);
+      }
+      if (choices) renderChoiceButtons(choices);
       chatMessages.scrollTop = chatMessages.scrollHeight;
       state.messages.push({ role: 'assistant', content: fullText });
     } else if (thinkingEl.parentNode) {
@@ -4186,6 +7142,660 @@ async function callClaude() {
     chatInput.focus();
   }
 }
+
+// ============ Intro / landing pitch ============
+const introOverlay = $('introOverlay');
+const introSkipBtn = $('introSkipBtn');
+const introPrevBtn = $('introPrevBtn');
+const introNextBtn = $('introNextBtn');
+const introStartBtn = $('introStartBtn');
+const introDots = $('introDots');
+const INTRO_SLIDE_COUNT = 4;
+let currentIntroSlide = 0;
+
+function showIntroSlide(n) {
+  currentIntroSlide = Math.max(0, Math.min(INTRO_SLIDE_COUNT - 1, n));
+  for (let i = 0; i < INTRO_SLIDE_COUNT; i++) {
+    const el = $('introSlide' + i);
+    if (el) el.style.display = (i === currentIntroSlide) ? 'block' : 'none';
+  }
+  // Re-trigger entry animation
+  const active = $('introSlide' + currentIntroSlide);
+  if (active) { active.style.animation = 'none'; void active.offsetWidth; active.style.animation = ''; }
+  // Dots
+  introDots.querySelectorAll('.intro-dot').forEach((d, i) => {
+    d.classList.toggle('active', i === currentIntroSlide);
+  });
+  // Nav buttons
+  introPrevBtn.disabled = currentIntroSlide === 0;
+  // On last slide, hide "next" (CTA does the action)
+  introNextBtn.style.visibility = (currentIntroSlide === INTRO_SLIDE_COUNT - 1) ? 'hidden' : 'visible';
+}
+
+function buildIntroDots() {
+  introDots.innerHTML = '';
+  for (let i = 0; i < INTRO_SLIDE_COUNT; i++) {
+    const d = document.createElement('button');
+    d.type = 'button';
+    d.className = 'intro-dot' + (i === 0 ? ' active' : '');
+    d.setAttribute('aria-label', 'Slide ' + (i + 1));
+    d.addEventListener('click', () => showIntroSlide(i));
+    introDots.appendChild(d);
+  }
+}
+
+function openIntro() {
+  buildIntroDots();
+  showIntroSlide(0);
+  introOverlay.classList.add('active');
+  document.body.style.overflow = 'hidden';
+}
+
+function closeIntro({ markSeen = true } = {}) {
+  introOverlay.classList.remove('active');
+  document.body.style.overflow = '';
+  if (markSeen) localStorage.setItem('user_seen_intro', 'true');
+}
+
+introPrevBtn.addEventListener('click', () => showIntroSlide(currentIntroSlide - 1));
+introNextBtn.addEventListener('click', () => showIntroSlide(currentIntroSlide + 1));
+introSkipBtn.addEventListener('click', () => {
+  closeIntro();
+  if (!state.name || !state.profile) openWelcomeModal();
+  else if (!state.apiKey) openApiKeyModal();
+});
+introStartBtn.addEventListener('click', () => {
+  closeIntro();
+  if (!state.name || !state.profile) openWelcomeModal();
+  else if (!state.apiKey) openApiKeyModal();
+});
+
+// ============ Library — saved learn decks ============
+const librarySection = $('librarySection');
+const libraryGrid = $('libraryGrid');
+
+function saveLibrary() {
+  localStorage.setItem('user_library', JSON.stringify(state.library));
+}
+
+function addToLibrary(cards, meta = {}) {
+  if (!cards || !cards.length) return;
+  const entry = {
+    id: 'dk_' + Date.now() + '_' + Math.random().toString(36).slice(2, 7),
+    type: meta.type || (state.learn && state.learn.mode) || null,
+    description: meta.description || (state.learn && state.learn.description) || '',
+    createdAt: Date.now(),
+    cards: cards.map(c => ({ front: c.front, back: c.back })),
+  };
+  // De-dup: if a recent entry with identical first/last cards exists, skip
+  const sig = entry.cards[0].front + '|' + entry.cards[entry.cards.length - 1].back + '|' + entry.cards.length;
+  const existing = state.library.find(e => {
+    if (!e.cards || !e.cards.length) return false;
+    return (e.cards[0].front + '|' + e.cards[e.cards.length - 1].back + '|' + e.cards.length) === sig;
+  });
+  if (existing) {
+    existing.createdAt = entry.createdAt; // bump recency
+    if (entry.description) existing.description = entry.description;
+    if (entry.type) existing.type = entry.type;
+  } else {
+    state.library.unshift(entry);
+    // Cap at 40 most-recent entries to keep localStorage manageable
+    if (state.library.length > 40) state.library = state.library.slice(0, 40);
+  }
+  saveLibrary();
+  renderLibrary();
+}
+
+function deleteFromLibrary(id) {
+  state.library = state.library.filter(e => e.id !== id);
+  saveLibrary();
+  renderLibrary();
+}
+
+function formatRelativeDate(ts) {
+  const diff = Date.now() - ts;
+  const day = 24 * 60 * 60 * 1000;
+  if (diff < 60_000) return t('time_now') || 'net nu';
+  if (diff < 60 * 60_000) return (t('time_min_ago') || '{n}m geleden').replace('{n}', Math.floor(diff / 60_000));
+  if (diff < day) return (t('time_hr_ago') || '{n}u geleden').replace('{n}', Math.floor(diff / (60 * 60_000)));
+  if (diff < 30 * day) return (t('time_day_ago') || '{n}d geleden').replace('{n}', Math.floor(diff / day));
+  const d = new Date(ts);
+  return d.toLocaleDateString(state.language || 'nl', { day: 'numeric', month: 'short' });
+}
+
+function renderLibrary() {
+  if (!libraryGrid) return;
+  if (!state.library || state.library.length === 0) {
+    librarySection.classList.remove('active');
+    libraryGrid.innerHTML = '';
+    return;
+  }
+  librarySection.classList.add('active');
+  libraryGrid.innerHTML = '';
+  state.library.forEach(entry => {
+    const typeLabel = entry.type === 'formulas' ? (t('learn_mode_formulas') || 'Formules')
+                    : entry.type === 'terms' ? (t('learn_mode_terms') || 'Termen')
+                    : (t('learn_mode_words') || 'Woordjes');
+    const title = entry.description && entry.description.trim()
+      ? entry.description
+      : (t('library_untitled') || '{n} kaarten').replace('{n}', entry.cards.length);
+    const card = document.createElement('button');
+    card.type = 'button';
+    card.className = 'library-card';
+    card.innerHTML = `
+      <div class="library-card-head">
+        <span class="library-card-chip">${typeLabel}</span>
+        <span class="library-card-count">${entry.cards.length}</span>
+      </div>
+      <div class="library-card-title"></div>
+      <div class="library-card-date">${formatRelativeDate(entry.createdAt)}</div>
+      <button type="button" class="library-card-remove" aria-label="Verwijder" data-id="${entry.id}">×</button>
+    `;
+    card.querySelector('.library-card-title').textContent = title;
+    card.addEventListener('click', e => {
+      if (e.target.closest('.library-card-remove')) return;
+      openDeckActionSheet(entry);
+    });
+    card.querySelector('.library-card-remove').addEventListener('click', e => {
+      e.stopPropagation();
+      if (confirm((t('library_confirm_delete') || 'Deze deck verwijderen?'))) {
+        deleteFromLibrary(entry.id);
+      }
+    });
+    libraryGrid.appendChild(card);
+  });
+}
+
+// Deck action sheet — choose what to do with a saved deck
+const deckActionModal = $('deckActionModal');
+const deckActionSubtitle = $('deckActionSubtitle');
+let deckActionCards = null; // currently picked deck
+
+function openDeckActionSheet(entry) {
+  deckActionCards = entry.cards.slice();
+  const typeLabel = entry.type === 'formulas' ? (t('learn_mode_formulas') || 'Formules')
+                  : entry.type === 'terms' ? (t('learn_mode_terms') || 'Termen')
+                  : (t('learn_mode_words') || 'Woordjes');
+  const title = entry.description && entry.description.trim() ? entry.description
+              : (t('library_untitled') || '{n} kaarten').replace('{n}', entry.cards.length);
+  deckActionSubtitle.textContent = `${typeLabel} · ${title}`;
+  deckActionModal.classList.add('active');
+}
+function closeDeckActionSheet() {
+  deckActionModal.classList.remove('active');
+  deckActionCards = null;
+}
+
+$('deckActionFlashcards').addEventListener('click', () => {
+  const cards = deckActionCards;
+  closeDeckActionSheet();
+  if (cards) openFlashcards(cards);
+});
+$('deckActionMatch').addEventListener('click', () => {
+  const cards = deckActionCards;
+  closeDeckActionSheet();
+  if (cards) openMatchGame(cards);
+});
+$('deckActionTijdrace').addEventListener('click', () => {
+  const cards = deckActionCards;
+  closeDeckActionSheet();
+  if (cards) openTijdrace(cards);
+});
+$('deckActionCancelBtn').addEventListener('click', closeDeckActionSheet);
+deckActionModal.addEventListener('click', e => {
+  if (e.target === deckActionModal) closeDeckActionSheet();
+});
+
+// ============ Quizlet-style games (Match + Tijdrace) ============
+const matchOverlay = $('matchOverlay');
+const matchBoard = $('matchBoard');
+const matchStage = $('matchStage');
+const matchSummary = $('matchSummary');
+const matchProgress = $('matchProgress');
+const matchTimer = $('matchTimer');
+const matchFinalTime = $('matchFinalTime');
+const matchCloseBtn = $('matchCloseBtn');
+const matchRestartBtn = $('matchRestartBtn');
+const matchBackBtn = $('matchBackBtn');
+const matchRecord = $('matchRecord');
+const matchNewRecord = $('matchNewRecord');
+const matchOldRecord = $('matchOldRecord');
+
+const tijdraceOverlay = $('tijdraceOverlay');
+const tijdraceStage = $('tijdraceStage');
+const tijdraceSummary = $('tijdraceSummary');
+const tijdraceScoreEl = $('tijdraceScore');
+const tijdraceTimer = $('tijdraceTimer');
+const tijdraceQuestion = $('tijdraceQuestion');
+const tijdraceFeedback = $('tijdraceFeedback');
+const tijdraceOptions = $('tijdraceOptions');
+const tijdraceFinalScore = $('tijdraceFinalScore');
+const tijdraceCloseBtn = $('tijdraceCloseBtn');
+const tijdraceRestartBtn = $('tijdraceRestartBtn');
+const tijdraceBackBtn = $('tijdraceBackBtn');
+const tijdraceRecord = $('tijdraceRecord');
+const tijdraceNewRecord = $('tijdraceNewRecord');
+const tijdraceOldRecord = $('tijdraceOldRecord');
+
+// Records persisted in localStorage. Match keys by pair-count so 6-pair vs 4-pair
+// times are compared fairly. Tijdrace is one global best score (always 60s).
+function loadRecord(key) {
+  const v = localStorage.getItem(key);
+  return v ? parseFloat(v) : null;
+}
+function saveRecord(key, val) { localStorage.setItem(key, String(val)); }
+function matchRecordKey(pairCount) { return `record_match_${pairCount}`; }
+const TIJDRACE_RECORD_KEY = 'record_tijdrace';
+
+function formatTime(seconds) {
+  const m = Math.floor(seconds / 60), s = seconds % 60;
+  return `${m}:${s.toString().padStart(2, '0')}`;
+}
+function shuffle(arr) {
+  const a = arr.slice();
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+
+// ----- Match game (Quizlet pair-matching) -----
+const matchState = { pairs: [], items: [], matched: new Set(), selected: [], startTime: 0, tick: null, fullDeck: [] };
+
+function openMatchGame(pairs) {
+  matchState.fullDeck = pairs.slice();
+  // Cap at 6 pairs (12 tiles) per round so the board stays approachable
+  const sample = shuffle(pairs).slice(0, 6);
+  matchState.pairs = sample;
+  matchState.matched = new Set();
+  matchState.selected = [];
+  matchState.items = [];
+  sample.forEach((p, i) => {
+    matchState.items.push({ text: p.front, pairId: i });
+    matchState.items.push({ text: p.back, pairId: i });
+  });
+  matchState.items = shuffle(matchState.items);
+  matchState.startTime = Date.now();
+  matchState.pairCount = sample.length;
+  if (matchState.tick) clearInterval(matchState.tick);
+  matchState.tick = setInterval(() => {
+    const s = Math.floor((Date.now() - matchState.startTime) / 1000);
+    matchTimer.textContent = formatTime(s);
+  }, 250);
+  matchTimer.textContent = '0:00';
+  // Load + show personal record for this pair count
+  const rec = loadRecord(matchRecordKey(matchState.pairCount));
+  if (rec != null) {
+    matchRecord.textContent = formatTime(rec);
+    matchRecord.classList.remove('empty');
+  } else {
+    matchRecord.textContent = '—';
+    matchRecord.classList.add('empty');
+  }
+  matchSummary.classList.add('hidden');
+  matchStage.classList.remove('hidden');
+  renderMatchBoard();
+  matchOverlay.classList.add('active');
+  document.body.style.overflow = 'hidden';
+}
+
+function renderMatchBoard() {
+  matchBoard.innerHTML = '';
+  matchState.items.forEach((item, idx) => {
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = 'match-tile';
+    btn.dataset.idx = idx;
+    btn.textContent = item.text;
+    btn.addEventListener('click', () => onMatchTileClick(idx));
+    matchBoard.appendChild(btn);
+  });
+  matchProgress.textContent = `${matchState.matched.size} / ${matchState.pairs.length}`;
+}
+
+function onMatchTileClick(idx) {
+  const item = matchState.items[idx];
+  if (matchState.matched.has(item.pairId)) return;
+  if (matchState.selected.includes(idx)) return;
+  if (matchState.selected.length >= 2) return;
+  const tile = matchBoard.children[idx];
+  tile.classList.add('selected');
+  matchState.selected.push(idx);
+  if (matchState.selected.length === 2) {
+    const [a, b] = matchState.selected;
+    const itemA = matchState.items[a], itemB = matchState.items[b];
+    if (itemA.pairId === itemB.pairId) {
+      setTimeout(() => {
+        matchBoard.children[a].classList.add('matched');
+        matchBoard.children[b].classList.add('matched');
+        matchState.matched.add(itemA.pairId);
+        matchState.selected = [];
+        matchProgress.textContent = `${matchState.matched.size} / ${matchState.pairs.length}`;
+        if (matchState.matched.size === matchState.pairs.length) endMatchGame();
+      }, 250);
+    } else {
+      setTimeout(() => {
+        matchBoard.children[a].classList.add('wrong');
+        matchBoard.children[b].classList.add('wrong');
+        setTimeout(() => {
+          matchBoard.children[a].classList.remove('selected', 'wrong');
+          matchBoard.children[b].classList.remove('selected', 'wrong');
+          matchState.selected = [];
+        }, 500);
+      }, 120);
+    }
+  }
+}
+
+function endMatchGame() {
+  if (matchState.tick) { clearInterval(matchState.tick); matchState.tick = null; }
+  const s = Math.floor((Date.now() - matchState.startTime) / 1000);
+  matchFinalTime.textContent = formatTime(s);
+  // Check for new record — lower time is better
+  const key = matchRecordKey(matchState.pairCount);
+  const prev = loadRecord(key);
+  const isRecord = prev == null || s < prev;
+  matchNewRecord.classList.toggle('hidden', !isRecord);
+  if (isRecord) {
+    saveRecord(key, s);
+    matchOldRecord.textContent = prev != null
+      ? (t('record_previous') || 'Vorig record: {time}').replace('{time}', formatTime(prev))
+      : (t('record_first') || 'Je eerste record!');
+    matchRecord.textContent = formatTime(s);
+    matchRecord.classList.remove('empty');
+  } else {
+    matchOldRecord.textContent = (t('record_yours') || 'Jouw record: {time}').replace('{time}', formatTime(prev));
+  }
+  matchStage.classList.add('hidden');
+  matchSummary.classList.remove('hidden');
+}
+
+function closeMatchGame() {
+  if (matchState.tick) { clearInterval(matchState.tick); matchState.tick = null; }
+  matchOverlay.classList.remove('active');
+  document.body.style.overflow = '';
+}
+
+matchCloseBtn.addEventListener('click', closeMatchGame);
+matchBackBtn.addEventListener('click', closeMatchGame);
+matchRestartBtn.addEventListener('click', () => openMatchGame(matchState.fullDeck.slice()));
+
+// ----- Tijdrace (60s speed quiz) -----
+const tijdraceState = { pairs: [], score: 0, timeLeft: 60, queue: [], current: null, tick: null, fullDeck: [] };
+const TIJDRACE_SECONDS = 60;
+
+function openTijdrace(pairs) {
+  tijdraceState.fullDeck = pairs.slice();
+  tijdraceState.pairs = pairs;
+  tijdraceState.score = 0;
+  tijdraceState.timeLeft = TIJDRACE_SECONDS;
+  tijdraceState.queue = shuffle(pairs);
+  tijdraceState.current = null;
+  if (tijdraceState.tick) clearInterval(tijdraceState.tick);
+  tijdraceState.tick = setInterval(tickTijdrace, 1000);
+  tijdraceTimer.classList.remove('warning', 'danger');
+  tijdraceScoreEl.textContent = '0';
+  tijdraceTimer.textContent = formatTime(TIJDRACE_SECONDS);
+  tijdraceFeedback.textContent = '';
+  tijdraceFeedback.classList.remove('pop');
+  // Show personal best
+  const rec = loadRecord(TIJDRACE_RECORD_KEY);
+  if (rec != null) {
+    tijdraceRecord.textContent = String(rec);
+    tijdraceRecord.classList.remove('empty');
+  } else {
+    tijdraceRecord.textContent = '—';
+    tijdraceRecord.classList.add('empty');
+  }
+  tijdraceSummary.classList.add('hidden');
+  tijdraceStage.classList.remove('hidden');
+  showNextTijdraceQuestion();
+  tijdraceOverlay.classList.add('active');
+  document.body.style.overflow = 'hidden';
+}
+
+function showNextTijdraceQuestion() {
+  if (tijdraceState.queue.length === 0) tijdraceState.queue = shuffle(tijdraceState.pairs);
+  const pair = tijdraceState.queue.shift();
+  tijdraceState.current = pair;
+  tijdraceQuestion.textContent = pair.front;
+  const wrongs = shuffle(tijdraceState.pairs.filter(p => p.back !== pair.back)).slice(0, 3).map(p => p.back);
+  const options = shuffle([pair.back, ...wrongs]);
+  tijdraceOptions.innerHTML = '';
+  options.forEach(opt => {
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = 'tijdrace-option';
+    btn.textContent = opt;
+    btn.addEventListener('click', () => answerTijdrace(opt === pair.back, btn));
+    tijdraceOptions.appendChild(btn);
+  });
+}
+
+function answerTijdrace(correct, btn) {
+  if (tijdraceState.timeLeft <= 0) return;
+  if (correct) {
+    btn.classList.add('correct');
+    tijdraceState.score++;
+    tijdraceScoreEl.textContent = tijdraceState.score;
+    tijdraceFeedback.textContent = '+1';
+    tijdraceFeedback.classList.remove('pop');
+    void tijdraceFeedback.offsetWidth;
+    tijdraceFeedback.classList.add('pop');
+    setTimeout(showNextTijdraceQuestion, 280);
+  } else {
+    btn.classList.add('wrong');
+    tijdraceState.timeLeft = Math.max(0, tijdraceState.timeLeft - 3);
+    updateTijdraceTimerUi();
+    tijdraceFeedback.textContent = '−3s';
+    tijdraceFeedback.style.color = '#ef4444';
+    tijdraceFeedback.classList.remove('pop');
+    void tijdraceFeedback.offsetWidth;
+    tijdraceFeedback.classList.add('pop');
+    setTimeout(() => {
+      btn.classList.remove('wrong');
+      tijdraceFeedback.style.color = '';
+    }, 600);
+  }
+}
+
+function tickTijdrace() {
+  tijdraceState.timeLeft--;
+  updateTijdraceTimerUi();
+  if (tijdraceState.timeLeft <= 0) endTijdrace();
+}
+
+function updateTijdraceTimerUi() {
+  tijdraceTimer.textContent = formatTime(Math.max(0, tijdraceState.timeLeft));
+  tijdraceTimer.classList.toggle('warning', tijdraceState.timeLeft <= 15 && tijdraceState.timeLeft > 5);
+  tijdraceTimer.classList.toggle('danger', tijdraceState.timeLeft <= 5);
+}
+
+function endTijdrace() {
+  if (tijdraceState.tick) { clearInterval(tijdraceState.tick); tijdraceState.tick = null; }
+  tijdraceFinalScore.textContent = tijdraceState.score;
+  // Check for new record — higher score is better
+  const prev = loadRecord(TIJDRACE_RECORD_KEY);
+  const isRecord = prev == null || tijdraceState.score > prev;
+  tijdraceNewRecord.classList.toggle('hidden', !isRecord);
+  if (isRecord && tijdraceState.score > 0) {
+    saveRecord(TIJDRACE_RECORD_KEY, tijdraceState.score);
+    tijdraceOldRecord.textContent = prev != null
+      ? (t('record_previous') || 'Vorig record: {score}').replace('{score}', String(prev)).replace('{time}', String(prev))
+      : (t('record_first') || 'Je eerste record!');
+    tijdraceRecord.textContent = String(tijdraceState.score);
+    tijdraceRecord.classList.remove('empty');
+  } else if (prev != null) {
+    tijdraceOldRecord.textContent = (t('record_yours') || 'Jouw record: {score}').replace('{score}', String(prev)).replace('{time}', String(prev));
+  } else {
+    tijdraceOldRecord.textContent = '';
+  }
+  tijdraceStage.classList.add('hidden');
+  tijdraceSummary.classList.remove('hidden');
+}
+
+function closeTijdrace() {
+  if (tijdraceState.tick) { clearInterval(tijdraceState.tick); tijdraceState.tick = null; }
+  tijdraceOverlay.classList.remove('active');
+  document.body.style.overflow = '';
+}
+
+tijdraceCloseBtn.addEventListener('click', closeTijdrace);
+tijdraceBackBtn.addEventListener('click', closeTijdrace);
+tijdraceRestartBtn.addEventListener('click', () => openTijdrace(tijdraceState.fullDeck.slice()));
+
+// Open the right game based on the [[GAME:type]] marker
+function openGame(game) {
+  if (!game || !game.pairs || game.pairs.length === 0) return;
+  if (game.type === 'match') openMatchGame(game.pairs);
+  else if (game.type === 'tijdrace') openTijdrace(game.pairs);
+}
+
+// ============ Flashcards (Quizlet-style) ============
+const flashcardsOverlay = $('flashcardsOverlay');
+const flashcardsStage = $('flashcardsStage');
+const flashcardsSummary = $('flashcardsSummary');
+const flashcardEl = $('flashcardEl');
+const flashcardFront = $('flashcardFront');
+const flashcardBack = $('flashcardBack');
+const flashcardsCounter = $('flashcardsCounter');
+const flashGradeRow = $('flashGradeRow');
+const flashWrongBtn = $('flashWrongBtn');
+const flashRightBtn = $('flashRightBtn');
+const flashPrevBtn = $('flashPrevBtn');
+const flashNextBtn = $('flashNextBtn');
+const flashcardsCloseBtn = $('flashcardsCloseBtn');
+const flashcardsGradingCheck = $('flashcardsGradingCheck');
+const flashSummaryScore = $('flashSummaryScore');
+const flashSummaryText = $('flashSummaryText');
+const flashRetryWrongBtn = $('flashRetryWrongBtn');
+const flashRestartAllBtn = $('flashRestartAllBtn');
+const flashBackToChatBtn = $('flashBackToChatBtn');
+
+const flashState = {
+  cards: [],           // [{front, back, status: null|'right'|'wrong'}, ...]
+  fullDeck: [],        // backup of the original full deck (for "restart all")
+  index: 0,
+  grading: true,
+};
+
+function openFlashcards(cards) {
+  flashState.fullDeck = cards.slice();
+  flashState.cards = cards.map(c => ({ ...c, status: null }));
+  flashState.index = 0;
+  flashState.grading = flashcardsGradingCheck.checked;
+  flashcardsSummary.classList.add('hidden');
+  flashcardsStage.classList.remove('hidden');
+  document.querySelector('.flashcards-nav').classList.remove('hidden');
+  flashcardsOverlay.classList.add('active');
+  document.body.style.overflow = 'hidden';
+  showFlashcard();
+}
+
+function closeFlashcards() {
+  flashcardsOverlay.classList.remove('active');
+  document.body.style.overflow = '';
+}
+
+function showFlashcard() {
+  const card = flashState.cards[flashState.index];
+  if (!card) return;
+  // Reset flip
+  flashcardEl.classList.remove('flipped');
+  // Populate. Try KaTeX rendering so formula cards look proper.
+  flashcardFront.textContent = card.front;
+  flashcardBack.textContent = card.back;
+  renderMathIn(flashcardFront);
+  renderMathIn(flashcardBack);
+  // Counter
+  flashcardsCounter.textContent = `${flashState.index + 1} / ${flashState.cards.length}`;
+  // Grade row visibility based on toggle
+  flashGradeRow.classList.toggle('hidden', !flashState.grading);
+  // Prev/Next states
+  flashPrevBtn.disabled = flashState.index === 0;
+  flashNextBtn.disabled = false;
+}
+
+function flipFlashcard() {
+  flashcardEl.classList.toggle('flipped');
+}
+
+function nextFlashcard() {
+  if (flashState.index < flashState.cards.length - 1) {
+    flashState.index++;
+    showFlashcard();
+  } else {
+    showFlashcardsSummary();
+  }
+}
+
+function prevFlashcard() {
+  if (flashState.index > 0) {
+    flashState.index--;
+    showFlashcard();
+  }
+}
+
+function gradeFlashcard(status) {
+  flashState.cards[flashState.index].status = status;
+  nextFlashcard();
+}
+
+function showFlashcardsSummary() {
+  const total = flashState.cards.length;
+  const right = flashState.cards.filter(c => c.status === 'right').length;
+  const wrong = flashState.cards.filter(c => c.status === 'wrong').length;
+  const ungraded = total - right - wrong;
+  flashSummaryScore.textContent = `${right} / ${total}`;
+  let text;
+  if (!flashState.grading || (right + wrong) === 0) {
+    text = t('flash_summary_no_grade') || `Je hebt alle ${total} kaarten doorgenomen.`;
+  } else if (right === total) {
+    text = t('flash_summary_perfect') || `Alles goed! 🎉`;
+  } else {
+    text = (t('flash_summary_some') || `Je had {right} van de {total} goed. {wrong} te oefenen.`)
+      .replace('{right}', right).replace('{total}', total).replace('{wrong}', wrong);
+  }
+  flashSummaryText.textContent = text;
+  // Show/hide "retry wrong" depending on whether there were wrong ones
+  flashRetryWrongBtn.style.display = (wrong > 0) ? '' : 'none';
+  flashcardsStage.classList.add('hidden');
+  document.querySelector('.flashcards-nav').classList.add('hidden');
+  flashcardsSummary.classList.remove('hidden');
+}
+
+// Wire flashcard events
+flashcardEl.addEventListener('click', flipFlashcard);
+flashWrongBtn.addEventListener('click', () => gradeFlashcard('wrong'));
+flashRightBtn.addEventListener('click', () => gradeFlashcard('right'));
+flashPrevBtn.addEventListener('click', prevFlashcard);
+flashNextBtn.addEventListener('click', nextFlashcard);
+flashcardsCloseBtn.addEventListener('click', closeFlashcards);
+flashcardsGradingCheck.addEventListener('change', () => {
+  flashState.grading = flashcardsGradingCheck.checked;
+  flashGradeRow.classList.toggle('hidden', !flashState.grading);
+});
+flashRetryWrongBtn.addEventListener('click', () => {
+  const wrongCards = flashState.cards.filter(c => c.status === 'wrong').map(c => ({ front: c.front, back: c.back }));
+  if (wrongCards.length === 0) return;
+  openFlashcards(wrongCards);
+});
+flashRestartAllBtn.addEventListener('click', () => openFlashcards(flashState.fullDeck.slice()));
+flashBackToChatBtn.addEventListener('click', closeFlashcards);
+// Keyboard nav
+document.addEventListener('keydown', e => {
+  if (!flashcardsOverlay.classList.contains('active')) return;
+  if (e.key === 'Escape') { closeFlashcards(); return; }
+  if (flashcardsSummary && !flashcardsSummary.classList.contains('hidden')) return;
+  if (e.key === ' ' || e.key === 'Enter') { e.preventDefault(); flipFlashcard(); }
+  else if (e.key === 'ArrowRight') { nextFlashcard(); }
+  else if (e.key === 'ArrowLeft') { prevFlashcard(); }
+  else if (flashState.grading) {
+    if (e.key === '1' || e.key.toLowerCase() === 'f') gradeFlashcard('wrong');
+    else if (e.key === '2' || e.key.toLowerCase() === 'g') gradeFlashcard('right');
+  }
+});
 
 // ============ Help modal ============
 const helpModal = $('helpModal');
@@ -4210,7 +7820,11 @@ helpModal.addEventListener('click', e => {
 });
 
 applyLanguage();
-if (!state.name || !state.profile) {
+renderLibrary();
+const hasSeenIntro = localStorage.getItem('user_seen_intro') === 'true';
+if (!hasSeenIntro) {
+  openIntro();
+} else if (!state.name || !state.profile) {
   openWelcomeModal();
 } else if (!state.apiKey) {
   openApiKeyModal();
