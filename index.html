@@ -8,6 +8,12 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<!-- KaTeX for rendering math formulas (fractions, roots, powers, etc.) -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css" crossorigin="anonymous">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js" crossorigin="anonymous"></script>
+<!-- mhchem extension for chemistry notation (must load after katex.min.js) -->
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/mhchem.min.js" crossorigin="anonymous"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js" crossorigin="anonymous"></script>
 <style>
   * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
 
@@ -564,6 +570,20 @@
     font-style: italic;
     background: var(--card-soft);
   }
+  /* Blinking cursor at the end of a streaming AI message */
+  .message.streaming::after {
+    content: '▍';
+    display: inline-block;
+    margin-left: 2px;
+    color: var(--accent);
+    animation: cursorBlink 1s steps(2, end) infinite;
+    vertical-align: baseline;
+    font-weight: 400;
+  }
+  @keyframes cursorBlink {
+    0%, 49% { opacity: 1; }
+    50%, 100% { opacity: 0; }
+  }
   .thinking-dots { display: inline-block; margin-left: 2px; }
   .thinking-dots span { animation: blink 1.4s infinite; opacity: 0; }
   .thinking-dots span:nth-child(2) { animation-delay: 0.2s; }
@@ -762,6 +782,298 @@
     color: white;
     font-weight: 600;
   }
+
+  /* Welcome multi-step progress + onboarding controls */
+  .welcome-step.hidden { display: none; }
+  .welcome-progress {
+    display: flex;
+    gap: 6px;
+    justify-content: center;
+    margin: 16px 0 18px;
+  }
+  .welcome-progress .dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--border-strong);
+    transition: all 0.25s;
+  }
+  .welcome-progress .dot.active {
+    background: var(--accent);
+    width: 24px;
+    border-radius: 4px;
+  }
+  .welcome-actions {
+    display: flex;
+    gap: 10px;
+  }
+  .welcome-actions .secondary-btn { flex: 1; justify-content: center; }
+  .welcome-actions .primary-btn { flex: 2; }
+
+  /* Option pills (education level, school level) */
+  .pill-picker {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  .opt-pill {
+    padding: 11px 16px;
+    border-radius: 999px;
+    border: 1.5px solid var(--border-strong);
+    background: var(--bg-2);
+    color: var(--text-soft);
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    font-family: inherit;
+    transition: all 0.18s;
+    min-height: 42px;
+  }
+  .opt-pill:hover {
+    border-color: var(--accent);
+    color: var(--text);
+  }
+  .opt-pill.active {
+    background: var(--accent-gradient);
+    border-color: transparent;
+    color: white;
+    font-weight: 600;
+    box-shadow: 0 4px 12px rgba(167, 139, 250, 0.25);
+  }
+
+  /* Native-styled dropdown */
+  .dropdown {
+    width: 100%;
+    padding: 13px 15px;
+    padding-right: 38px;
+    border: 1.5px solid var(--border-strong);
+    border-radius: var(--radius-sm);
+    font-size: 15px;
+    font-family: inherit;
+    background: var(--bg-2);
+    color: var(--text);
+    cursor: pointer;
+    min-height: 48px;
+    appearance: none;
+    -webkit-appearance: none;
+    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%238b8db5' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'><polyline points='6 9 12 15 18 9'/></svg>");
+    background-repeat: no-repeat;
+    background-position: right 14px center;
+    transition: border-color 0.2s, box-shadow 0.2s;
+  }
+  .dropdown:focus {
+    outline: none;
+    border-color: var(--accent);
+    box-shadow: 0 0 0 4px rgba(167, 139, 250, 0.16);
+  }
+  .dropdown option { background: var(--card); color: var(--text); }
+
+  /* Skills list (what the student has already mastered) */
+  .skills-list {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    max-height: 220px;
+    overflow-y: auto;
+    padding: 4px;
+    background: var(--bg-2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+  }
+  .skill-pill {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 10px 12px;
+    font-size: 13.5px;
+    color: var(--text-soft);
+    line-height: 1.35;
+  }
+  .skill-pill span { flex: 1; }
+  .skill-remove {
+    background: var(--card-soft);
+    border: 1px solid var(--border);
+    color: var(--muted);
+    cursor: pointer;
+    width: 26px;
+    height: 26px;
+    border-radius: 50%;
+    font-size: 16px;
+    line-height: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    font-family: inherit;
+    transition: all 0.15s;
+  }
+  .skill-remove:hover {
+    background: var(--card-hover);
+    color: var(--text);
+    border-color: var(--border-strong);
+  }
+  .skills-empty {
+    color: var(--muted);
+    font-size: 13px;
+    font-style: italic;
+    padding: 12px;
+    text-align: center;
+  }
+
+  /* Subject view (separate "page" per subject) */
+  .back-bar {
+    display: flex;
+    align-items: center;
+    margin-bottom: 4px;
+  }
+  .back-link {
+    background: var(--card);
+    border: 1px solid var(--border);
+    color: var(--text-soft);
+    padding: 9px 14px 9px 10px;
+    border-radius: 999px;
+    font-size: 13.5px;
+    font-weight: 500;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-family: inherit;
+    transition: all 0.15s;
+  }
+  .back-link:hover {
+    background: var(--card-hover);
+    border-color: var(--border-strong);
+    color: var(--text);
+  }
+  .back-link .icon { width: 18px; height: 18px; transform: rotate(180deg); }
+
+  /* Subject hero — one per chosen subject, with that subject's gradient */
+  .subject-hero {
+    position: relative;
+    border-radius: var(--radius-lg);
+    padding: 30px 28px;
+    overflow: hidden;
+    color: white;
+    box-shadow: var(--shadow-lg);
+  }
+  .subject-hero[data-subject="wiskunde"]         { background: linear-gradient(140deg, #3b82f6 0%, #06b6d4 100%); }
+  .subject-hero[data-subject="natuurkunde"]      { background: linear-gradient(140deg, #fb923c 0%, #ef4444 100%); }
+  .subject-hero[data-subject="scheikunde"]       { background: linear-gradient(140deg, #c084fc 0%, #ec4899 100%); }
+  .subject-hero[data-subject="biologie"]         { background: linear-gradient(140deg, #84cc16 0%, #166534 100%); }
+  .subject-hero[data-subject="nederlands"]       { background: linear-gradient(140deg, #f97316 0%, #dc2626 100%); }
+  .subject-hero[data-subject="engels"]           { background: linear-gradient(140deg, #6366f1 0%, #2563eb 100%); }
+  .subject-hero[data-subject="duits"]            { background: linear-gradient(140deg, #facc15 0%, #ea580c 100%); }
+  .subject-hero[data-subject="frans"]            { background: linear-gradient(140deg, #ec4899 0%, #d946ef 100%); }
+  .subject-hero[data-subject="spaans"]           { background: linear-gradient(140deg, #fbbf24 0%, #dc2626 100%); }
+  .subject-hero[data-subject="latijn"]           { background: linear-gradient(140deg, #d97706 0%, #78350f 100%); }
+  .subject-hero[data-subject="grieks"]           { background: linear-gradient(140deg, #06b6d4 0%, #1e40af 100%); }
+  .subject-hero[data-subject="geschiedenis"]     { background: linear-gradient(140deg, #a16207 0%, #57534e 100%); }
+  .subject-hero[data-subject="aardrijkskunde"]   { background: linear-gradient(140deg, #22c55e 0%, #0d9488 100%); }
+  .subject-hero[data-subject="economie"]         { background: linear-gradient(140deg, #16a34a 0%, #65a30d 100%); }
+  .subject-hero[data-subject="bedrijfseconomie"] { background: linear-gradient(140deg, #475569 0%, #1e3a8a 100%); }
+  .subject-hero::before {
+    content: '';
+    position: absolute;
+    top: -60px; right: -60px;
+    width: 220px; height: 220px;
+    background: rgba(255, 255, 255, 0.12);
+    border-radius: 50%;
+  }
+  .subject-hero::after {
+    content: '';
+    position: absolute;
+    bottom: -80px; left: -40px;
+    width: 180px; height: 180px;
+    background: rgba(255, 255, 255, 0.08);
+    border-radius: 50%;
+  }
+  .subject-hero-inner {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    gap: 18px;
+    align-items: flex-start;
+  }
+  .subject-hero-icon {
+    width: 60px;
+    height: 60px;
+    border-radius: 16px;
+    background: rgba(255, 255, 255, 0.2);
+    backdrop-filter: blur(8px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+  .subject-hero-icon .icon { width: 32px; height: 32px; color: white; stroke-width: 2; }
+  .subject-hero-title {
+    font-size: 22px;
+    font-weight: 800;
+    letter-spacing: -0.02em;
+    line-height: 1.2;
+    margin-bottom: 8px;
+  }
+  .subject-hero-text {
+    font-size: 15px;
+    line-height: 1.5;
+    opacity: 0.95;
+  }
+
+  /* Help modal — explainer content */
+  .help-modal { max-width: 540px; }
+  .help-body { color: var(--text-soft); font-size: 14.5px; line-height: 1.65; }
+  .help-body h3 {
+    color: var(--text);
+    font-size: 15px;
+    font-weight: 700;
+    margin-top: 18px;
+    margin-bottom: 6px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .help-body h3:first-child { margin-top: 0; }
+  .help-body p { margin-bottom: 10px; }
+  .help-body strong { color: var(--text); font-weight: 600; }
+  .help-body .term-demo {
+    color: #fbcfe8;
+    background: rgba(244, 114, 182, 0.12);
+    border-bottom: 2px dotted #f472b6;
+    padding: 0 3px;
+    border-radius: 3px;
+    font-weight: 600;
+  }
+  .help-body .help-icon {
+    display: inline-flex;
+    width: 22px;
+    height: 22px;
+    background: var(--accent-gradient);
+    border-radius: 6px;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 13px;
+    font-weight: 800;
+    flex-shrink: 0;
+  }
+
+  /* Profile summary in settings */
+  .profile-summary {
+    background: var(--bg-2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 12px 14px;
+    font-size: 14px;
+    color: var(--text-soft);
+    line-height: 1.5;
+  }
+  .profile-summary strong { color: var(--text); font-weight: 600; }
+  .profile-summary .muted { color: var(--muted); font-style: italic; }
 
   /* ===== Difficult terms (clickable) ===== */
   .term {
@@ -990,6 +1302,11 @@
     <symbol id="i-plus" viewBox="0 0 24 24">
       <path d="M12 5v14"/><path d="M5 12h14"/>
     </symbol>
+    <symbol id="i-help" viewBox="0 0 24 24">
+      <circle cx="12" cy="12" r="10"/>
+      <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/>
+      <line x1="12" y1="17" x2="12.01" y2="17"/>
+    </symbol>
     <symbol id="i-camera" viewBox="0 0 24 24">
       <path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"/>
       <circle cx="12" cy="13" r="3"/>
@@ -1080,9 +1397,9 @@
     <span class="user-greeting" id="userGreeting"></span>
   </h1>
   <div class="header-actions">
-    <button class="icon-btn" id="resetBtn">
-      <svg class="icon"><use href="#i-plus"/></svg>
-      <span class="btn-label" data-i18n="btn_reset">Nieuwe opdracht</span>
+    <button class="icon-btn" id="helpBtn">
+      <svg class="icon"><use href="#i-help"/></svg>
+      <span class="btn-label" data-i18n="btn_help">Help</span>
     </button>
     <button class="icon-btn" id="settingsBtn">
       <svg class="icon"><use href="#i-sliders"/></svg>
@@ -1223,9 +1540,27 @@
     </div>
   </section>
 
+  <!-- Subject view: shown after a subject card is clicked. Contains hero, photo upload, chat. -->
+  <section id="subjectView" class="hidden" style="display: flex; flex-direction: column; gap: 24px;">
+    <div class="back-bar">
+      <button type="button" class="back-link" id="backToSubjectsBtn">
+        <svg class="icon"><use href="#i-arrow-right"/></svg>
+        <span data-i18n="btn_back_subjects">Andere vak</span>
+      </button>
+    </div>
+    <div class="subject-hero" id="subjectHero" data-subject="">
+      <div class="subject-hero-inner">
+        <div class="subject-hero-icon" id="subjectHeroIcon"></div>
+        <div>
+          <div class="subject-hero-title" id="subjectHeroTitle"></div>
+          <div class="subject-hero-text" id="subjectHeroText"></div>
+        </div>
+      </div>
+    </div>
+
   <section id="step-photo" class="hidden">
     <h2 class="step-label">
-      <span class="step-num">2</span>
+      <span class="step-num">1</span>
       <span data-i18n="step2">Foto van je opdracht</span>
     </h2>
     <div class="upload-zone" id="uploadZone">
@@ -1256,7 +1591,7 @@
 
   <section id="step-chat" class="hidden">
     <h2 class="step-label">
-      <span class="step-num">3</span>
+      <span class="step-num">2</span>
       <span data-i18n="step3">Werk samen aan de opdracht</span>
     </h2>
     <div class="chat-container">
@@ -1274,28 +1609,95 @@
       </div>
     </div>
   </section>
+  </section><!-- /subjectView -->
 </main>
 
-<!-- Welcome Modal -->
+<!-- Welcome Modal (multi-step onboarding) -->
 <div class="modal-overlay" id="welcomeModal">
   <div class="modal welcome-modal">
-    <div class="welcome-header">
-      <div class="welcome-icon"><svg class="icon"><use href="#i-cap"/></svg></div>
-      <h2 data-i18n="welcome_title">Welkom!</h2>
-      <p data-i18n="welcome_intro">Vul je naam in en kies je taal, dan kunnen we beginnen.</p>
+
+    <!-- STEP 1 — name + language -->
+    <div class="welcome-step" id="welcomeStep1">
+      <div class="welcome-header">
+        <div class="welcome-icon"><svg class="icon"><use href="#i-cap"/></svg></div>
+        <h2 data-i18n="welcome_title">Welkom!</h2>
+        <p data-i18n="welcome_intro">Vul je naam in en kies je taal, dan stellen we daarna nog een paar korte vragen.</p>
+      </div>
+      <div class="form-field">
+        <label class="form-field-label" data-i18n="label_language">Taal</label>
+        <div class="lang-picker" id="welcomeLangPicker"></div>
+      </div>
+      <div class="form-field">
+        <label class="form-field-label" data-i18n="label_name">Je naam</label>
+        <input type="text" id="welcomeNameInput" data-i18n-placeholder="placeholder_name" placeholder="Bijv. Lisa" maxlength="40">
+      </div>
+      <div class="welcome-progress"><span class="dot active"></span><span class="dot"></span></div>
+      <button class="primary-btn" id="welcomeNextBtn" style="width: 100%;">
+        <span data-i18n="btn_next">Volgende</span>
+        <svg class="icon icon-sm"><use href="#i-arrow-right"/></svg>
+      </button>
     </div>
-    <div class="form-field">
-      <label class="form-field-label" data-i18n="label_language">Taal</label>
-      <div class="lang-picker" id="welcomeLangPicker"></div>
+
+    <!-- STEP 2 — student profile -->
+    <div class="welcome-step hidden" id="welcomeStep2">
+      <div class="welcome-header">
+        <div class="welcome-icon"><svg class="icon"><use href="#i-cap"/></svg></div>
+        <h2 data-i18n="profile_title">Vertel iets over jezelf</h2>
+        <p data-i18n="profile_intro">Zo kunnen we de uitleg op jouw niveau afstemmen.</p>
+      </div>
+
+      <div class="form-field">
+        <label class="form-field-label" data-i18n="label_education">Wat voor onderwijs volg je?</label>
+        <div class="pill-picker" id="educationPicker">
+          <button type="button" class="opt-pill" data-edu="basisschool" data-i18n="edu_primary">Basisschool</button>
+          <button type="button" class="opt-pill" data-edu="middelbare" data-i18n="edu_secondary">Middelbare school</button>
+          <button type="button" class="opt-pill" data-edu="mbo">MBO</button>
+          <button type="button" class="opt-pill" data-edu="hbo">HBO</button>
+          <button type="button" class="opt-pill" data-edu="uni" data-i18n="edu_university">Universiteit</button>
+        </div>
+      </div>
+
+      <div class="form-field hidden" id="schoolLevelField">
+        <label class="form-field-label" data-i18n="label_school_level">Welk niveau?</label>
+        <div class="pill-picker" id="schoolLevelPicker">
+          <button type="button" class="opt-pill" data-level="vmbo">VMBO</button>
+          <button type="button" class="opt-pill" data-level="havo">HAVO</button>
+          <button type="button" class="opt-pill" data-level="vwo">VWO</button>
+          <button type="button" class="opt-pill" data-level="gymnasium">Gymnasium</button>
+        </div>
+      </div>
+
+      <div class="form-field hidden" id="gradeYearField">
+        <label class="form-field-label" data-i18n="label_grade_year">Welk leerjaar?</label>
+        <select id="gradeYearSelect" class="dropdown">
+          <option value="" data-i18n="select_placeholder">Kies...</option>
+        </select>
+      </div>
+
+      <div class="welcome-progress"><span class="dot"></span><span class="dot active"></span></div>
+      <div class="welcome-actions">
+        <button type="button" class="secondary-btn" id="welcomeBackBtn">
+          <svg class="icon icon-sm" style="transform: rotate(180deg);"><use href="#i-arrow-right"/></svg>
+          <span data-i18n="btn_back">Terug</span>
+        </button>
+        <button type="button" class="primary-btn" id="welcomeStartBtn">
+          <span data-i18n="btn_get_started">Aan de slag</span>
+          <svg class="icon icon-sm"><use href="#i-arrow-right"/></svg>
+        </button>
+      </div>
     </div>
-    <div class="form-field">
-      <label class="form-field-label" data-i18n="label_name">Je naam</label>
-      <input type="text" id="welcomeNameInput" data-i18n-placeholder="placeholder_name" placeholder="Bijv. Lisa" maxlength="40">
+
+  </div>
+</div>
+
+<!-- Help / how it works Modal -->
+<div class="modal-overlay" id="helpModal">
+  <div class="modal help-modal">
+    <h2 data-i18n="help_title">Hoe werkt de Huiswerk helper?</h2>
+    <div class="help-body" id="helpBody"></div>
+    <div class="modal-actions">
+      <button class="primary-btn" id="helpCloseBtn" data-i18n="btn_close">Begrepen</button>
     </div>
-    <button class="primary-btn" id="welcomeStartBtn" style="width: 100%;">
-      <span data-i18n="btn_get_started">Aan de slag</span>
-      <svg class="icon icon-sm"><use href="#i-arrow-right"/></svg>
-    </button>
   </div>
 </div>
 
@@ -1340,6 +1742,22 @@
       <input type="password" id="settingsKeyInput" placeholder="sk-ant-...">
       <span class="form-field-hint" data-i18n="api_key_hint">Blijft in je eigen browser. Wordt nergens anders opgeslagen.</span>
     </div>
+
+    <div class="form-field">
+      <label class="form-field-label" data-i18n="label_profile">Jouw profiel</label>
+      <div class="profile-summary" id="profileSummary"></div>
+      <button type="button" class="secondary-btn" id="editProfileBtn" style="margin-top: 8px; width: 100%; justify-content: center;">
+        <svg class="icon icon-sm"><use href="#i-sliders"/></svg>
+        <span data-i18n="btn_edit_profile">Profiel aanpassen</span>
+      </button>
+    </div>
+
+    <div class="form-field">
+      <label class="form-field-label" data-i18n="label_skills">Wat ken je al</label>
+      <div class="skills-list" id="skillsList"></div>
+      <span class="form-field-hint" data-i18n="skills_hint">De begeleider onthoudt automatisch wat je goed beheerst. Hier kun je het zien en eventueel weghalen.</span>
+    </div>
+
     <div class="modal-actions">
       <button class="secondary-btn" id="settingsCancelBtn" data-i18n="btn_cancel">Annuleren</button>
       <button class="primary-btn" id="settingsSaveBtn" data-i18n="btn_save">Opslaan</button>
@@ -1406,6 +1824,39 @@ const TRANSLATIONS = {
     lang_name_en: 'Dutch',
     term_loading: 'Even opzoeken...',
     term_error: 'Sorry, kon deze term nu niet uitleggen.',
+    label_skills: 'Wat ken je al',
+    skills_hint: 'De begeleider onthoudt automatisch wat je goed beheerst. Hier kun je het zien en eventueel weghalen.',
+    skills_empty: 'Nog niets onthouden — terwijl je leert, vult dit zich vanzelf.',
+    skills_forget: 'Vergeten',
+    welcome_intro: 'Vul je naam in en kies je taal, dan stellen we daarna nog een paar korte vragen.',
+    profile_title: 'Vertel iets over jezelf',
+    profile_intro: 'Zo kunnen we de uitleg op jouw niveau afstemmen.',
+    label_education: 'Wat voor onderwijs volg je?',
+    label_school_level: 'Welk niveau?',
+    label_grade_year: 'Welk leerjaar?',
+    edu_primary: 'Basisschool',
+    edu_secondary: 'Middelbare school',
+    edu_university: 'Universiteit',
+    year_groep: 'Groep',
+    year_klas: 'Klas',
+    year_jaar: 'Jaar',
+    select_placeholder: 'Kies...',
+    btn_next: 'Volgende',
+    btn_back: 'Terug',
+    err_pick_education: 'Kies eerst je onderwijstype.',
+    err_pick_level: 'Kies je niveau (VMBO/HAVO/VWO/Gymnasium).',
+    err_pick_year: 'Kies een leerjaar.',
+    label_profile: 'Jouw profiel',
+    profile_empty: 'Nog geen profiel ingevuld.',
+    btn_edit_profile: 'Profiel aanpassen',
+    btn_back_subjects: 'Andere vak',
+    intro_title: 'Hoi {name}! Ik ben de {subjLower}bot.',
+    intro_text: 'Ik help je met {topics} en meer. Maak hieronder een foto van je opdracht — dan gaan we samen aan de slag.',
+    btn_help: 'Help',
+    btn_close: 'Begrepen',
+    help_title: 'Hoe werkt de Huiswerk helper?',
+    help_demo_term: 'discriminant',
+    help_body_html: '<h3><span class="help-icon">1</span>Geen kant-en-klaar antwoord</h3><p>De begeleider werkt <strong>Socratisch</strong>: in plaats van een antwoord krijg je vragen en hints die je helpen het zélf op te lossen. Ook als je erom smeekt — hij blijft vragen stellen. Zo leer je het écht.</p><h3><span class="help-icon">2</span>Hoe begin je?</h3><p>Kies een vak op het startscherm → maak of upload een foto van je opdracht → klik op "Begin met uitleg". De begeleider analyseert de foto en vraagt eerst hoever je al bent.</p><h3><span class="help-icon">3</span>Klikbare moeilijke termen</h3><p>Komt er een vakterm langs zoals {demoTerm}? Tik erop voor een korte uitleg in een popup. Handig voor jargon dat je nog niet kent.</p><h3><span class="help-icon">4</span>De begeleider onthoudt je</h3><p>Als je iets goed beheerst (bijvoorbeeld Duitse naamvallen), onthoudt de app dat automatisch. De volgende keer slaat hij de uitleg over. Bij <strong>Instellingen → "Wat ken je al"</strong> zie je het overzicht en kun je dingen weghalen.</p><h3><span class="help-icon">5</span>Elk vak een eigen begeleider</h3><p>Wiskunde, Natuurkunde, Frans, Geschiedenis ... elk vak heeft zijn eigen aanpak en kleur. Klik op "<strong>← Andere vak</strong>" boven een vak-pagina om te wisselen.</p><h3><span class="help-icon">6</span>Aanpassen</h3><p>Klik op <strong>Instellingen</strong> rechtsboven om je naam, taal, niveau, profiel of API key aan te passen.</p>',
   },
   en: {
     app_name: 'Homework helper',
@@ -1464,6 +1915,39 @@ const TRANSLATIONS = {
     lang_name_en: 'English',
     term_loading: 'Looking it up...',
     term_error: 'Sorry, could not explain that term right now.',
+    label_skills: 'What you already know',
+    skills_hint: 'The tutor automatically remembers what you have mastered. You can review and remove items here.',
+    skills_empty: 'Nothing remembered yet — this fills up as you learn.',
+    skills_forget: 'Forget',
+    welcome_intro: 'Enter your name and pick your language. Then a few quick questions about you.',
+    profile_title: 'Tell us about you',
+    profile_intro: 'So we can match the explanations to your level.',
+    label_education: 'What kind of education are you in?',
+    label_school_level: 'Which level?',
+    label_grade_year: 'Which year?',
+    edu_primary: 'Primary school',
+    edu_secondary: 'Secondary school',
+    edu_university: 'University',
+    year_groep: 'Group',
+    year_klas: 'Year',
+    year_jaar: 'Year',
+    select_placeholder: 'Choose...',
+    btn_next: 'Next',
+    btn_back: 'Back',
+    err_pick_education: 'Please pick your education type.',
+    err_pick_level: 'Please pick your level (VMBO/HAVO/VWO/Gymnasium).',
+    err_pick_year: 'Please pick a year.',
+    label_profile: 'Your profile',
+    profile_empty: 'No profile filled in yet.',
+    btn_edit_profile: 'Edit profile',
+    btn_back_subjects: 'Other subject',
+    intro_title: 'Hi {name}! I’m the {subj} bot.',
+    intro_text: 'I help with {topics} and more. Upload a photo of your assignment below — let’s tackle it together.',
+    btn_help: 'Help',
+    btn_close: 'Got it',
+    help_title: 'How does Homework helper work?',
+    help_demo_term: 'discriminant',
+    help_body_html: '<h3><span class="help-icon">1</span>No ready answers, just guidance</h3><p>The tutor works <strong>Socratically</strong>: instead of a finished answer, you get questions and hints that help you figure it out yourself. Even if you beg — it keeps asking. That is how you actually learn.</p><h3><span class="help-icon">2</span>How to start</h3><p>Pick a subject on the home screen → take or upload a photo of your assignment → click "Start explanation". The tutor reads the photo and first asks how far you have got.</p><h3><span class="help-icon">3</span>Tappable difficult terms</h3><p>See a specialised word like {demoTerm}? Tap it for a short pop-up explanation. Handy for jargon you do not know yet.</p><h3><span class="help-icon">4</span>The tutor remembers you</h3><p>When you have clearly mastered something (for example German cases), the app remembers automatically. Next time it skips the recap. Under <strong>Settings → "What you already know"</strong> you can review and remove items.</p><h3><span class="help-icon">5</span>Each subject is its own bot</h3><p>Maths, physics, French, history... every subject has its own approach and colour. Use "<strong>← Other subject</strong>" at the top of a subject page to switch.</p><h3><span class="help-icon">6</span>Customising</h3><p>Click <strong>Settings</strong> in the top right to change your name, language, education level, profile or API key.</p>',
   },
   de: {
     app_name: 'Hausaufgaben-Helfer',
@@ -1522,6 +2006,39 @@ const TRANSLATIONS = {
     lang_name_en: 'German',
     term_loading: 'Wird nachgeschlagen...',
     term_error: 'Sorry, konnte diesen Begriff gerade nicht erklären.',
+    label_skills: 'Was du schon kannst',
+    skills_hint: 'Der Tutor merkt sich automatisch, was du schon beherrschst. Hier kannst du es einsehen und entfernen.',
+    skills_empty: 'Noch nichts gespeichert — das füllt sich, während du lernst.',
+    skills_forget: 'Vergessen',
+    welcome_intro: 'Gib deinen Namen ein und wähle deine Sprache. Danach noch ein paar kurze Fragen.',
+    profile_title: 'Erzähl etwas über dich',
+    profile_intro: 'So können wir die Erklärungen an dein Niveau anpassen.',
+    label_education: 'Welche Schulart besuchst du?',
+    label_school_level: 'Welches Niveau?',
+    label_grade_year: 'Welche Klasse / welches Jahr?',
+    edu_primary: 'Grundschule',
+    edu_secondary: 'Weiterführende Schule',
+    edu_university: 'Universität',
+    year_groep: 'Klasse',
+    year_klas: 'Klasse',
+    year_jaar: 'Jahr',
+    select_placeholder: 'Wählen...',
+    btn_next: 'Weiter',
+    btn_back: 'Zurück',
+    err_pick_education: 'Bitte wähle zuerst deine Schulart.',
+    err_pick_level: 'Bitte wähle dein Niveau (VMBO/HAVO/VWO/Gymnasium).',
+    err_pick_year: 'Bitte wähle eine Klasse / ein Jahr.',
+    label_profile: 'Dein Profil',
+    profile_empty: 'Noch kein Profil ausgefüllt.',
+    btn_edit_profile: 'Profil bearbeiten',
+    btn_back_subjects: 'Anderes Fach',
+    intro_title: 'Hallo {name}! Ich bin der {subj}-Bot.',
+    intro_text: 'Ich helfe dir mit {topics} und mehr. Lade unten ein Foto deiner Aufgabe hoch — dann lösen wir es zusammen.',
+    btn_help: 'Hilfe',
+    btn_close: 'Verstanden',
+    help_title: 'Wie funktioniert der Hausaufgaben-Helfer?',
+    help_demo_term: 'Diskriminante',
+    help_body_html: '<h3><span class="help-icon">1</span>Keine fertigen Antworten, nur Hilfe</h3><p>Der Tutor arbeitet <strong>sokratisch</strong>: statt einer fertigen Antwort bekommst du Fragen und Hinweise, die dir helfen, es selbst zu lösen. Auch wenn du bettelst — er stellt weiter Fragen. So lernst du wirklich.</p><h3><span class="help-icon">2</span>So fängst du an</h3><p>Wähle ein Fach auf dem Startbildschirm → mache oder lade ein Foto deiner Aufgabe hoch → klicke auf "Erklärung starten". Der Tutor liest das Foto und fragt erst, wie weit du schon bist.</p><h3><span class="help-icon">3</span>Anklickbare Fachbegriffe</h3><p>Siehst du ein Fachwort wie {demoTerm}? Tippe darauf für eine kurze Erklärung in einem Pop-up. Praktisch für Begriffe, die du noch nicht kennst.</p><h3><span class="help-icon">4</span>Der Tutor merkt sich dich</h3><p>Wenn du etwas sicher beherrschst (zum Beispiel die deutschen Fälle), merkt sich die App das automatisch. Beim nächsten Mal überspringt er die Wiederholung. Unter <strong>Einstellungen → "Was du schon kannst"</strong> siehst du die Übersicht und kannst Einträge entfernen.</p><h3><span class="help-icon">5</span>Jedes Fach ein eigener Bot</h3><p>Mathematik, Physik, Französisch, Geschichte ... jedes Fach hat seinen eigenen Ansatz und seine eigene Farbe. Mit "<strong>← Anderes Fach</strong>" oben auf einer Fachseite kannst du wechseln.</p><h3><span class="help-icon">6</span>Anpassen</h3><p>Klicke oben rechts auf <strong>Einstellungen</strong>, um deinen Namen, deine Sprache, dein Niveau, dein Profil oder deinen API key zu ändern.</p>',
   },
   fr: {
     app_name: 'Aide aux devoirs',
@@ -1580,6 +2097,39 @@ const TRANSLATIONS = {
     lang_name_en: 'French',
     term_loading: 'Je cherche...',
     term_error: 'Désolé, je n’ai pas pu expliquer ce terme.',
+    label_skills: 'Ce que tu sais déjà',
+    skills_hint: 'Le tuteur retient automatiquement ce que tu maîtrises. Tu peux consulter et supprimer les éléments ici.',
+    skills_empty: 'Rien retenu pour l’instant — cela se remplit au fur et à mesure.',
+    skills_forget: 'Oublier',
+    welcome_intro: 'Entre ton prénom et choisis ta langue. Ensuite quelques courtes questions sur toi.',
+    profile_title: 'Parle-nous de toi',
+    profile_intro: 'Pour adapter les explications à ton niveau.',
+    label_education: 'Quel type d’enseignement suis-tu ?',
+    label_school_level: 'Quel niveau ?',
+    label_grade_year: 'Quelle année ?',
+    edu_primary: 'École primaire',
+    edu_secondary: 'École secondaire',
+    edu_university: 'Université',
+    year_groep: 'Classe',
+    year_klas: 'Classe',
+    year_jaar: 'Année',
+    select_placeholder: 'Choisir...',
+    btn_next: 'Suivant',
+    btn_back: 'Retour',
+    err_pick_education: 'Choisis d’abord ton type d’enseignement.',
+    err_pick_level: 'Choisis ton niveau (VMBO/HAVO/VWO/Gymnasium).',
+    err_pick_year: 'Choisis une année.',
+    label_profile: 'Ton profil',
+    profile_empty: 'Pas encore de profil rempli.',
+    btn_edit_profile: 'Modifier le profil',
+    btn_back_subjects: 'Autre matière',
+    intro_title: 'Salut {name} ! Je suis le bot de {subjLower}.',
+    intro_text: 'Je t’aide avec {topics} et plus encore. Charge une photo de ton exercice ci-dessous — on s’y attaque ensemble.',
+    btn_help: 'Aide',
+    btn_close: 'Compris',
+    help_title: 'Comment fonctionne Aide aux devoirs ?',
+    help_demo_term: 'discriminant',
+    help_body_html: '<h3><span class="help-icon">1</span>Pas de réponse toute faite, juste de l’aide</h3><p>Le tuteur fonctionne de manière <strong>socratique</strong> : au lieu d’une réponse, tu reçois des questions et des indices qui t’aident à trouver la solution toi-même. Même si tu insistes — il continue à poser des questions. C’est comme ça qu’on apprend vraiment.</p><h3><span class="help-icon">2</span>Comment démarrer</h3><p>Choisis une matière sur l’écran d’accueil → prends ou télécharge une photo de ton exercice → clique sur "Lancer l’explication". Le tuteur lit la photo et te demande d’abord où tu en es.</p><h3><span class="help-icon">3</span>Termes difficiles cliquables</h3><p>Tu vois un mot spécialisé comme {demoTerm} ? Tape dessus pour une explication courte dans une pop-up. Pratique pour le jargon que tu ne connais pas encore.</p><h3><span class="help-icon">4</span>Le tuteur se souvient de toi</h3><p>Quand tu maîtrises clairement quelque chose (par exemple les cas allemands), l’appli s’en souvient automatiquement. La prochaine fois, il saute le rappel. Dans <strong>Paramètres → "Ce que tu sais déjà"</strong>, tu vois la liste et tu peux supprimer des éléments.</p><h3><span class="help-icon">5</span>Chaque matière a son propre bot</h3><p>Maths, physique, anglais, histoire ... chaque matière a sa propre approche et sa propre couleur. Utilise "<strong>← Autre matière</strong>" en haut d’une page de matière pour changer.</p><h3><span class="help-icon">6</span>Personnaliser</h3><p>Clique sur <strong>Paramètres</strong> en haut à droite pour modifier ton prénom, ta langue, ton niveau, ton profil ou ta clé API.</p>',
   },
   es: {
     app_name: 'Ayudante de deberes',
@@ -1638,6 +2188,39 @@ const TRANSLATIONS = {
     lang_name_en: 'Spanish',
     term_loading: 'Buscando...',
     term_error: 'Lo siento, no he podido explicar ese término.',
+    label_skills: 'Lo que ya sabes',
+    skills_hint: 'El tutor recuerda automáticamente lo que ya dominas. Aquí puedes verlo y eliminarlo.',
+    skills_empty: 'Nada recordado todavía — se irá llenando mientras aprendes.',
+    skills_forget: 'Olvidar',
+    welcome_intro: 'Escribe tu nombre y elige tu idioma. Después unas preguntas cortas sobre ti.',
+    profile_title: 'Cuéntanos sobre ti',
+    profile_intro: 'Así podemos ajustar las explicaciones a tu nivel.',
+    label_education: '¿Qué tipo de educación sigues?',
+    label_school_level: '¿Qué nivel?',
+    label_grade_year: '¿Qué curso/año?',
+    edu_primary: 'Escuela primaria',
+    edu_secondary: 'Escuela secundaria',
+    edu_university: 'Universidad',
+    year_groep: 'Curso',
+    year_klas: 'Curso',
+    year_jaar: 'Año',
+    select_placeholder: 'Elegir...',
+    btn_next: 'Siguiente',
+    btn_back: 'Atrás',
+    err_pick_education: 'Elige primero tu tipo de educación.',
+    err_pick_level: 'Elige tu nivel (VMBO/HAVO/VWO/Gymnasium).',
+    err_pick_year: 'Elige un curso.',
+    label_profile: 'Tu perfil',
+    profile_empty: 'Aún no hay perfil.',
+    btn_edit_profile: 'Editar perfil',
+    btn_back_subjects: 'Otra asignatura',
+    intro_title: '¡Hola {name}! Soy el bot de {subjLower}.',
+    intro_text: 'Te ayudo con {topics} y más. Sube una foto de tu tarea abajo — la resolvemos juntos.',
+    btn_help: 'Ayuda',
+    btn_close: 'Entendido',
+    help_title: '¿Cómo funciona el Ayudante de deberes?',
+    help_demo_term: 'discriminante',
+    help_body_html: '<h3><span class="help-icon">1</span>Sin respuestas hechas, solo ayuda</h3><p>El tutor funciona de forma <strong>socrática</strong>: en lugar de una respuesta, recibes preguntas y pistas que te ayudan a encontrarla tú mismo. Aunque insistas, sigue preguntando. Así se aprende de verdad.</p><h3><span class="help-icon">2</span>Cómo empezar</h3><p>Elige una asignatura en la pantalla de inicio → haz o sube una foto de tu tarea → pulsa "Empezar explicación". El tutor lee la foto y primero te pregunta hasta dónde has llegado.</p><h3><span class="help-icon">3</span>Términos difíciles clicables</h3><p>¿Ves una palabra especializada como {demoTerm}? Tócala para una explicación corta en una ventana emergente. Útil para la jerga que aún no conoces.</p><h3><span class="help-icon">4</span>El tutor se acuerda de ti</h3><p>Cuando dominas algo claramente (por ejemplo los casos alemanes), la app lo recuerda automáticamente. La próxima vez se salta el repaso. En <strong>Configuración → "Lo que ya sabes"</strong> ves la lista y puedes eliminar elementos.</p><h3><span class="help-icon">5</span>Cada asignatura, su propio bot</h3><p>Matemáticas, física, francés, historia ... cada asignatura tiene su enfoque y su color. Usa "<strong>← Otra asignatura</strong>" arriba de una página de asignatura para cambiar.</p><h3><span class="help-icon">6</span>Personalizar</h3><p>Pulsa <strong>Configuración</strong> arriba a la derecha para cambiar tu nombre, idioma, nivel, perfil o clave API.</p>',
   },
 };
 
@@ -1649,71 +2232,969 @@ const LANG_LABELS = {
 const SUBJECTS = {
   wiskunde: {
     icon: 'i-triangle', en: 'Mathematics', key: 'math',
-    style: 'After identifying the topic, lay out the solving method as a clear numbered plan ("Step 1: …, Step 2: …, Step 3: …"). Then ask the student which step they are on, or to attempt step 1. Wait for their answer before moving to the next step. If they have not learned a needed concept (e.g. quadratic formula, derivative rule), briefly explain it (2-3 sentences) before letting them apply it themselves. Encourage them to draw a sketch for geometry/graphs. Always end the assignment by asking them to check whether the answer makes sense.',
+    style: `WERKWIJZE: identificeer het onderwerp → leg de oplosmethode neer als een genummerd plan ("Stap 1: ..., Stap 2: ..., Stap 3: ...") → vraag de leerling welke stap hij/zij aanpakt → wacht op antwoord per stap → ga pas verder als de stap klopt. Laat bij meetkunde en grafieken altijd een schets maken. Sluit af met de vraag "Klopt het antwoord qua orde van grootte?".
+
+ONDERWERPEN MET KERNFORMULES — KEN DEZE PERFECT:
+
+ALGEBRA & VERGELIJKINGEN:
+- Lineair: $ax + b = 0 \\Rightarrow x = -b/a$.
+- Kwadratisch $ax^2 + bx + c = 0$: abc-formule $x = \\dfrac{-b \\pm \\sqrt{b^2-4ac}}{2a}$. Discriminant $D = b^2-4ac$: $D>0$ twee oplossingen, $D=0$ één, $D<0$ geen reële.
+- Ontbinden: gemeenschappelijke factor, $a^2 - b^2 = (a-b)(a+b)$, $(a \\pm b)^2 = a^2 \\pm 2ab + b^2$.
+- Wortelvergelijking: kwadrateer beide kanten, CONTROLEER oplossingen achteraf (vreemde wortels).
+- Exponentiële vergelijking: schrijf beide kanten als zelfde grondtal, of neem $\\log$ van beide kanten.
+- Stelsels: substitutie of eliminatie. Bij 2 vgl met 2 onbekenden: één onbekende uitdrukken in de ander.
+
+MEETKUNDE:
+- Pythagoras (rechthoekige driehoek): $a^2 + b^2 = c^2$.
+- Oppervlakte: rechthoek $b \\cdot h$, driehoek $\\tfrac{1}{2}bh$, parallelogram $b \\cdot h$, trapezium $\\tfrac{1}{2}(a+b)h$, cirkel $\\pi r^2$.
+- Omtrek cirkel: $2\\pi r$.
+- Inhoud: balk $l \\cdot b \\cdot h$, prisma $G \\cdot h$, cilinder $\\pi r^2 h$, kegel $\\tfrac{1}{3}\\pi r^2 h$, piramide $\\tfrac{1}{3}G \\cdot h$, bol $\\tfrac{4}{3}\\pi r^3$.
+- Cosinusregel: $a^2 = b^2 + c^2 - 2bc\\cos\\alpha$.
+- Sinusregel: $\\dfrac{a}{\\sin\\alpha} = \\dfrac{b}{\\sin\\beta} = \\dfrac{c}{\\sin\\gamma}$.
+- Gelijkvormigheid: zelfde hoeken → evenredige zijden, vergelijk verhoudingsfactor.
+
+FUNCTIES & GRAFIEKEN:
+- Lineair $f(x) = ax + b$: $a$ = richtingscoefficient, $b$ = snijpunt y-as. Helling via $a = \\dfrac{\\Delta y}{\\Delta x}$.
+- Kwadratisch $f(x) = ax^2 + bx + c$: top bij $x = -\\dfrac{b}{2a}$. Dalparabool als $a>0$, bergparabool als $a<0$.
+- Exponentieel $f(x) = b \\cdot g^x$: groeifactor $g$. Verdubbelingstijd / halveringstijd.
+- Logaritme $f(x) = {}^{g}\\!\\log x$: inverse van exponentieel. Domein $x > 0$.
+- Macht $f(x) = ax^n$.
+- Goniometrisch $f(x) = a \\sin(b(x-c)) + d$: amplitude $a$, periode $\\dfrac{2\\pi}{b}$, horizontale verschuiving $c$, verticale verschuiving $d$.
+
+DIFFERENTIAALREKENING:
+- Definitie: $f'(x) = \\lim\\limits_{h \\to 0} \\dfrac{f(x+h) - f(x)}{h}$.
+- Basisregels:
+  - Constante: $\\dfrac{d}{dx}(c) = 0$.
+  - Macht: $\\dfrac{d}{dx}(x^n) = n x^{n-1}$.
+  - Som: $(f+g)' = f' + g'$.
+  - Productregel: $(fg)' = f'g + fg'$.
+  - Quotientregel: $(\\dfrac{f}{g})' = \\dfrac{f'g - fg'}{g^2}$.
+  - Kettingregel: $(f(g(x)))' = f'(g(x)) \\cdot g'(x)$.
+- Toepassingen: top/dal ($f'(x) = 0$), helling raaklijn, snelheid uit afgelegde weg, optimalisatie.
+
+STATISTIEK & KANSREKENING:
+- Gemiddelde: $\\bar{x} = \\dfrac{\\sum x_i}{n}$.
+- Mediaan: middelste waarde na sorteren.
+- Modus: meest voorkomende.
+- Spreidingsbreedte: max − min.
+- Standaardafwijking: $\\sigma = \\sqrt{\\dfrac{\\sum (x_i - \\bar{x})^2}{n}}$.
+- Normaalverdeling: 68% binnen $\\bar{x} \\pm \\sigma$, 95% binnen $\\pm 2\\sigma$, 99{,}7% binnen $\\pm 3\\sigma$.
+- Klassieke kans: $P(A) = \\dfrac{\\text{gunstige uitkomsten}}{\\text{totaal}}$.
+- Som-regel: $P(A \\cup B) = P(A) + P(B) - P(A \\cap B)$.
+- Productregel (onafhankelijk): $P(A \\cap B) = P(A) \\cdot P(B)$.
+- Voorwaardelijke kans: $P(A|B) = \\dfrac{P(A \\cap B)}{P(B)}$.
+- Combinaties: $\\binom{n}{k} = \\dfrac{n!}{k!(n-k)!}$. Permutaties: $\\dfrac{n!}{(n-k)!}$.
+- Binomiaal: $P(X = k) = \\binom{n}{k} p^k (1-p)^{n-k}$.
+
+LOGARITMEN & EXPONENTEN:
+- $\\log(xy) = \\log x + \\log y$
+- $\\log(x/y) = \\log x - \\log y$
+- $\\log(x^n) = n \\log x$
+- Basisverandering: $\\log_a x = \\dfrac{\\log_b x}{\\log_b a}$.
+- $a^{x+y} = a^x \\cdot a^y$, $(a^x)^y = a^{xy}$, $a^{-x} = \\dfrac{1}{a^x}$.
+
+RIJEN & REEKSEN:
+- Rekenkundig: $u_n = u_1 + (n-1)v$. Som: $S_n = \\tfrac{n}{2}(u_1 + u_n)$.
+- Meetkundig: $u_n = u_1 \\cdot r^{n-1}$. Som: $S_n = u_1 \\cdot \\dfrac{1-r^n}{1-r}$ ($r \\ne 1$). Oneindig (als $|r|<1$): $S_\\infty = \\dfrac{u_1}{1-r}$.
+
+COACHING: laat de leerling per stap zelf rekenen — geef NOOIT zelf getallen, alleen structuur. Bij vastlopen: één gerichte hint-vraag ("Welke formule past hier?", "Wat doet $D$ als $b^2 < 4ac$?"). Onbekende concepten ([[discriminant]], [[asymptoot]], [[kettingregel]], [[binomiaalcoefficient]]) eerst kort uitleggen voordat de leerling ze toepast.`,
   },
   natuurkunde: {
     icon: 'i-atom', en: 'Physics', key: 'phys',
-    style: 'Physics has a fixed method: 1) list the given quantities WITH their units, 2) state what must be found, 3) draw a quick situation sketch (with vectors for forces/motion), 4) name the physical law connecting them, 5) isolate the unknown in the formula, 6) plug in numbers, 7) check the units of the result. Walk the student through this plan and ask them to do each step. If they do not know a needed law (Newton’s laws, Ohm’s law, conservation of energy, etc.), briefly explain it (2-3 sentences) before they apply it. Always finish by asking whether the order of magnitude of the answer is realistic.',
+    style: `VASTE METHODE voor elke som: 1) lijst de gegeven grootheden MÉT eenheid, 2) noteer wat gevraagd is, 3) maak een korte situatieschets (met vectoren bij krachten/beweging), 4) benoem de natuurkundige wet die alles verbindt, 5) isoleer het onbekende in de formule, 6) vul in, 7) controleer de eenheid van het antwoord. Walk de leerling per stap mee. Sluit af met "Is de orde van grootte realistisch?".
+
+ONDERWERPEN MET KERNFORMULES EN EENHEDEN — KEN DEZE PERFECT:
+
+MECHANICA — KINEMATICA (beweging zonder kracht):
+- Snelheid: $v = \\dfrac{\\Delta s}{\\Delta t}$ — eenheid m/s.
+- Versnelling: $a = \\dfrac{\\Delta v}{\\Delta t}$ — eenheid m/s².
+- Eenparig versneld: $v = v_0 + at$; $s = v_0 t + \\tfrac{1}{2}at^2$; $v^2 = v_0^2 + 2as$.
+- Vrije val: $a = g \\approx 9{,}81$ m/s² omlaag (Binas).
+- Cirkelbeweging: $v = \\dfrac{2\\pi r}{T}$; middelpuntzoekende versnelling $a_{mpz} = \\dfrac{v^2}{r}$.
+
+MECHANICA — DYNAMICA (krachten):
+- Newton 1: zonder netto kracht → constante snelheid (incl. stilstand).
+- Newton 2: $F_{net} = m \\cdot a$ — kracht in newton (N), 1 N = 1 kg·m/s².
+- Newton 3: actie = −reactie.
+- Zwaartekracht: $F_z = m \\cdot g$.
+- Wrijvingskracht: $F_w = \\mu \\cdot F_n$ (normaalkracht).
+- Veerkracht: $F_{veer} = C \\cdot u$ (Hooke; $C$ = veerconstante in N/m).
+- Spankracht in touw: trekt aan beide kanten gelijk.
+
+MECHANICA — ENERGIE & ARBEID:
+- Arbeid: $W = F \\cdot s \\cdot \\cos\\theta$ — joule (J), 1 J = 1 N·m.
+- Kinetische energie: $E_k = \\tfrac{1}{2}mv^2$.
+- Potentiele (zwaarte-)energie: $E_z = m \\cdot g \\cdot h$.
+- Veerenergie: $E_{veer} = \\tfrac{1}{2}Cu^2$.
+- Behoud van energie: $E_{tot}$ constant in gesloten systeem (zonder wrijving).
+- Vermogen: $P = \\dfrac{W}{t} = F \\cdot v$ — watt (W), 1 W = 1 J/s.
+- Rendement: $\\eta = \\dfrac{E_{nuttig}}{E_{ingaand}} \\times 100\\%$.
+
+ELEKTRICITEIT:
+- Wet van Ohm: $U = I \\cdot R$ — volt (V) = ampere (A) × ohm (Ω).
+- Vermogen: $P = U \\cdot I = I^2 R = \\dfrac{U^2}{R}$ — watt.
+- Energie: $E = P \\cdot t$ — joule of kWh ($1 \\text{ kWh} = 3{,}6 \\times 10^6$ J).
+- Serieschakeling: $R_{tot} = R_1 + R_2 + \\ldots$. Zelfde stroom door alle weerstanden; spanning verdeelt.
+- Parallelschakeling: $\\dfrac{1}{R_{tot}} = \\dfrac{1}{R_1} + \\dfrac{1}{R_2} + \\ldots$. Zelfde spanning over alle takken; stroom verdeelt.
+- Wetten van Kirchhoff: knooppunt (som $I_{in} = I_{uit}$), maas (som $U = 0$ rond een lus).
+- Lading: $Q = I \\cdot t$ — coulomb (C).
+
+GOLVEN & TRILLINGEN:
+- Frequentie: $f = \\dfrac{1}{T}$ — hertz (Hz), $T$ = trillingstijd.
+- Golfsnelheid: $v = f \\cdot \\lambda$ ($\\lambda$ = golflengte in m).
+- Geluidssnelheid in lucht: $\\approx 343$ m/s; lichtsnelheid: $c \\approx 3 \\times 10^8$ m/s.
+- Doppler-effect: bron beweegt → waargenomen frequentie wijzigt.
+- Interferentie: twee golven optellen — constructief (in fase) of destructief (tegenfase).
+
+OPTICA:
+- Brekingswet (Snellius): $n_1 \\sin\\theta_1 = n_2 \\sin\\theta_2$.
+- Brekingsindex: $n = \\dfrac{c}{v_{medium}}$.
+- Totale terugkaatsing als $\\theta > \\theta_{grens}$ met $\\sin\\theta_{grens} = \\dfrac{n_2}{n_1}$.
+- Lenzenformule: $\\dfrac{1}{f} = \\dfrac{1}{v} + \\dfrac{1}{b}$ ($v$ = voorwerpsafstand, $b$ = beeldafstand, $f$ = brandpuntsafstand).
+- Vergroting: $N = \\dfrac{b}{v}$.
+
+WARMTE & THERMODYNAMICA:
+- Soortelijke warmte: $Q = m \\cdot c \\cdot \\Delta T$ ($c$ in J/(kg·K)).
+- Smelt-/verdampingswarmte: $Q = m \\cdot l$ ($l$ in J/kg).
+- Eerste hoofdwet: $\\Delta U = Q - W$.
+- Algemene gaswet: $pV = nRT$ ($R = 8{,}314$ J/(mol·K)).
+
+KERN- EN ATOOMFYSICA:
+- Massa-energie: $E = m c^2$.
+- Soorten straling: $\\alpha$ (He-kern), $\\beta^-$ (elektron), $\\beta^+$ (positron), $\\gamma$ (foton).
+- Halfwaardetijd: $N(t) = N_0 \\cdot \\left(\\tfrac{1}{2}\\right)^{t/T_{1/2}}$.
+- Activiteit: $A = \\lambda N$ — eenheid becquerel (Bq).
+- Foton-energie: $E = hf = \\dfrac{hc}{\\lambda}$ met $h = 6{,}626 \\times 10^{-34}$ Js.
+
+EENHEDEN — let altijd op:
+- SI-prefixen: $\\mu$ = $10^{-6}$, m = $10^{-3}$, k = $10^3$, M = $10^6$, G = $10^9$.
+- mL → L delen door 1000, cm → m delen door 100, min → s vermenigvuldigen met 60.
+- Eindcontrole: deel de eenheden in de formule mechanisch uit. Krijg je een rare eenheid → fout.
+
+COACHING: laat de leerling per stap zelf rekenen, geef geen getallen. Onbekende wetten ([[wet van Coulomb]], [[wet van Ohm]], [[behoud van impuls]], [[lensformule]]) eerst kort uitleggen (2-3 zinnen) voor toepassing. Bij vastlopen: één gerichte hint ("Welke grootheid verandert hier?", "Welke wet verbindt $U$ en $I$?").`,
   },
   scheikunde: {
     icon: 'i-flask', en: 'Chemistry', key: 'chem',
-    style: 'Chemistry breaks into clear method types. For balancing reactions: 1) identify the reaction type (verbranding, neutralisatie, redox, etc.), 2) count atoms per element on both sides, 3) balance coefficients. For stoichiometry: ALWAYS convert grams ↔ moles using molar mass before applying any ratio. For acids/bases: identify the proton donor and acceptor. For redox: track which atom loses/gains electrons (oxidation numbers). Lay out the relevant method as numbered steps and ask the student to do each. If they do not know a concept (mol, oxidatiegetal, evenwicht), briefly explain it (2-3 sentences) before they apply it.',
+    style: `CHEMISTRY NOTATION — ALWAYS use mhchem syntax inside $...$ for every formula, ion, equation. The app renders proper subscripts, charges and reaction arrows. Examples:
+- Formulas: $\\ce{H2O}$, $\\ce{CO2}$, $\\ce{NaCl}$, $\\ce{H2SO4}$, $\\ce{C6H12O6}$
+- Ions / charges: $\\ce{Na+}$, $\\ce{Cl-}$, $\\ce{NH4+}$, $\\ce{SO4^{2-}}$, $\\ce{Fe^{3+}}$
+- Reactions with arrow: $\\ce{2H2 + O2 -> 2H2O}$
+- Equilibria: $\\ce{N2 + 3H2 <=> 2NH3}$
+- States of matter: $\\ce{NaCl(s) -> Na+(aq) + Cl-(aq)}$
+- Precipitate (down) / gas (up): $\\ce{CaCO3 -> CaO + CO2 ^}$, $\\ce{Ag+ + Cl- -> AgCl v}$
+- Oxidation numbers (above element): $\\ce{\\overset{+1}{H} \\overset{-1}{Cl}}$ or simply note them in text
+- Concentrations / pH: $[\\ce{H+}] = 10^{-3}$ mol/L, $\\mathrm{pH} = -\\log[\\ce{H+}]$
+- Half-reactions: $\\ce{Cu^{2+} + 2e- -> Cu}$
+NEVER write "H2O" or "Na+" in plain text — always wrap in $\\ce{...}$.
+
+METHOD TYPES — identify which one applies first:
+1. Balancing reactions: identify reaction type (verbranding, neutralisatie, redox, neerslag, ontleding, dubbele verdringing). Count atoms per element on both sides. Balance coefficients one element at a time, leaving H and O for last.
+2. Molair rekenen / stoichiometrie — KERNTECHNIEK, leg dit ALTIJD heel expliciet uit met een vast stappenplan.
+
+   BASISBEGRIPPEN die de leerling moet kennen vóór hij begint (kort uitleggen als hij ze niet kent):
+   - 1 mol = $6{,}022 \\times 10^{23}$ deeltjes (= $N_A$, het [[getal van Avogadro]]).
+   - Molaire massa $M$ (g/mol) = massa van 1 mol; aflezen uit Binas/periodiek systeem en optellen voor moleculen. Voorbeeld: $M(\\ce{H2O}) = 2 \\times 1{,}008 + 16{,}00 = 18{,}02$ g/mol.
+   - Symbolen: $n$ = mol, $m$ = massa (g), $V$ = volume (L of mL — let op!), $c$ = concentratie (mol/L), $M$ = molaire massa (g/mol).
+
+   DE DRIE BASISFORMULES (uit hoofd):
+   - Mol ↔ massa:   $n = \\dfrac{m}{M}$   en   $m = n \\cdot M$
+   - Mol ↔ gasvolume (bij standaardomstandigheden): $n = \\dfrac{V}{V_m}$ met $V_m = 22{,}4$ L/mol
+   - Mol ↔ oplossing: $n = c \\cdot V$   en   $c = \\dfrac{n}{V}$
+
+   VAST STAPPENPLAN voor élke molberekening — gebruik altijd deze volgorde:
+   STAP 1 — Schrijf de gebalanceerde reactievergelijking op. Zonder vergelijking geen molverhouding.
+   STAP 2 — Onderstreep wat gegeven is en wat gevraagd wordt (omcirkel de stof + eenheid).
+   STAP 3 — Zet de GEGEVEN stof om naar mol (via $n = \\dfrac{m}{M}$, of $n = \\dfrac{V}{22{,}4}$, of $n = c \\cdot V$).
+   STAP 4 — Gebruik de MOLVERHOUDING uit de vergelijking. Voorbeeld: bij $\\ce{2H2 + O2 -> 2H2O}$ geldt $\\ce{H2} : \\ce{O2} : \\ce{H2O} = 2 : 1 : 2$. Bereken: $n_{\\text{gevraagd}} = n_{\\text{gegeven}} \\times \\dfrac{\\text{coefficient gevraagd}}{\\text{coefficient gegeven}}$.
+   STAP 5 — Zet mol om naar de gevraagde eenheid: gram via $m = n \\cdot M$, gasvolume via $V = n \\cdot 22{,}4$, concentratie via $c = \\dfrac{n}{V}$.
+   STAP 6 — Controleer eenheden (mL → L?, kg → g?) en grootteorde (is het antwoord realistisch?).
+
+   COACHING-STIJL bij molberekeningen: vraag bij elke stap "Welke stof zet je nu om?", "Wat is de molverhouding hier?", "Wat krijg je voor $n$?". Laat de leerling zélf de getallen invullen. Geef NOOIT zelf het tussenresultaat — alleen de structuur van de stap.
+
+   VEELVOORKOMENDE FOUTEN om actief op te checken:
+   - mL niet naar L omgerekend (1 L = 1000 mL).
+   - $M$ verkeerd opgeteld of het verkeerde element opgezocht.
+   - Molverhouding omgedraaid (zorg dat de coefficient van de gevraagde stof BOVEN staat).
+   - Eenheden van $V_m$ vergeten (alleen 22,4 L/mol bij standaardomstandigheden).
+
+   SPECIALE GEVALLEN:
+   - [[Beperkende factor]] (limiterende reagens): bij twee gegeven hoeveelheden, doe stap 3 voor beide stoffen, deel beide door hun coefficient — de stof met de KLEINSTE uitkomst is beperkend en bepaalt de opbrengst.
+   - [[Rendement]] / opbrengst: $\\text{rendement} = \\dfrac{\\text{werkelijke opbrengst}}{\\text{theoretische opbrengst}} \\times 100\\%$. Bereken eerst de theoretische opbrengst via het stappenplan, dan invullen.
+   - Overmaat: het deel van de niet-beperkende stof dat overblijft na de reactie. Bereken hoeveel mol gereageerd heeft (via de beperkende factor), trek dat af van de oorspronkelijke hoeveelheid.
+
+REACTIETYPES MET STANDAARDFORMULES — KEN DEZE PERFECT en gebruik ze actief om reacties te herkennen, voorspellen en uitleggen:
+
+a) VERBRANDING (stof + $\\ce{O2}$):
+   - Volledige verbranding van koolwaterstof: $\\ce{C_xH_y + O2 -> CO2 + H2O}$. Voorbeeld: $\\ce{CH4 + 2O2 -> CO2 + 2H2O}$.
+   - Met heteroatomen (N, S): $\\ce{4NH3 + 5O2 -> 4NO + 6H2O}$.
+   - Onvolledige verbranding (zuurstoftekort): extra producten $\\ce{CO}$ of $\\ce{C(s)}$ (roet).
+   - Herkennen: zuurstof is een reagens en er ontstaan oxiden.
+
+b) NEUTRALISATIE (zuur + base → zout + water):
+   - Algemeen: $\\ce{HZ + MOH -> MZ + H2O}$.
+   - Voorbeeld: $\\ce{HCl + NaOH -> NaCl + H2O}$.
+   - Polyprotisch zuur (meer $\\ce{H+}$): $\\ce{H2SO4 + 2NaOH -> Na2SO4 + 2H2O}$.
+   - Netto-ionvergelijking: $\\ce{H+ + OH- -> H2O}$. Bij sterk zuur + sterke base ligt $pH = 7$ op het equivalentiepunt.
+
+c) NEERSLAGREACTIE (twee zoutoplossingen → onoplosbaar zout):
+   - Algemeen: $\\ce{AB(aq) + CD(aq) -> AD(s) v + CB(aq)}$ als $\\ce{AD}$ onoplosbaar is (raadpleeg oplosbaarheidstabel/Binas).
+   - Voorbeeld: $\\ce{AgNO3(aq) + NaCl(aq) -> AgCl(s) v + NaNO3(aq)}$.
+   - Onthouden: zilver- en loodzouten (behalve nitraten), bariumsulfaat en de meeste hydroxiden zijn slecht oplosbaar.
+
+d) ONTLEDING (één stof → meerdere):
+   - Thermisch: $\\ce{CaCO3 ->[\\Delta] CaO + CO2 ^}$.
+   - Elektrolyse: $\\ce{2H2O ->[\\text{elektrolyse}] 2H2 ^ + O2 ^}$.
+   - Herkennen: pijl gaat van 1 stof naar 2+ stoffen.
+
+e) SYNTHESE (elementen → verbinding):
+   - $\\ce{2H2 + O2 -> 2H2O}$, $\\ce{N2 + 3H2 <=> 2NH3}$ (Haber-Bosch, evenwicht!).
+   - Herkennen: van losse elementen naar één verbinding.
+
+f) REDOX (elektronenoverdracht):
+   - Halfreactie OXIDATIE (verlies $e^-$): $\\ce{Cu -> Cu^{2+} + 2e-}$. Oxidatiegetal stijgt.
+   - Halfreactie REDUCTIE (winst $e^-$): $\\ce{Ag+ + e- -> Ag}$. Oxidatiegetal daalt.
+   - Combineren met gelijk aantal elektronen: $\\ce{Cu + 2Ag+ -> Cu^{2+} + 2Ag}$.
+   - Standaard redoxpotentialen ($E^0$) uit Binas tabel 48: hoger $E^0$ = sterker oxidator.
+   - Ezelsbruggetje OIL RIG: Oxidation Is Loss, Reduction Is Gain (van elektronen).
+
+g) ESTERVORMING (carbonzuur + alcohol):
+   - Algemeen: $\\ce{R-COOH + R'-OH <=> R-COO-R' + H2O}$ (evenwicht, vaak gekatalyseerd door $\\ce{H2SO4}$).
+   - Voorbeeld: $\\ce{CH3COOH + C2H5OH <=> CH3COOC2H5 + H2O}$ (azijnzuur + ethanol → ethylacetaat).
+   - Herkennen aan -COO- in het product. Hydrolyse is de omgekeerde reactie.
+
+h) ZUUR-BASE EVENWICHTEN (Brønsted):
+   - Zwak zuur: $\\ce{HA <=> H+ + A-}$, $K_a = \\dfrac{[\\ce{H+}][\\ce{A-}]}{[\\ce{HA}]}$.
+   - Zwakke base: $\\ce{B + H2O <=> BH+ + OH-}$, $K_b = \\dfrac{[\\ce{BH+}][\\ce{OH-}]}{[\\ce{B}]}$.
+   - Verband: $K_a \\cdot K_b = K_w = 10^{-14}$ bij 25°C.
+   - pH zwak zuur: $\\mathrm{pH} = \\tfrac{1}{2}(pK_a - \\log c)$.
+
+i) ORGANISCHE REACTIES — herken aan de functionele groep:
+   - Substitutie: $\\ce{CH4 + Cl2 ->[\\text{licht}] CH3Cl + HCl}$.
+   - Additie aan dubbele binding: $\\ce{CH2=CH2 + Br2 -> CH2Br-CH2Br}$.
+   - Eliminatie: $\\ce{CH3-CH2-OH ->[\\ce{H2SO4}, \\Delta] CH2=CH2 + H2O}$.
+   - Condensatie: twee moleculen → één molecuul + klein bijproduct (vaak $\\ce{H2O}$), zoals bij estervorming.
+
+REGELS VOOR HET VOORSPELLEN EN BALANCEREN VAN PRODUCTEN:
+- Behoud van ATOMEN: elke atoomsoort links = rechts. Coefficiënten aanpassen, NOOIT subscripts in formules.
+- Behoud van LADING: totale lading links = rechts (vooral belangrijk bij ionvergelijkingen en redox).
+- Behoud van MASSA: som massa reagentia = som massa producten.
+- Tip-volgorde bij balanceren: eerst metalen, dan niet-metalen behalve H en O, dan H, dan O als laatste.
+- Gasontwijking (^) als product een gas is bij kamertemperatuur (CO2, NH3, H2, O2, etc.).
+- Neerslag (v) als het product een onoplosbaar zout is — controleer in de oplosbaarheidstabel.
+
+COACHING bij reactievergelijkingen: laat de leerling steeds zelf benoemen "Welk type reactie is dit?" en "Welke producten verwacht je?". Geef nooit zelf direct het type — vraag naar de reagentia en laat hem/haar zelf concluderen. Als de leerling vastloopt, vraag een gerichte hint: "Welke twee stoffen reageren hier? Wat hebben ze gemeen?"
+3. Concentratie: $c = \\frac{n}{V}$ (mol/L). Watch unit conversion (mL → L).
+4. Gaswet: $pV = nRT$ at non-standard conditions, or $V_m = 22.4$ L/mol at standard.
+5. Zuren/basen (Brønsted): identify proton donor and acceptor. pH calculations: $\\mathrm{pH} = -\\log[\\ce{H+}]$, sterke zuur volledig, zwak zuur via $K_a$.
+6. Redox: assign oxidation numbers, identify which atom is oxidised (loses e-) and which is reduced (gains e-), then balance half-reactions and combine.
+7. Evenwicht: write the $K$ expression: for $\\ce{aA + bB <=> cC + dD}$, $K = \\frac{[C]^c[D]^d}{[A]^a[B]^b}$. K depends only on temperature.
+8. Organic chemistry: identify functional groups (alcohol, carbonzuur, ester, amine, etc.). Recognise reaction types: substitutie, eliminatie, additie, condensatie. Draw structural formula in words if useful (e.g. "CH3-CH2-OH").
+
+TEACHING APPROACH:
+Step 1: ALWAYS write the chemical equation first, properly balanced, before any calculation.
+Step 2: identify what the student is asked to find (mol, gram, V, c, pH...).
+Step 3: list what is given.
+Step 4: pick the right method (see above) and lay out the steps as a numbered plan.
+Step 5: ask the student to attempt step 1, wait for their answer, check, then continue.
+If the student does not know a concept ([[mol]], [[oxidatiegetal]], [[evenwicht]], [[Avogadro]], [[molariteit]], [[functionele groep]]), briefly teach it (2-3 sentences) before they apply it. Always end by checking whether the answer's order of magnitude is realistic (e.g. "Is 5000 mol water in een glas reëel?").`,
   },
   biologie: {
     icon: 'i-leaf', en: 'Biology', key: 'bio',
-    style: 'Biology has many sub-domains — first identify which one: 1) cel & DNA (mitose, meiose, eiwitsynthese), 2) menselijk lichaam & organen (spijsvertering, ademhaling, zenuwstelsel, hormonen), 3) ecologie & ecosystemen (voedselketens, kringlopen, successie), 4) evolutie & erfelijkheid (Darwin, genetica, kruisingsschema), 5) planten (fotosynthese, stomata). For PROCESSES (celdeling, fotosynthese, spijsvertering): split into stages and ask which stage the student is on. For DIAGRAMS: ask them to label the parts themselves. For ecology: walk through cause-and-effect chains ("what eats this? what happens if it disappears?"). For genetics: walk through a kruisingsschema (Punnett square) step by step. If a concept is unknown (e.g. [[mitose]], [[ATP]], [[fenotype]]), briefly teach it before they apply it.',
+    style: `IDENTIFICEER EERST het sub-domein: cel & DNA / menselijk lichaam / ecologie / evolutie & genetica / planten. Daarna een vast stappenplan, met checkpoints bij elke stap.
+
+CEL & DNA:
+- Celorganellen: kern (DNA + nucleolus), mitochondrium (ATP-productie via celademhaling), ribosoom (eiwitsynthese), endoplasmatisch reticulum (ruw met ribosomen, glad zonder), golgi-apparaat (sorteren/verpakken), lysosoom (afbraak), chloroplast (alleen plantencellen, fotosynthese), celwand (planten/schimmels/bacteriën).
+- Mitose (groei/herstel): één diploïde cel → 2 identieke diploïde dochtercellen. Fasen: profase, metafase (chromosomen in middenvlak), anafase (uit elkaar), telofase, cytokinese.
+- Meiose (geslachtscellen): één diploïde → 4 haploïde cellen. Twee delingen. Crossing-over in profase I geeft genetische variatie.
+- DNA-structuur: dubbele helix, basenparen A-T en C-G (waterstofbruggen). Suiker-fosfaat-ruggengraat.
+- DNA-replicatie: helicase opent helix, DNA-polymerase synthetiseert nieuwe streng (5'→3', semi-conservatief).
+- Eiwitsynthese:
+   1) TRANSCRIPTIE in de kern: DNA → mRNA (RNA-polymerase, T wordt U).
+   2) TRANSLATIE op het ribosoom: mRNA → eiwit. Codon (3 basen) = 1 aminozuur. tRNA brengt aminozuren aan.
+- Genetische code: 64 codons → 20 aminozuren + start (AUG) + 3 stopcodons.
+- Mutaties: puntmutatie (1 base), inversie, deletie, insertie. Niet alle mutaties hebben effect (degeneratie code).
+
+MENSELIJK LICHAAM — orgaansystemen:
+- SPIJSVERTERING: mond (amylase splitst zetmeel) → slokdarm (peristaltiek) → maag (HCl + pepsine voor eiwitten) → twaalfvingerige darm (gal van lever emulgeert vet; alvleeskliersappen) → dunne darm (opname via darmvlokken/microvilli) → dikke darm (water-opname). Eindproducten: aminozuren, glucose, vetzuren + glycerol.
+- ADEMHALING: luchtwegen (neus → trachea → bronchiën → bronchioli → alveoli). Gasuitwisseling in longblaasjes via diffusie. Diafragma omlaag = inademing.
+- BLOEDSOMLOOP: hart pompt; kleine kring (rechter ventrikel → longen → linker boezem); grote kring (linker ventrikel → lichaam → rechter boezem). Slagaders (van hart af, met druk), aders (naar hart toe, met kleppen), haarvaten (uitwisseling).
+- BLOED: rode bloedcellen (hemoglobine, O2-transport), witte bloedcellen (afweer), bloedplaatjes (stolling), plasma.
+- UITSCHEIDING: nieren filteren bloed. Glomerulus filtreert, tubulus reabsorbeert nuttige stoffen. Urine = afvalwater.
+- ZENUWSTELSEL: prikkel → receptor → sensorisch neuron → CZS (hersenen/ruggenmerg) → motorisch neuron → effector. Synaps gebruikt neurotransmitters (bv. acetylcholine). Reflexboog gaat sneller (via ruggenmerg, niet hersenen).
+- HORMOONSTELSEL: trage chemische signalen. Hypofyse = "meesterklier". Insuline (alvleesklier-bètacellen) verlaagt bloedglucose; glucagon verhoogt het. Adrenaline (bijnier) bij stress.
+- AFWEER: 1e lijn (huid, slijmvliezen). 2e lijn aspecifiek (ontstekingsreactie, fagocyten). 3e lijn specifiek (B-cellen → antistoffen; T-cellen → cellulaire afweer). Vaccinatie = geheugencel-vorming.
+- VOORTPLANTING: cyclus (28 dagen gemiddeld), ovulatie ~dag 14. Hormonen FSH, LH, oestrogeen, progesteron.
+
+ECOLOGIE:
+- Niveaus: organisme → populatie → levensgemeenschap → ecosysteem → biosfeer.
+- Voedselrelaties: producent (autotroof, vaak plant) → 1e orde consument (herbivoor) → 2e orde (carnivoor) → enz. Reducenten (bacteriën, schimmels) sluiten de kringloop.
+- Energiepiramide: per trofisch niveau ~10% energie doorgegeven, 90% gaat verloren als warmte.
+- Koolstofkringloop: $\\ce{CO2}$ in lucht ↔ fotosynthese → biomassa → ademhaling/verbranding/rotting → $\\ce{CO2}$.
+- Stikstofkringloop: $\\ce{N2}$ → fixatie (bacteriën) → $\\ce{NH4+}$ → nitrificatie → $\\ce{NO3-}$ → opname planten → denitrificatie.
+- Populatiedynamiek: $\\Delta N = (\\text{geboorte} + \\text{immigratie}) - (\\text{sterfte} + \\text{emigratie})$. Draagkracht $K$ = max populatie die het milieu aankan.
+- Successie: pionierfase (mossen, korstmossen) → kruidlaag → struweel → bos (climaxfase).
+- Symbiose: mutualisme (beide voordeel), commensalisme (één voordeel, ander neutraal), parasitisme (één voordeel, ander nadeel).
+
+EVOLUTIE & ERFELIJKHEID:
+- Darwin: 1) variatie binnen populatie, 2) selectiedruk, 3) reproductie van best aangepasten, 4) erfelijkheid → evolutie.
+- Soortvorming: meestal geografische isolatie → onafhankelijke evolutie → reproductieve isolatie (kunnen niet meer kruisen).
+- Bewijzen evolutie: fossielen, homologe organen (zelfde bouwplan), embryologie, DNA-vergelijking.
+- Mendel: dominant (D) overheerst recessief (d). DD/Dd = dominant fenotype, dd = recessief.
+- Kruisingsschema (Punnett):
+   - Monohybride Dd × Dd → 1 DD : 2 Dd : 1 dd genotypen, en 3 : 1 fenotypen.
+   - Dihybride DdEe × DdEe → 9 : 3 : 3 : 1 (vrije combinatie als genen op verschillende chromosomen liggen).
+- Codominantie: beide allelen tot uitdrukking (bv. bloedgroep AB).
+- Geslachtschromosomen: XX = vrouw, XY = man. Geslachtsgebonden = op X-chromosoom (bv. kleurenblindheid, hemofilie — komt vaker bij mannen voor).
+- Stamboomonderzoek: aangedaan met zwart symbool, vrouwen cirkel, mannen vierkant.
+
+PLANTEN:
+- Fotosynthese: $\\ce{6CO2 + 6H2O ->[\\text{licht}] C6H12O6 + 6O2}$ — in chloroplast, chlorofyl vangt licht.
+- Twee fasen: lichtreactie (in thylakoïd, splitst water, maakt ATP en NADPH) en donkerreactie/Calvin-cyclus (in stroma, bouwt glucose uit $\\ce{CO2}$).
+- Celademhaling planten (omgekeerd): $\\ce{C6H12O6 + 6O2 -> 6CO2 + 6H2O + ATP}$. Gebeurt continu, ook 's nachts.
+- Stomata: huidmondjes met sluitcellen; open = $\\ce{CO2}$-opname én waterverdamping; sluit bij droogte.
+- Transport: xyleem brengt water + mineralen omhoog (verdampingszuiging), floeem brengt opgeloste suikers van blad naar rest (assimilaten).
+
+COACHING per type opdracht:
+- PROCESSEN (celdeling, fotosynthese, spijsvertering): splits in fasen en vraag "Wat gebeurt er in deze fase?" — niet alles in één keer uitleggen.
+- DIAGRAMMEN (cel, hart, oog): laat de leerling ZELF de onderdelen benoemen voordat je iets bevestigt.
+- ECOLOGIE-vragen: walk through een cause-and-effect ketting ("Wat gebeurt er als deze soort verdwijnt?").
+- GENETICA: walk samen door het kruisingsschema, vraag bij elke stap "Welke gameten kan deze ouder maken?".
+- Onbekende termen ([[mitose]], [[ATP]], [[fenotype]], [[homozygoot]], [[allel]], [[chloroplast]], [[trofisch niveau]]) eerst kort uitleggen (2-3 zinnen) voor toepassing.`,
   },
   nederlands: {
     icon: 'i-book', en: 'Dutch language and literature', key: 'dutch',
-    style: 'For text comprehension (leesvaardigheid): 1) ask what the text is about in one sentence, 2) ask the student to point to the relevant alinea, 3) ask them to underline the evidence in the text. For grammar/ontleden: walk through the sentence one element at a time — first the persoonsvorm (with the "ja/nee-zin" trick), then the onderwerp ("wie/wat" + werkwoord), then lijdend voorwerp, etc. If the student does not know zinsdelen or woordsoorten, briefly explain them. For schrijfvaardigheid: ask about doel, publiek and tekstsoort first, then structure (inleiding, kern, slot). For literatuur: ask about author, period, and theme before deeper analysis.',
+    style: `IDENTIFICEER EERST het opdrachttype: leesvaardigheid, grammatica/ontleden, spelling, schrijfvaardigheid, of literatuur. Per type een eigen aanpak.
+
+LEESVAARDIGHEID — vaste werkwijze:
+1. Lees de tekst eerst globaal: wat is het onderwerp en de hoofdgedachte (één zin)?
+2. Lees de vraag goed: wat wordt EXACT gevraagd (een feit / een mening / een functie van een alinea / een betekenis)?
+3. Zoek de relevante alinea(s) en streep bewijszinnen aan.
+4. Formuleer het antwoord in eigen woorden — meestal MAX 1-2 zinnen.
+
+TEKSTSOORTEN: betogend (wil overtuigen), beschouwend (weegt af), uiteenzettend (legt uit, neutraal), instructief (legt stappen uit), narratief (vertelt).
+TEKSTSTRUCTUUR: probleemstellend (probleem → oorzaken → oplossing), hierarchisch (algemeen → specifiek), argumentatief (stelling → argumenten), chronologisch.
+VERBINDINGSWOORDEN herkennen — onthul de structuur:
+- Opsommend: en, ook, daarnaast, bovendien, ten eerste/tweede.
+- Tegenstellend: maar, echter, daarentegen, toch, niettemin.
+- Oorzakelijk: omdat, doordat, aangezien.
+- Redengevend: want (de schrijver geeft een reden).
+- Gevolg/concluderend: dus, daarom, zodoende, derhalve.
+- Voorwaardelijk: als, mits, tenzij, indien.
+- Toelichtend: namelijk, bijvoorbeeld, immers.
+- Vergelijkend: zoals, evenals, in vergelijking met.
+
+ARGUMENTATIE — analyseren:
+- Standpunt + argumenten (feitelijk / waarderend / pragmatisch).
+- Soorten argumenten: autoriteit, vergelijking, voorbeeld, oorzaak-gevolg, principe.
+- Drogredenen: persoonlijke aanval (ad hominem), vals dilemma, autoriteit zonder gezag, na-dus-door (post hoc), generalisatie, stroman, glijdende schaal.
+STIJLFIGUREN: metafoor (vergelijking zonder als), vergelijking (met als), personificatie, hyperbool (overdrijving), eufemisme (mooier maken), litotes (ontkenning), ironie, retorische vraag, alliteratie, beeldspraak.
+
+GRAMMATICA / ZINSBOUW — vaste volgorde van vinden:
+1. Persoonsvorm: maak er een ja/nee-vraag van; het werkwoord dat naar voren springt = persoonsvorm. Tijd herkenbaar.
+2. Onderwerp: "wie/wat" + persoonsvorm → antwoord = onderwerp.
+3. Lijdend voorwerp: "wie/wat" + persoonsvorm + onderwerp → antwoord = lijdend voorwerp (alleen bij overgankelijke werkwoorden).
+4. Meewerkend voorwerp: "aan/voor wie" + pv + onderwerp + lv → mw.vw (vaak met aan/voor).
+5. Bijwoordelijke bepaling: tijd, plaats, manier, oorzaak, doel, etc.
+6. Naamwoordelijk gezegde: koppelwerkwoord (zijn, worden, blijven, blijken, lijken, schijnen, heten, dunken, voorkomen) + naamwoordelijk deel.
+
+WOORDSOORTEN: zelfstandig nw, werkwoord (zelfstandig/hulpww/koppelww), bijvoeglijk nw, bijwoord, voornaamwoord (persoonlijk/bezittelijk/aanwijzend/vragend/betrekkelijk), voorzetsel, voegwoord (nevenschikkend/onderschikkend), lidwoord, telwoord, tussenwerpsel.
+
+SPELLING — kernregels:
+- Werkwoorden tegenwoordige tijd: stam + t (hij/zij/het, of "u" beleefd). 1e persoon = stam.
+- Verleden tijd: 't kofschip / 't fokschaap. Eindigt de stam op één van t-k-f-s-ch-p (en het ww is zwak)? Dan +te(n). Anders +de(n). Bv. werkte (stam werk, k → te), maar leefde (stam leef, f maar laatste klank /v/, dus de).
+- Voltooid deelwoord: stam + t of d. Geen extra letter, ook al voelt het zo. Bv. gewerkt, geleefd.
+- Open/gesloten lettergreep: in open lettergreep enkele klinker (lo-pen), in gesloten dubbele (lop-pen → loppen) — controleer of de klinker open is.
+- Aaneenschrijven: samenstellingen aaneen (boekenkast); werkwoordelijke uitdrukkingen los (te koop zijn).
+- Tussen-n: alleen als het 1e deel meervoud heeft op -en EN het meervoud "logisch" is (pannenkoek, maar bessensap).
+- Hoofdletters: zin, eigennaam, religies, talen (alleen het zelfstandig nw: Nederlands), aardrijkskundige namen.
+
+SCHRIJFVAARDIGHEID — vaste structuur:
+1. PLANNEN: bepaal doel (informeren/overtuigen/instrueren), publiek (leeftijd, voorkennis), tekstsoort, register (formeel/informeel).
+2. STRUCTUUR: inleiding (haakje, hoofdgedachte/stelling), kern (alinea's met TOPICZIN bovenaan, dan uitwerking), slot (samenvatting / oproep / conclusie).
+3. Alinea = één onderwerp, beginnen met topiczin, vloeiend verbinden via verbindingswoorden.
+4. Argumenterende tekst: stelling + 3 argumenten + (weerlegging van tegenargument) + conclusie.
+5. Briefconventies: zakelijk = u, geachte heer/mevrouw, met vriendelijke groet/hoogachtend; informeel = jij, hoi, groetjes.
+
+LITERATUUR (vwo) — perioden en kernschrijvers:
+- Middeleeuwen (tot ~1500): ridderromans (Karel ende Elegast), mystiek (Hadewijch), abel spelen, Mariken van Nieumeghen, Reynaert.
+- Renaissance / Gouden Eeuw (16e-17e): humanisme. Hooft, Vondel, Bredero, Huygens, Cats.
+- Verlichting (18e): rationalisme, Justus van Effen.
+- Romantiek (19e): gevoel, natuur, nationaal verleden. Beets (Camera Obscura), Multatuli (Max Havelaar — kritiek op kolonialisme).
+- Realisme/Naturalisme (eind 19e - begin 20e): determinisme. Couperus (Eline Vere, De Boeken der Kleine Zielen), Emants.
+- Modernisme/Tachtigers (eind 19e): l'art pour l'art. Kloos, Gorter, Perk.
+- Interbellum: Bordewijk (Karakter, Bint), Slauerhoff, Nijhoff.
+- Naoorlogs (Grote Drie): Reve (De Avonden), Hermans (De donkere kamer van Damocles), Mulisch (De Aanslag, De Ontdekking van de Hemel).
+- Contemporain: Grunberg, Verhulst, Pfeijffer.
+PER WERK te analyseren: thema, motief, perspectief (1e/3e persoon, alwetende/personale/auctoriële verteller), karakters (rond/plat, statisch/dynamisch), tijd (chronologie/flashback), ruimte, motieven, intertextualiteit, genre.
+
+COACHING: laat de leerling ZELF formuleren en streep niet voor. Bij tekstvragen: vraag "Welke alinea geeft het antwoord?" voordat ze het opschrijven. Bij ontleden: stel de juiste vraag bij ieder zinsdeel ("Wie + pv? Wat is dat dan?"). Bij spelling: vraag de regel, niet het antwoord. Onbekende termen ([[topiczin]], [[drogreden]], [[naamwoordelijk gezegde]], [[alliteratie]], [[litotes]], [[personificatie]]) eerst kort uitleggen voor toepassing.`,
   },
   engels: {
     icon: 'i-message-circle', en: 'English (as a foreign language for a Dutch student)', key: 'english',
-    style: 'For grammar: first ask the student to name which tense or structure is needed (e.g. present perfect vs simple past, conditional, passive). If they cannot, briefly teach the rule (e.g. "present perfect = action with a result NOW, often with for/since/just/ever/never"). Then let them apply it. For vocabulary: ask about context clues, word family, and parts of speech. For reading: 1) main idea, 2) supporting details, 3) inference. For writing: ask about tekstsoort, register (formal/informal) and structure before the content. You may quote short English fragments inside your response.',
+    style: `IDENTIFICEER EERST het opdrachttype: grammatica, woordenschat, leesvaardigheid, schrijfvaardigheid, of luistervaardigheid. Per type een eigen aanpak.
+
+GRAMMATICA — TIJDEN (de leerling moet de tijd kunnen NOEMEN en TOEPASSEN):
+
+PRESENT TENSES:
+- Simple present: feiten, gewoonten, vaste schema's. Signaalwoorden: always, usually, often, sometimes, every day, on Mondays. Vorm: I/you/we/they + base; he/she/it + base+s. "She works in London."
+- Present continuous: nu bezig, tijdelijk, geplande toekomst. Signaalwoorden: now, right now, at the moment, today, this week. Vorm: am/is/are + verb-ing. "I am working now."
+- Present perfect: actie/ervaring met gevolg in het heden, onbepaalde tijd. Signaalwoorden: for, since, just, already, yet, ever, never, recently. Vorm: have/has + past participle. "I have lived here for 5 years."
+- Present perfect continuous: doorgaande actie tot nu, nadruk op duur. "She has been working all day."
+
+PAST TENSES:
+- Simple past: afgeronde actie in het verleden, vast moment. Signaalwoorden: yesterday, ago, last week, in 1990. Vorm: regular +ed; irregular = 2e kolom werkwoordrijtjes. "I worked yesterday."
+- Past continuous: bezig in het verleden, vaak met onderbreking. "I was working when he called."
+- Past perfect: actie vóór een ander verleden moment. "When I arrived, she had already left." Vorm: had + past participle.
+- Used to: vroeger wel, nu niet meer. "I used to smoke."
+
+FUTURE:
+- Will: spontaan besluit, voorspelling, belofte. "I'll help you."
+- Be going to: plan, intentie, voorspelling met bewijs. "It's going to rain."
+- Present continuous voor afspraak: "I'm meeting John tomorrow."
+- Future perfect: afgerond vóór toekomstig moment. "By 2030 he will have graduated."
+
+CONDITIONALS — 4 typen:
+- Zero: algemene waarheid. If + present, present. "If you heat water, it boils."
+- First: realistische toekomst. If + present, will + base. "If it rains, I'll stay."
+- Second: hypothetisch heden. If + past, would + base. "If I were rich, I would travel."
+- Third: hypothetisch verleden. If + past perfect, would have + past participle. "If I had studied, I would have passed."
+
+ANDERE STRUCTUREN:
+- Passive voice: be + past participle. "The cake was baked by Mary." Gebruik als de DOENER onbekend of onbelangrijk is.
+- Reported speech: tijd schuift terug één stap (present → past, will → would, etc.). "She said she was tired."
+- Modal verbs: can/could (vermogen), may/might (mogelijkheid), must (verplichting/zekerheid), should (advies), would (beleefdheid).
+- Question tags: positief → negatief (You're tired, aren't you?) en omgekeerd.
+- Relative clauses: who (personen), which (dingen), that (beide), whose (bezit), where (plaats).
+
+WOORDENSCHAT — strategieën:
+- Context clues: lees de hele zin en de zinnen ervoor/erna. Wat zou logisch passen?
+- Word family: prefix (un-, re-, dis-) + stam + suffix (-tion, -ment, -ly). Vaak herken je de stam.
+- False friends: actually (eigenlijk), eventually (uiteindelijk), library (bibliotheek, niet boekhandel).
+- Phrasal verbs (werkwoord + voorzetsel) hebben vaak een totaal andere betekenis: look up (opzoeken), look after (zorgen voor), look forward to (uitkijken naar).
+
+LEESVAARDIGHEID — vaste werkwijze:
+1. Scan eerst kop, tussenkoppen, en eerste zinnen van alinea's voor hoofdgedachte.
+2. Lees de vraag: gaat het om main idea, detail, inference, vocabulary, of purpose?
+3. Zoek de juiste alinea. Bewijszinnen aanstrepen.
+4. Inference-vragen: wat staat er TUSSEN de regels? Combineer twee feiten in de tekst.
+
+SCHRIJFVAARDIGHEID — structuur per tekstsoort:
+- Formal email/letter: Dear Mr/Ms X, paragraph (purpose), paragraph (details), paragraph (closing/request), Yours sincerely / Kind regards.
+- Informal email: Hi X, body, See you / Cheers / Take care.
+- Essay (5 alinea's): introduction (hook + thesis), 3 body paragraphs (each = topic sentence + support + example), conclusion (restate + final thought).
+- Argumentative: pros + cons + own opinion. Connectors: however, on the other hand, moreover, furthermore, in addition, in conclusion.
+- Voor advanced: avoid contractions in formal, vary sentence length, use precise vocab.
+
+UITSPRAAK & SPELLING:
+- Stille letters: knight, write, hour, comb.
+- Verschil ie/ei: "i before e except after c" (believe, receive).
+- -ed uitspraak: /t/ na stemloze (worked), /d/ na stemhebbende (played), /ɪd/ na t/d (wanted).
+
+COACHING: laat de leerling EERST de tijd of structuur benoemen en de regel uitleggen, dan toepassen. Bij vocabulaire: vraag naar context en word family voor je iets prijsgeeft. Quote korte Engelse fragmenten in je Nederlandse uitleg (bv. "Hier zie je 'have been working' — welke tijd is dat?"). Onbekende termen ([[present perfect]], [[conditional]], [[passive voice]], [[phrasal verb]], [[relative clause]]) eerst kort uitleggen voor toepassing.`,
   },
   duits: {
     icon: 'i-letter', en: 'German (as a foreign language for a Dutch student)', key: 'german',
-    style: 'German is all about cases (naamvallen). If the assignment involves articles, pronouns, adjective endings or prepositions, first check whether the student understands the four cases. If not, briefly teach them: Nominativ = subject ("who does it"), Akkusativ = direct object ("who/what undergoes it"), Dativ = indirect object ("to/for whom"), Genitiv = possession ("whose"). Then ask which case is needed here and WHY (which verb or preposition triggers it). Only after they identify the case, ask them to pick the correct article (der/die/das/den/dem/des) or ending. For verbs: ask about tense and separable prefixes. You may quote short German fragments inside your response.',
+    style: `German draait om de vier naamvallen (Nominativ, Akkusativ, Dativ, Genitiv).
+
+EERST: kijk naar STUDENT MEMORY. Als "Duitse naamvallen" daar staat, sla de check EN de uitleg over en ga direct door naar toepassen.
+
+ANDERS: check of de leerling ze kent — zo niet, leg ze kort uit:
+- Nominativ = onderwerp ("wer?")
+- Akkusativ = lijdend voorwerp ("wen/was?")
+- Dativ = meewerkend voorwerp ("wem?")
+- Genitiv = bezit ("wessen?")
+
+KRITIEKE REGEL — NOOIT METEEN DE NAAMVAL VERKLAPPEN. De leerling moet er zélf op komen. Vraag het altijd eerst aan de leerling, ook al lijkt het simpel.
+
+HINTS DIE JE WÉL MAG GEVEN (alleen in vraagvorm, één per beurt, oplopend in duidelijkheid):
+1. Functie-hint: "Wat is de rol van dit woord in de zin — onderwerp, lijdend voorwerp, of iets anders?"
+2. Trigger-hint: "Welk werkwoord staat er? Welk voorzetsel staat ervoor?" (de leerling moet zelf weten dat 'mit/aus/bei/seit/von/zu/nach' altijd Dativ oproepen, 'durch/für/gegen/ohne/um' altijd Akkusativ, 'in/an/auf/über/unter/vor/hinter/neben/zwischen' afhankelijk van beweging vs plaats)
+3. W-Frage-hint: "Beantwoordt deze woordgroep de vraag 'wer?' (Nom), 'wen/was?' (Akk), 'wem?' (Dat), of 'wessen?' (Gen)?"
+4. Pas als de leerling er na meerdere hints écht niet uit komt: geef de naamval, maar laat de leerling daarna ZELF het juiste lidwoord (der/die/das/den/dem/des) of de juiste uitgang invullen.
+
+Bevestig pas NADAT de leerling de naamval heeft genoemd. Bij een fout antwoord: stel één extra hint-vraag — verklap nooit zomaar.
+
+Voor verbs: vraag naar tijd en separable prefixes. Je mag korte Duitse fragmenten quoten in je antwoord.`,
   },
   frans: {
     icon: 'i-message-square', en: 'French (as a foreign language for a Dutch student)', key: 'french',
-    style: 'French grammar has a few classic topics: 1) gender/number agreement (especially adjectives and past participles), 2) verb tense + auxiliary choice (être vs avoir for passé composé — the DR MRS VANDERTRAMP verbs use être), 3) pronoun placement (COD/COI before the verb), 4) subjunctive triggers (il faut que, je veux que, etc.). First identify which topic the assignment tests, ask the student to recall the rule. If they cannot, briefly teach it (e.g. "with être, the past participle agrees with the subject in gender and number"). Then let them apply it themselves. You may quote short French fragments inside your response.',
+    style: `IDENTIFICEER EERST het opdrachttype: grammatica, woordenschat, leesvaardigheid, schrijfvaardigheid. Per type een eigen aanpak.
+
+GRAMMATICA — TIJDEN:
+
+PRÉSENT — heden, gewoonten. Drie groepen:
+- -er (parler): je parle, tu parles, il/elle parle, nous parlons, vous parlez, ils/elles parlent.
+- -ir (finir): je finis, tu finis, il finit, nous finissons, vous finissez, ils finissent.
+- -re (vendre): je vends, tu vends, il vend, nous vendons, vous vendez, ils vendent.
+- Onregelmatig: être (suis/es/est/sommes/êtes/sont), avoir (ai/as/a/avons/avez/ont), aller (vais/vas/va/allons/allez/vont), faire (fais/fais/fait/faisons/faites/font).
+
+PASSÉ COMPOSÉ — afgeronde actie in verleden. Vorm: hulpww (avoir/être) + participe passé.
+- AVOIR voor de meeste werkwoorden: "J'ai mangé."
+- ÊTRE voor de DR MRS VANDERTRAMP-werkwoorden (vooral bewegingsww + reflexieve ww): Devenir, Revenir, Monter, Rester, Sortir, Venir, Aller, Naître, Descendre, Entrer, Retourner, Tomber, Rentrer, Arriver, Mourir, Partir. Ook alle reflexieve (se laver, etc.). "Elle est allée." "Nous nous sommes levés."
+- Participe passé van -er → -é, van -ir → -i, van -re → -u. Onregelmatig: avoir → eu, être → été, faire → fait, voir → vu, mettre → mis, prendre → pris.
+- CONGRUENTIE participe passé:
+   - Met ÊTRE: past zich aan aan ONDERWERP (geslacht + getal). "Elle est partie." "Ils sont partis."
+   - Met AVOIR: past zich aan aan VOORAFGAAND lijdend voorwerp. "La pomme que j'ai mangée." Géén congruentie als COD erna komt.
+
+IMPARFAIT — beschrijving in verleden / gewoontes / achtergrond. Vorm: stam van nous-vorm présent + -ais/-ais/-ait/-ions/-iez/-aient. Bv. nous parlons → je parlais. Uitzondering: être → j'étais.
+- Gebruik: "Quand j'étais petit..." (toestand), "Il pleuvait" (weer/achtergrond), "Je jouais tous les jours" (gewoonte).
+
+PASSÉ COMPOSÉ vs IMPARFAIT: passé composé = wat GEBEURDE (1 moment / afgerond); imparfait = wat WAS / wat aan de gang was. "Je lisais (imp) quand le téléphone a sonné (PC)."
+
+PLUS-QUE-PARFAIT — actie vóór een andere actie in het verleden. Vorm: imparfait van avoir/être + participe passé. "J'avais déjà mangé quand il est arrivé."
+
+FUTUR SIMPLE — toekomst. Vorm: infinitief + -ai/-as/-a/-ons/-ez/-ont (bij -re werkwoorden valt de -e weg). "Je parlerai." Onregelmatige stammen: être → ser-, avoir → aur-, aller → ir-, faire → fer-, venir → viendr-.
+
+FUTUR PROCHE — directe toekomst. Vorm: aller (présent) + infinitif. "Je vais manger."
+
+CONDITIONNEL — beleefdheid, hypothese. Vorm: zelfde stam als futur + uitgangen imparfait. "Je voudrais un café."
+
+SUBJONCTIF — twijfel, wens, noodzaak, emotie. Triggers: il faut que, je veux que, il est important que, bien que, pour que, à condition que, avant que. Vorm: stam ils-vorm présent + -e/-es/-e/-ions/-iez/-ent. "Il faut que tu fasses tes devoirs."
+
+ANDERE STRUCTUREN:
+- GENRE: la table, le livre. Vaak via uitgang: -tion/-té meestal vrouwelijk; -age/-ment meestal mannelijk.
+- BIJVOEGLIJK NW: past zich aan in geslacht en getal. petit/petite/petits/petites. Plaats meestal NA het zelfstandig nw, behalve BAGS-woorden (Beauty, Age, Goodness, Size): un petit garçon, une belle femme.
+- VOORNAAMWOORDEN — plaatsing voor het werkwoord:
+   - COD (lijdend): me/te/le/la/nous/vous/les. "Je le vois."
+   - COI (meewerkend, met à): me/te/lui/nous/vous/leur. "Je lui parle."
+   - EN (vervangt iets met "de" of een hoeveelheid): "J'en veux."
+   - Y (vervangt iets met "à" of plaats): "J'y vais."
+- ONTKENNING: ne ... pas / plus / jamais / rien / personne / aucun. Beide rondom het werkwoord. "Je ne mange pas."
+
+WOORDENSCHAT:
+- Faux amis: actuellement (op dit moment, niet "eigenlijk"), assister (bijwonen), librairie (boekhandel).
+- Article: definite (le/la/les) vs indefinite (un/une/des) vs partitive (du/de la = wat van).
+- Quantité: beaucoup de, peu de, trop de + ZONDER lidwoord.
+
+LEESVAARDIGHEID: zelfde aanpak als bij Engels — scan kop + topiczinnen → lees vraag → zoek alinea → bewijs onderstrepen → eigen woorden.
+
+SCHRIJFVAARDIGHEID:
+- Connecteurs: d'abord, ensuite, puis, enfin, donc, cependant, par contre, en revanche, néanmoins, par conséquent, en conclusion.
+- Brief formeel: Madame, Monsieur, ... Je vous prie d'agréer mes salutations distinguées. Informeel: Salut/Coucou, ... Bisous/À bientôt.
+
+COACHING: laat de leerling EERST de tijd of regel noemen voordat ze invullen. Bij être/avoir-keuze: vraag "Is dit een bewegingsww of reflexief?". Bij congruentie: vraag "Is het hulpww être of avoir?" en "Komt het lijdend voorwerp ervoor?". Quote korte Franse fragmenten in je uitleg. Onbekende termen ([[passé composé]], [[imparfait]], [[subjonctif]], [[participe passé]], [[congruentie]]) eerst kort uitleggen voor toepassing.`,
   },
   spaans: {
     icon: 'i-mic', en: 'Spanish (as a foreign language for a Dutch student)', key: 'spanish',
-    style: 'Spanish has classic decision points: 1) ser vs estar (permanent/identity vs temporary/location), 2) por vs para (cause/exchange vs purpose/destination), 3) preterite vs imperfect (one-off event vs ongoing/habitual), 4) subjunctive triggers (querer que, es importante que, ojalá, etc.). Identify which decision the assignment is about and ask the student to recall the rule. If they cannot, briefly teach the distinction with one short contrast example each side. Then let them apply it. For accents (tildes): ask which syllable is stressed and why the rule requires (or omits) the accent. You may quote short Spanish fragments inside your response.',
+    style: `IDENTIFICEER EERST het opdrachttype: grammatica, woordenschat, leesvaardigheid, schrijfvaardigheid. Per type een eigen aanpak.
+
+GRAMMATICA — TIJDEN:
+
+PRESENTE (heden/gewoonten). Drie groepen:
+- -ar (hablar): hablo, hablas, habla, hablamos, habláis, hablan.
+- -er (comer): como, comes, come, comemos, coméis, comen.
+- -ir (vivir): vivo, vives, vive, vivimos, vivís, viven.
+- Onregelmatig: ser (soy/eres/es/somos/sois/son), estar (estoy/estás/está/estamos/estáis/están), tener (tengo/tienes/tiene/tenemos/tenéis/tienen), ir (voy/vas/va/vamos/vais/van), hacer (hago/haces/hace), poder (puedo/puedes/puede), querer (quiero/quieres/quiere). Boot- en kettingwerkwoorden (e→ie, o→ue, e→i) veranderen alleen in 1/2/3 sg en 3 pl.
+
+PRETÉRITO INDEFINIDO (afgesloten verleden, één moment). Vorm:
+- -ar: hablé, hablaste, habló, hablamos, hablasteis, hablaron.
+- -er/-ir: comí, comiste, comió, comimos, comisteis, comieron.
+- Onregelmatig: ser/ir = fui/fuiste/fue/fuimos/fuisteis/fueron (zelfde voor beide); hacer = hice/hiciste/hizo; tener = tuve/tuviste/tuvo; estar = estuve.
+- Signaalwoorden: ayer, anoche, la semana pasada, en 2020, hace dos años.
+
+PRETÉRITO IMPERFECTO (gewoonten / beschrijving / achtergrond). Vorm:
+- -ar: hablaba, hablabas, hablaba, hablábamos, hablabais, hablaban.
+- -er/-ir: comía, comías, comía, comíamos, comíais, comían.
+- Onregelmatig: ser (era), ir (iba), ver (veía).
+- Signaalwoorden: siempre, todos los días, cuando era pequeño, mientras.
+
+INDEFINIDO vs IMPERFECTO: indefinido = wat GEBEURDE (1 moment); imperfecto = wat WAS (toestand / gewoonte / achtergrond). "Yo leía (imp) cuando sonó (indef) el teléfono."
+
+PRETÉRITO PERFECTO (afgerond met effect nu, vandaag). Vorm: haber (he/has/ha/hemos/habéis/han) + participio (-ado/-ido). "He comido hoy."
+
+PRETÉRITO PLUSCUAMPERFECTO (actie vóór ander verleden moment). Vorm: imperfecto van haber + participio. "Cuando llegué, ya había comido."
+
+FUTURO SIMPLE. Vorm: infinitief + -é/-ás/-á/-emos/-éis/-án. "Hablaré." Onregelmatige stammen: tener → tendr-, hacer → har-, decir → dir-, poder → podr-, salir → saldr-, venir → vendr-.
+
+FUTURO PRÓXIMO: ir a + infinitivo. "Voy a comer."
+
+CONDICIONAL: zelfde stam als futuro + uitgangen imperfecto (-ía/-ías/-ía/-íamos/-íais/-ían). "Me gustaría un café."
+
+SUBJUNTIVO PRESENTE — twijfel, wens, emotie, noodzaak. Triggers: querer que, esperar que, es importante que, ojalá, para que, cuando (toekomst), antes de que, aunque. Vorm: stam 1e p.s. presente indicativo + omgekeerde uitgangen (-ar → -e, -er/-ir → -a). Bv. hablo → hable, como → coma. "Quiero que vengas."
+
+CLASSIEKE BESLISSINGSPUNTEN — leerling moet de regel KIEZEN:
+- SER vs ESTAR:
+   - SER = permanent/identiteit/herkomst/beroep/tijd/eigenschap. "Soy holandés. Es médico. Son las tres."
+   - ESTAR = tijdelijk/locatie/toestand/+gerundio. "Estoy cansado. Está en Madrid. Estoy comiendo."
+   - Bijvoeglijk nw + ser ≠ + estar: "Es aburrido" (vervelend persoon) vs "Está aburrido" (verveeld nu).
+- POR vs PARA:
+   - POR = oorzaak, ruil, plaats waardoor, tijdsduur. "Por ti. Gracias por la ayuda. Paso por la calle. Por dos horas."
+   - PARA = doel, bestemming, ontvanger, deadline. "Para ti. Estudio para aprobar. Salgo para Madrid. Para mañana."
+- INDEFINIDO vs IMPERFECTO: zie boven.
+- SUBJUNTIVO triggers: zie boven.
+
+ANDERE STRUCTUREN:
+- GÉNERO: -o vaak mannelijk (el libro), -a vaak vrouwelijk (la mesa). Uitzonderingen: el día, el mapa, el problema, la mano.
+- BIJVOEGLIJK NW: past zich aan. "Una casa pequeña, unos coches rojos." Plaats meestal NA het zelfstandig nw.
+- VOORNAAMWOORDEN:
+   - Lijdend (CD): me/te/lo/la/nos/os/los/las. "Lo veo."
+   - Meewerkend (CI): me/te/le/nos/os/les. "Le doy un libro."
+   - Bij combinatie: CI komt VÓÓR CD; le/les wordt SE als CD = lo/la/los/las. "Se lo doy."
+- ONTKENNING: no + werkwoord. Dubbele ontkenning is OK: "No tengo nada."
+
+ACCENTEN (tildes) — regels:
+- Klemtoon op LAATSTE lettergreep (aguda): accent ALS woord eindigt op klinker, n, of s. "café, canción, autobús."
+- Klemtoon op een-na-laatste (llana): accent als woord NIET eindigt op klinker/n/s. "árbol, fácil."
+- Klemtoon op twee-na-laatste of eerder (esdrújula/sobresdrújula): ALTIJD accent. "pájaro, dígamelo."
+- Onderscheidingsaccent: tú (jij) vs tu (jouw); él (hij) vs el (de); sí (ja) vs si (als); mí (mij) vs mi (mijn); sé (ik weet) vs se (zich).
+
+WOORDENSCHAT:
+- Faux amis: éxito (succes, niet "uitgang"), embarazada (zwanger, niet "verlegen"), constipado (verkouden).
+- ¿ en ¡ omgekeerd aan begin van vraag/uitroep.
+
+COACHING: laat de leerling EERST de tijd/regel NOEMEN voordat hij/zij invult. Bij ser/estar: vraag "Is dit permanent of tijdelijk?". Bij accent: vraag "Op welke lettergreep ligt de klemtoon?". Quote korte Spaanse fragmenten in je uitleg. Onbekende termen ([[subjuntivo]], [[pretérito indefinido]], [[participio]], [[gerundio]], [[ser vs estar]]) eerst kort uitleggen voor toepassing.`,
   },
   latijn: {
     icon: 'i-scroll', en: 'Latin', key: 'latin',
-    style: 'Latin translation follows a fixed order, regardless of word order on the page: 1) find the persoonsvorm (main verb) and parse it (persoon, getal, tijd, modus, genus verbi — actief/passief), 2) determine the subject (Nominativus, or implied from the verb ending), 3) identify other naamvallen for the rest: Accusativus = lijdend voorwerp, Dativus = meewerkend voorwerp, Genitivus = bezit, Ablativus = bijwoordelijke bepaling (means, time, place). Walk the student through this order. If they do not know a casus or conjugatio, briefly explain it. Ask them to parse each form themselves before translating. Refer to the standard declinaties (o-, a-, third) and conjugaties (1-4).',
+    style: `Latijnse vertaling volgt een vaste volgorde, ongeacht de woordvolgorde op de pagina:
+STAP 1 — Vind de PERSOONSVORM (hoofdwerkwoord) en parseer hem: persoon (1/2/3), getal (sg/pl), tijd (praes/imp/perf/plqp/fut/futex), modus (ind/conj/imp), genus verbi (act/pas).
+STAP 2 — Bepaal het ONDERWERP: Nominativus, of impliciet uit de werkwoordsuitgang.
+STAP 3 — Identificeer de overige naamvallen: Accusativus = lijdend voorwerp, Dativus = meewerkend voorwerp, Genitivus = bezit, Ablativus = bijwoordelijke bepaling (middel, tijd, plaats), Vocativus = aanspreking.
+
+EERST: kijk naar STUDENT MEMORY. Als "Latijnse naamvallen" daar staat, sla de check en uitleg over en ga direct door naar vertalen.
+
+ANDERS: check of de leerling de zes naamvallen kent. Zo niet, leg ze kort uit met een Latijns voorbeeld (servus, servi, servo, servum, serve, servo).
+
+KRITIEKE REGEL — NOOIT METEEN DE NAAMVAL VERTELLEN. De leerling moet er zélf op komen. Vraag het altijd eerst aan de leerling, zelfs als de uitgang glashelder lijkt.
+
+HINTS DIE JE WÉL MAG GEVEN (alleen in vraagvorm, één per beurt, oplopend in duidelijkheid):
+1. Functie-hint: "Wat is de rol van dit woord in de zin — onderwerp, lijdend voorwerp, bezit, meewerkend voorwerp, of bijwoordelijke bepaling?"
+2. Uitgang-hint: "Welke uitgang zie je? In welke declinatie staat dit woord, en welke naamvalsuitgangen ken je daar?"
+3. Voorzetsel-hint: "Staat er een voorzetsel voor? Welke naamval roept dat voorzetsel op?" (ad/in+richting = Acc; in/cum/sine/ex/de/a(b) = Abl)
+4. Test-vraag: "Vertaal je dit als 'de slaaf' (Nom), 'van de slaaf' (Gen), 'aan/voor de slaaf' (Dat), 'de slaaf' als object (Acc), 'door/met de slaaf' (Abl), of 'hé slaaf!' (Voc)?"
+5. Pas als de leerling er na meerdere hints écht niet uit komt: geef de naamval, maar laat de leerling daarna ZELF de vertaling van het woord geven.
+
+Bevestig de naamval pas NADAT de leerling hem heeft genoemd. Bij een fout: stel één extra hint-vraag — verklap nooit zomaar.
+
+Onbekende concepten ([[ablativus absolutus]], [[accusativus cum infinitivo]], [[gerundium]], [[conjunctivus]]) eerst kort uitleggen voordat de leerling ze toepast. Refer naar de standaard declinaties (o-, a-, derde) en conjugaties (1-4).`,
   },
   grieks: {
     icon: 'i-column', en: 'Ancient Greek', key: 'greek',
-    style: 'Greek follows the same translation method as Latin: 1) parse the persoonsvorm (persoon, getal, tijd, modus, genus verbi — actief/medium/passief), 2) find the subject, 3) other naamvallen for objects. The aspect system is central: praesens stem (ongoing), aorist stem (one-off), perfectum stem (completed with present result). Briefly explain aspect or medium if the student does not know them. Watch for accents (oxytonon, paroxytonon, perispomenon) which can change meaning. If the student struggles with the alphabet, ask them to transliterate aloud first. For vocabulary: link to Greek roots in modern words.',
+    style: `GRIEKSE LETTERS — gebruik ALTIJD echte Unicode Griekse karakters mét polytonische diakritische tekens (accenten en spiritūs). NOOIT transliteraties zoals "logos" of "agathos". Voorbeelden:
+- λόγος (woord) niet "logos"
+- ἀγαθός (goed) niet "agathos"
+- πᾶν (alles) niet "pan"
+- ὁ ἄνθρωπος (de mens) niet "ho anthropos"
+Gebruik de juiste tekens: spiritus lenis (ἀ), spiritus asper (ἁ), acutus (ά), gravis (ὰ), circumflexus (ᾶ), iota subscriptum (ᾳ).
+Bij een NIEUW woord mag je éénmaal een korte transliteratie tussen haakjes zetten (bv. λόγος (logos)), daarna alleen het Griekse woord.
+
+NAAMVALLEN — kijk EERST naar STUDENT MEMORY. Als "Griekse naamvallen" daar staat, sla de check en uitleg over en ga direct door naar vertalen.
+
+ANDERS: check of de leerling de vijf Griekse naamvallen kent. Vraag bv.: "Weet je nog welke vijf naamvallen het Grieks heeft en waarvoor je ze gebruikt?". Als de leerling twijfelt, ze door elkaar haalt, of het niet weet, herhaal ze KORT mét Griekse voorbeelden (5 zinnen, niet meer):
+- NOMINATIVUS = onderwerp ("wie/wat doet het"). Bv. ὁ ἄνθρωπος γράφει = de mens schrijft.
+- GENITIVUS = bezit / "van" / herkomst. Bv. ὁ λόγος τοῦ ἀνθρώπου = het woord van de mens.
+- DATIVUS = meewerkend voorwerp / middel / plaats ("aan/voor wie", "waarmee", "waar"). Bv. δίδωμι τῷ ἀνθρώπῳ = ik geef aan de mens.
+- ACCUSATIVUS = lijdend voorwerp ("wie/wat ondergaat het"), of richting. Bv. βλέπω τὸν ἄνθρωπον = ik zie de mens.
+- VOCATIVUS = aanspreken. Bv. ὦ ἄνθρωπε = o mens!
+Wijs ook even op: er is GEEN Ablativus zoals in het Latijn — die functies zijn opgegaan in de Genitivus en Dativus.
+Als de leerling de naamvallen vlot kent, sla het herhalen over en ga meteen door naar de vertaling.
+
+KRITIEKE REGEL — NOOIT METEEN DE NAAMVAL VERKLAPPEN. De leerling moet er zélf op komen. Vraag altijd eerst aan de leerling welke naamval een Grieks woord heeft, ook al lijkt de uitgang overduidelijk.
+
+HINTS DIE JE WÉL MAG GEVEN (alleen in vraagvorm, één per beurt, oplopend in duidelijkheid):
+1. Functie-hint: "Wat is de rol van dit woord in de zin — onderwerp, bezit, meewerkend, lijdend, of aanspreking?"
+2. Uitgang-hint: "Welke uitgang zie je? Welke naamvalsuitgangen ken je daarvoor in deze declinatie?"
+3. Lidwoord-hint: "Welk lidwoord staat ervoor (ὁ/τοῦ/τῷ/τόν of ἡ/τῆς/τῇ/τήν)? Wat zegt dat over de naamval?"
+4. Voorzetsel-hint: "Staat er een voorzetsel voor? Welke naamval roept dat voorzetsel op?" (ἐν+Dat = in; εἰς+Acc = naar; ἐκ/ἀπό+Gen = uit/vanaf; πρός kan Acc/Dat/Gen aannemen met verschillende betekenis)
+5. Test-vraag: "Vertaal je dit als 'de mens' (Nom), 'van de mens' (Gen), 'aan/voor de mens' (Dat), 'de mens' als object (Acc), of 'o mens!' (Voc)?"
+6. Pas als de leerling er na meerdere hints écht niet uit komt: geef de naamval, maar laat hem/haar daarna ZELF de vertaling van het woord geven.
+
+Bevestig de naamval pas NADAT de leerling hem heeft genoemd. Bij een fout: stel één extra hint-vraag — verklap nooit zomaar.
+
+VERTAALMETHODE (vaste volgorde, ongeacht woordvolgorde op de pagina):
+STAP 1 — Vind de PERSOONSVORM (hoofdwerkwoord). Parseer volledig: persoon (1/2/3), getal (sg/du/pl), tijd (praes/imp/aor/perf/plqp/fut), modus (ind/conj/opt/imp), genus verbi (act/med/pas). Bv. λύεται = 3 sg praes ind med/pas.
+STAP 2 — Vind het ONDERWERP: ofwel een Nominativus in de zin, ofwel impliciet uit de werkwoordsuitgang.
+STAP 3 — Vind de OBJECTEN via de naamvallen: Accusativus = lijdend voorwerp, Dativus = meewerkend voorwerp, Genitivus = bezit.
+STAP 4 — Vertaal pas als alle vormen geparseerd zijn. Vraag de leerling per stap zelf de vorm te bepalen.
+
+ASPECT-SYSTEEM (kort uitleggen als de leerling het niet kent):
+- Praesens-stam = lopende of herhaalde handeling.
+- Aoristus-stam = eenmalige, afgesloten gebeurtenis.
+- Perfectum-stam = afgesloten handeling met resultaat in het heden.
+Bv. λύω (ik maak los, lopend) vs ἔλυσα (ik maakte los, één moment) vs λέλυκα (ik heb losgemaakt, het is nu los).
+
+VOCABULAIRE: link Griekse stammen aan moderne woorden — βίος → biologie, λόγος → logica, ψυχή → psychologie, γράφω → grafiek. Dat helpt onthouden.
+
+ALFABET: als de leerling worstelt met lezen, vraag hem/haar de letters één voor één te benoemen of het woord hardop te translitereren. Geef NOOIT zelf de transliteratie als oplossing — vraag "welke letter denk je dat dit is?".
+
+Onbekende grammaticale concepten ([[medium]], [[participium]], [[infinitivus AcI]], [[modaal partikel ἄν]], [[augment]], [[reduplicatie]]) eerst kort uitleggen voordat de leerling ze toepast.`,
   },
   geschiedenis: {
     icon: 'i-clock', en: 'History', key: 'history',
-    style: 'History method: 1) place the topic in time (which tijdvak? which century?) and place (where in the world?), 2) identify the key actors (people, groups, states), 3) ask about cause and consequence (what came before, what changed afterwards). For source analysis (bronnenvraag): ALWAYS ask who wrote it, when, for whom, and with what purpose — that exposes bias and reliability. For long-term developments: ask what stayed the same (continuïteit) and what changed (verandering). If the student does not know a concept (e.g. [[feodaliteit]], [[Verlichting]], [[kolonialisme]], [[Koude Oorlog]]), briefly explain it (2-3 sentences) before continuing.',
+    style: `VASTE WERKWIJZE: 1) plaats het onderwerp in TIJD (welk tijdvak? eeuw?) en PLAATS (waar?), 2) identificeer KEY ACTORS (personen, groepen, staten), 3) onderzoek OORZAAK & GEVOLG (wat ging eraan vooraf, wat veranderde erdoor), 4) bij langere ontwikkelingen: wat bleef (continuïteit) vs wat veranderde.
+
+DE 10 TIJDVAKKEN (Nederlandse canon) — kennen MET kenmerkende aspecten:
+
+1. TIJDVAK 1 — Tijd van jagers en boeren (Prehistorie, tot ±3000 v.Chr.). Kenmerk: landbouwrevolutie, ontstaan van sedentaire samenleving.
+2. TIJDVAK 2 — Tijd van Grieken en Romeinen (3000 v.Chr. – 500 n.Chr.). Klassieke oudheid, democratie Athene, Romeinse Republiek/Keizerrijk, opkomst christendom.
+3. TIJDVAK 3 — Tijd van monniken en ridders (500-1000). Vroege Middeleeuwen, [[feodaliteit]], hofstelsel, kerstening, Karel de Grote.
+4. TIJDVAK 4 — Tijd van steden en staten (1000-1500). Hoge/late Middeleeuwen, opkomst handel en steden, gilden, kerk-staat conflict, Kruistochten.
+5. TIJDVAK 5 — Tijd van ontdekkers en hervormers (1500-1600). Renaissance, humanisme, drukpers (Gutenberg), Reformatie (Luther, Calvijn), ontdekkingsreizen (Columbus, VOC-voorlopers), Tachtigjarige Oorlog begint.
+6. TIJDVAK 6 — Tijd van regenten en vorsten (1600-1700). Gouden Eeuw Nederland, VOC/WIC, [[absolutisme]] (Lodewijk XIV), wetenschappelijke revolutie (Newton, Descartes), Republiek der Zeven Verenigde Nederlanden.
+7. TIJDVAK 7 — Tijd van pruiken en revoluties (1700-1800). [[Verlichting]] (Voltaire, Rousseau, Montesquieu), Amerikaanse Revolutie (1776), Franse Revolutie (1789), Bataafse Republiek.
+8. TIJDVAK 8 — Tijd van burgers en stoommachines (1800-1900). [[Industriële Revolutie]], opkomst burgerij/liberalisme, [[nationalisme]], [[kolonialisme]] (modern imperialism), grondwet Thorbecke 1848, sociale kwestie (Marx).
+9. TIJDVAK 9 — Tijd van wereldoorlogen (1900-1950). WO I (1914-1918), interbellum, opkomst totalitaire stelsels ([[fascisme]], [[nazisme]], [[communisme]]), WO II (1939-1945), Holocaust, dekolonisatie begint.
+10. TIJDVAK 10 — Tijd van televisie en computer (1950-nu). [[Koude Oorlog]], welvaartsstaat, dekolonisatie, EU-vorming, val Berlijnse Muur (1989), globalisering, digitalisering.
+
+KERNBEGRIPPEN per categorie:
+- POLITIEK: democratie, republiek, monarchie, dictatuur, totalitarisme, scheiding der machten (trias politica), kiesrecht (algemeen vs censuskiesrecht).
+- ECONOMIE: feodaal, kapitalisme, mercantilisme, vrijhandel, planeconomie, globalisering.
+- IDEOLOGIE: liberalisme (vrijheid individu), socialisme (gelijkheid), conservatisme (behoud), nationalisme (volk), fascisme (autoritair + nationalistisch).
+- RELIGIE: katholicisme, protestantisme, islam, secularisatie.
+
+BRONANALYSE — VASTE VRAGEN bij élke historische bron:
+1. WIE heeft het gemaakt? (auteur, beroep, positie)
+2. WANNEER? (datum, jaar; let op of tijdgenoot of later)
+3. WAAR? (welk land, welke context)
+4. VOOR WIE? (publiek: zichzelf, machthebbers, volk)
+5. WAAROM / met welk DOEL? (informeren, overtuigen, vermaken, opruien)
+6. WAT staat erin? (kort samenvatten)
+7. Is het PRIMAIR (uit de tijd zelf) of SECUNDAIR (later geschreven)?
+8. Is het REPRESENTATIEF voor de tijd, of een uitzondering?
+9. BIAS / SUBJECTIVITEIT: welke belangen heeft de auteur?
+10. BETROUWBAARHEID: kunnen we het verifiëren met andere bronnen?
+
+VRAAGTYPES in geschiedenisexamens:
+- STANDPUNTBEPALING: "Wat vond X van Y?" — zoek expliciete uitspraken en woordkeuze.
+- VERGELIJKING: "Vergelijk bron 1 en 2 op X." — noem overeenkomsten EN verschillen.
+- OORZAAK-GEVOLG: "Waarom gebeurde X?" — geef structurele (lange termijn) én directe (korte termijn) oorzaken.
+- CONTINUÏTEIT/VERANDERING: "Wat bleef hetzelfde / veranderde?" — geef beide kanten.
+- REPRESENTATIVITEIT: "In hoeverre is bron X kenmerkend voor periode Y?" — gebruik kenmerkende aspecten van het tijdvak.
+
+COACHING: bij elke vraag eerst PLAATS in tijd + plaats laten benoemen door leerling. Bij bronvragen: laat de leerling zelf de 10 bronvragen langslopen. Bij oorzaak-gevolg: vraag "Wat was er VOOR? Wat ÉRNA?". Verbind altijd terug naar een kenmerkend aspect van het tijdvak. Onbekende concepten ([[feodaliteit]], [[Verlichting]], [[kolonialisme]], [[Koude Oorlog]], [[liberalisme]], [[totalitarisme]], [[absolutisme]]) eerst kort uitleggen (2-3 zinnen) voor toepassing.`,
   },
   aardrijkskunde: {
     icon: 'i-globe', en: 'Geography', key: 'geo',
-    style: 'For physical geography (klimaat, gesteenten, landschapsvorming, water): ALWAYS ask about the PROCESS first — which physical force causes this? (e.g. [[erosie]], [[platentektoniek]], waterkringloop, broeikaseffect). Walk through cause → effect step by step. For human geography (bevolking, economie, stedelijkheid, migratie): ask about location, demographics, economic activity, politics. Always use a mental map: ask the student to describe where on the globe / in Europe / in the country this is. For climate questions: ask about temperature, neerslag and seasonality. If a concept is new (e.g. [[subductie]], [[demografische transitie]]), briefly teach it before they apply it.',
+    style: `IDENTIFICEER EERST het sub-domein: fysische geografie (natuurlijke processen) of sociaal-economische geografie (mensen, samenleving). Bij elke vraag: laat de leerling EERST de locatie op de wereldkaart benoemen.
+
+FYSISCHE GEOGRAFIE — KEN DE PROCESSEN:
+
+PLATENTEKTONIEK:
+- Aarde bestaat uit aardkorst (continentaal/oceanisch) op semi-vloeibare mantel. Korst is opgebroken in [[tektonische platen]] die langzaam bewegen.
+- Plaatgrenzen — 3 typen:
+   - Divergent (uit elkaar): bv. Mid-Atlantische Rug → nieuwe oceanische korst, vulkanen, IJsland.
+   - Convergent (op elkaar): oceanisch onder continentaal = [[subductie]] → diepzeetrog + vulkaangordel (bv. Andes). Continentaal + continentaal = gebergte (Himalaya).
+   - Transform (langs elkaar): bv. San Andreas-breuk → aardbevingen, geen vulkanisme.
+- Gevolgen: aardbevingen (Richterschaal, hypocentrum/epicentrum), vulkanisme (effusief vs explosief), gebergtevorming.
+
+LANDSCHAPSVORMING / EROSIE:
+- Verwering: mechanisch (vorst, temperatuur), chemisch (regen + $\\ce{CO2}$), biologisch (planten).
+- Erosie door water: rivieren (V-dal in bovenloop, meanders in benedenloop), zee (kustafslag, klippen).
+- Erosie door wind: woestijngebieden, duinvorming.
+- Erosie door ijs: gletsjers schaven U-dalen, fjorden, morenes.
+- Sedimentatie: afzetting van geërodeerd materiaal (delta, vlaktes).
+
+WATERKRINGLOOP:
+- Verdamping (uit zee/land) → condensatie (wolken) → neerslag (regen/sneeuw) → infiltratie/afstroming → terug naar zee. Aangedreven door zonne-energie.
+- Begrippen: grondwaterspiegel, stroomgebied, waterscheiding, debiet (m³/s).
+
+KLIMAATSYSTEEM:
+- 5 hoofdklimaten (vereenvoudigde [[Köppen-classificatie]]):
+   - A = tropisch (warm + nat, regenwoud).
+   - B = droog (woestijn/steppe).
+   - C = gematigd (NW-Europa, mediterraan).
+   - D = continentaal (winterstrenge gebieden).
+   - E = polair (ijs, toendra).
+- Klimaatfactoren: latitudegraad, hoogte, ligging tov zee (zeeklimaat vs landklimaat), zeestromen (Golfstroom), wind (passaten, westenwinden).
+- Klimaatverandering: broeikaseffect, oorzaken (CO2, methaan), gevolgen (zeespiegelstijging, extreme weer, biodiversiteitsverlies).
+- Weer vs klimaat: weer = momentaan, klimaat = langjarig gemiddelde (≥30 jaar).
+
+ECOSYSTEMEN / BIOMEN: tropisch regenwoud, savanne, woestijn, steppe, gematigd loofbos, taiga (boreaal naaldbos), toendra, gebergte.
+
+SOCIAAL-ECONOMISCHE GEOGRAFIE:
+
+BEVOLKING:
+- Bevolkingsdichtheid: inw/km².
+- Geboortecijfer (per 1000), sterftecijfer, natuurlijke groei = G − S.
+- Migratiesaldo = immigratie − emigratie.
+- Totale groei = natuurlijke groei + migratiesaldo.
+- [[Demografische transitie]] — 5 fasen:
+   1. Hoog G, hoog S → langzame groei (pre-industrieel).
+   2. Hoog G, dalend S → snelle groei (begin industrialisatie).
+   3. Dalend G, laag S → afnemende groei.
+   4. Laag G, laag S → stabiel (West-Europa).
+   5. G < S → krimp + vergrijzing (Japan, delen Europa).
+- Bevolkingsopbouw (piramide): vorm verraadt fase. Brede basis = jong, smal = vergrijzing.
+
+URBANISATIE / STEDELIJKHEID:
+- Verstedelijking: aandeel stedelijke bevolking groeit (wereldwijd >55%).
+- Verstedelijkingsstadia: pre-industrieel, industriële stad, post-industriële stad, suburbanisatie, re-urbanisatie.
+- Mondiale steden / [[megasteden]] (>10 mln): Tokio, Delhi, Shanghai.
+- Sloppenwijken in arme landen vs gentrificatie in rijke.
+- Krimpregio's: jonge mensen weg, voorzieningen verdwijnen.
+
+GLOBALISERING & WERELDORDENING:
+- Centrum/semi-periferie/periferie (Wallerstein).
+- BBP per capita als welvaartsmaatstaf; HDI = onderwijs + gezondheid + inkomen.
+- Globalisering: vrijhandel, multinationals, [[outsourcing]], wereldwijde toeleveringsketens.
+- Internationale organisaties: VN, WTO, EU, NAVO, OPEC.
+
+NEDERLAND-SPECIFIEK:
+- Waterbeheer: dijken, polders, Deltawerken. Risico zeespiegelstijging.
+- Ruimtelijke ordening: Randstad vs Groene Hart vs krimpregio's (Limburg, Groningen, Zeeland).
+- Landgebruik: landbouw, natuur, stedelijk, infrastructuur.
+
+KAARTGEBRUIK & VAARDIGHEDEN:
+- Schaal: absoluut (1:50.000) of grafisch. Hoe groter de noemer, hoe kleiner de schaal, hoe groter het gebied.
+- Coördinaten: breedte (noord/zuid van evenaar 0°), lengte (oost/west van Greenwich 0°).
+- Topografische kaart: hoogtelijnen, symbolen.
+- Thematische kaart: choropletenkaart, stippenkaart, isolijnen.
+
+COACHING:
+- Bij elke vraag eerst LOCATIE laten plaatsen: "Waar op de wereldkaart speelt dit?".
+- Bij fysieke processen: vraag "Welk natuurlijk proces zorgt hiervoor?" — laat de leerling de keten zelf opbouwen (oorzaak → effect → gevolg).
+- Bij klimaat: vraag "Wat zijn de temperatuur en neerslag in deze maand? Welk klimaat past daarbij?".
+- Bij bevolking: laat de leerling eerst de cijfers berekenen (natuurlijke groei, migratiesaldo) voor conclusies.
+- Onbekende begrippen ([[subductie]], [[demografische transitie]], [[megastad]], [[outsourcing]], [[Köppen]], [[gletsjer]]) eerst kort uitleggen (2-3 zinnen) voor toepassing.`,
   },
   economie: {
     icon: 'i-trending', en: 'Economics', key: 'econ',
-    style: 'Economics method: 1) name the topic (markt, prijsvorming, [[elasticiteit]], marktvormen, geld & banken), 2) define the key terms BEFORE using them in any calculation, 3) draw the relevant grafiek if applicable. For supply/demand graphs: ask what is on each as, what shifts and waarom, what the new evenwicht becomes. For calculations: ask which formule applies (BEP, prijselasticiteit, BBP) and what is given. If a concept is unknown (e.g. [[surplus]], [[opportuniteitskosten]], inflation), briefly teach it before they apply it. Always connect to a real-world example when possible.',
+    style: `ECONOMIE-METHODE:
+1. Benoem het onderwerp: markt & prijsvorming, [[elasticiteit]], marktvormen, geld & banken, overheid & begroting, of macrocijfers.
+2. Definieer de [[begrippen]] EERST voordat je gaat rekenen.
+3. Teken de relevante grafiek als die past (vraag/aanbod, kostenfunctie, etc.).
+
+VRAAG & AANBOD (microniveau):
+- Vraag: $Q_v = a - bP$ — neemt af als prijs stijgt.
+- Aanbod: $Q_a = c + dP$ — neemt toe als prijs stijgt.
+- Evenwicht: $Q_v = Q_a$, oplossen voor $P$ en $Q$.
+- Verschuivingen vragen: WAT verschuift (vraag- of aanboodlijn), waarom (verandering inkomen / smaak / prijs substituut / aantal aanbieders / techniek / belasting), en wat het nieuwe evenwicht doet.
+- Prijselasticiteit: $E_v = \\dfrac{\\%\\Delta Q_v}{\\%\\Delta P}$. Inelastisch $|E_v|<1$ (noodzakelijk goed), elastisch $|E_v|>1$ (luxe), unitair $=1$.
+- Inkomenselasticiteit, kruislingse elasticiteit: vergelijkbaar maar met andere noemer.
+
+MARKTVORMEN — herken op aantal aanbieders + producthomogeniteit:
+- Volkomen concurrentie: veel kleine aanbieders, homogeen product, prijsnemer. $P = MO = MK$.
+- Monopolie: één aanbieder, prijszetter. Winstmaximalisatie waar $MO = MK$, prijs lezen op vraaglijn.
+- Monopolistische concurrentie: veel aanbieders, gedifferentieerd product (eigen klantenkring).
+- Oligopolie: weinig aanbieders, onderlinge afhankelijkheid (speltheorie / gevangenendilemma).
+
+OVERHEIDSBEGROTING (MILJOENENNOTA in Nederland):
+- INKOMSTEN: belastingen (loonbelasting, inkomstenbelasting, BTW = omzetbelasting, vennootschapsbelasting, accijnzen) en niet-belastinginkomsten (aardgasbaten, dividenden staatsbedrijven, boetes).
+- UITGAVEN: sociale zekerheid (AOW, WW, bijstand), zorg, onderwijs, openbaar bestuur, defensie, infrastructuur, rente staatsschuld.
+- BEGROTINGSSALDO = inkomsten − uitgaven. Tekort = uitgaven > inkomsten (financiering via leningen → toename staatsschuld). Overschot = omgekeerd.
+- EMU-norm (eurozone): tekort ≤ 3% BBP, staatsschuld ≤ 60% BBP.
+- Onderscheid PRIMAIR saldo (zonder rentebetalingen) en FEITELIJK saldo. Onderscheid CONJUNCTUREEL deel (door economische schommelingen) en STRUCTUREEL deel.
+- Procyclisch beleid (uitgaven omhoog in hoogconjunctuur) vs anticyclisch (Keynesiaans: uitgaven omhoog in laagconjunctuur).
+
+MACRO-CIJFERS:
+- BBP (Bruto Binnenlands Product) = totale waarde geproduceerde goederen/diensten binnen het land in een jaar. Onderscheid nominaal vs reëel (gecorrigeerd voor inflatie), en BBP per capita.
+- INFLATIE: $\\text{inflatie} = \\dfrac{\\text{CPI}_t - \\text{CPI}_{t-1}}{\\text{CPI}_{t-1}} \\times 100\\%$. Oorzaken: vraaginflatie, kosteninflatie, geldhoeveelheid.
+- WERKLOOSHEID: $u = \\dfrac{\\text{werklozen}}{\\text{beroepsbevolking}} \\times 100\\%$. Onderscheid frictie-, structurele en conjuncturele werkloosheid.
+- CONJUNCTUURGOLF: hoogconjunctuur (BBP-groei > trend), laagconjunctuur (< trend), recessie (2 kwartalen krimp).
+- Wisselkoersen: appreciatie/depreciatie, gevolg voor export/import.
+
+GELD & BANKEN:
+- Geldcreatie: commerciële banken creëren giraal geld door leningen te verstrekken (multiplicator: $\\dfrac{1}{\\text{reserveratio}}$).
+- Centrale bank (ECB): bepaalt rentetarief om inflatie te sturen. Hogere rente → minder lenen → minder bestedingen → lagere inflatie.
+- Monetair beleid vs fiscaal beleid (overheid via begroting).
+
+COACHING: vraag bij elke som "Welke formule past hier?" en "Wat zijn de gegeven waarden?". Voor begrip-vragen: laat de leerling eerst de term definiëren. Voor grafieken: vraag wat op de assen staat en wat er verschuift en waarom. Verbind altijd met een actueel of herkenbaar voorbeeld (boodschappen duurder, hypotheekrente, etc.).
+
+Onbekende begrippen ([[BBP]], [[inflatie]], [[surplus]], [[opportuniteitskosten]], [[elasticiteit]], [[multiplicator]], [[monetair beleid]]) eerst kort uitleggen voordat de leerling ze toepast.`,
   },
   bedrijfseconomie: {
     icon: 'i-briefcase', en: 'Business Economics (accounting and corporate finance)', key: 'biz',
-    style: 'Bedrijfseconomie is methodische berekeningen. Voor elke som: 1) identify the type ([[BEP]], [[dekkingsbijdrage]], balans, resultatenrekening, [[liquiditeit]], [[solvabiliteit]]), 2) list given values, 3) write down the relevant formula, 4) plug in numbers. For balans: always use the boekhoudkundige vergelijking (activa = passiva), and check the student knows debet/credit. For ratios: ask what the ratio CONCEPTUALLY measures before calculating. For investeringsselectie: ask about terugverdientijd, netto contante waarde or rentabiliteit. Use Dutch accounting terms (eigen vermogen, vreemd vermogen, vlottende/vaste activa) when working in Dutch. If a concept is unknown, briefly teach it first.',
+    style: `Bedrijfseconomie = methodische berekeningen rond bedrijven. Vaste werkwijze per som:
+1. Identificeer het type: [[BEP]] / [[dekkingsbijdrage]], balans, resultatenrekening, begroting, liquiditeit, solvabiliteit, rentabiliteit, investeringsselectie, of voorraadwaardering.
+2. List the given values mét eenheid (€, stuks, %, maanden).
+3. Schrijf de formule op vóór je getallen invult.
+4. Vul in en bereken; controleer eenheden en grootteorde.
+
+DE BALANS — KEN DEZE PERFECT (op datum X, momentopname):
+
+LINKERZIJDE = ACTIVA (wat het bedrijf BEZIT, hoe het geld is geïnvesteerd)
+  VASTE ACTIVA (lange termijn, > 1 jaar):
+    - Immateriële vaste activa: goodwill, octrooien, licenties, software.
+    - Materiële vaste activa: gebouwen, grond, machines, inventaris, vervoermiddelen.
+    - Financiële vaste activa: deelnemingen in andere bedrijven, langlopende vorderingen.
+  VLOTTENDE ACTIVA (korte termijn, < 1 jaar):
+    - Voorraden: grondstoffen, halffabrikaten, gereed product, handelsgoederen.
+    - Vorderingen / debiteuren: klanten die nog moeten betalen.
+    - Liquide middelen: kas + bank.
+
+RECHTERZIJDE = PASSIVA (hoe het bedrijf het geld heeft GEFINANCIERD)
+  EIGEN VERMOGEN (van de eigenaar/aandeelhouders):
+    - Geplaatst aandelenkapitaal / startkapitaal.
+    - Agioreserve (boven nominale waarde betaald).
+    - Algemene reserve / ingehouden winst uit vorige jaren.
+    - Resultaat boekjaar (winst toegevoegd, verlies afgetrokken).
+  VOORZIENINGEN (verwachte toekomstige uitgaven): pensioen, onderhoud, garantie.
+  LANG VREEMD VERMOGEN (> 1 jaar): hypothecaire lening, onderhandse lening, obligatielening.
+  KORT VREEMD VERMOGEN (< 1 jaar): crediteuren (leveranciers), te betalen belastingen, rekening-courant krediet bij bank.
+
+KERNVERGELIJKING (BOEKHOUDKUNDIGE VERGELIJKING):
+$$\\text{Activa} = \\text{Eigen Vermogen} + \\text{Vreemd Vermogen}$$
+Of: $\\text{Bezit} = \\text{Schuld} + \\text{Eigen geld}$. Beide kanten ALTIJD even groot — een balans móét sluiten.
+
+DEBET/CREDIT logica voor mutaties:
+- Activa stijgt = debet; Activa daalt = credit.
+- Passiva stijgt = credit; Passiva daalt = debet.
+- Iedere boeking heeft minstens één debet- en één credit-kant, en de bedragen zijn altijd gelijk (dubbel boekhouden).
+
+RESULTATENREKENING — opbouw (over een PERIODE, bv. een jaar):
+  Omzet (= verkoopprijs × afzet)
+  − Inkoopwaarde van de omzet (kostprijs verkochte producten)
+  ──────────────
+  = Brutowinst
+  − Bedrijfskosten (lonen, huur, afschrijvingen, energie, verkoopkosten)
+  ──────────────
+  = Bedrijfsresultaat (= EBIT, Operationele winst)
+  − Rentekosten (+ rente-opbrengsten)
+  ──────────────
+  = Resultaat vóór belasting
+  − Vennootschapsbelasting
+  ──────────────
+  = NETTOWINST (gaat naar eigen vermogen / dividend)
+
+KOSTEN-CONCEPTEN:
+- Constante (vaste) kosten ($CK$ of $TCK$): blijven gelijk ongeacht productie (huur, afschrijving, vast salaris).
+- Variabele kosten ($VK$): hangen af van productie ($VK = \\text{vk per stuk} \\times Q$).
+- Totale kosten: $TK = CK + VK$. Gemiddelde totale kosten: $GTK = TK/Q$.
+- Dekkingsbijdrage per stuk: $DB = P - \\text{vk per stuk}$. Totale dekkingsbijdrage = winst + constante kosten.
+- Break-even: $Q_{BEP} = \\dfrac{CK}{P - \\text{vk per stuk}}$. Bij die afzet is winst = 0.
+
+BEGROTINGEN — drie hoofdtypes, allemaal vooruitkijkend:
+1. EXPLOITATIEBEGROTING: verwachte omzet, kosten en winst over de komende periode (vorm = resultatenrekening, maar prognose). Beantwoordt "Wordt er winst gemaakt volgend jaar?".
+2. LIQUIDITEITSBEGROTING / KASSTROOMBEGROTING: verwachte ONTVANGSTEN en BETALINGEN per maand (of kwartaal). Werk vanuit beginsaldo + ontvangsten − betalingen = eindsaldo. Beantwoordt "Hebben we elke maand genoeg cash?". Let op: omzet ≠ ontvangst (klanten betalen later), kosten ≠ betaling (leveranciers betaal je later, afschrijving is geen kas-uitgave).
+3. INVESTERINGSBEGROTING: geplande uitgaven aan vaste activa + hoe ze worden gefinancierd (eigen vermogen, lening, leasing). Vaak gekoppeld aan een afschrijvingsplan.
+
+INVESTERINGSSELECTIE (welk project doorvoeren?):
+- Terugverdientijd: $\\dfrac{\\text{investering}}{\\text{jaarlijkse cashflow}}$ — hoe sneller, hoe beter.
+- Netto contante waarde (NCW / NPV): contant maken van toekomstige cashflows tegen vermogenskostenvoet. NCW > 0 = doen.
+- Gemiddelde boekhoudkundige rentabiliteit: $\\dfrac{\\text{gem. winst}}{\\text{gem. geïnvesteerd vermogen}} \\times 100\\%$.
+
+RATIO'S — vraag eerst WAT de ratio meet, dan rekenen:
+- LIQUIDITEIT (kan ik op korte termijn betalen?):
+   - Current ratio: $\\dfrac{\\text{vlottende activa}}{\\text{kort vreemd vermogen}}$ — gezond ≥ 1,5.
+   - Quick ratio: $\\dfrac{\\text{vlottende activa} - \\text{voorraad}}{\\text{kort vreemd vermogen}}$ — gezond ≥ 1.
+- SOLVABILITEIT (kan ik op lange termijn aan mijn schulden voldoen?):
+   - $\\dfrac{\\text{eigen vermogen}}{\\text{totaal vermogen}} \\times 100\\%$ — gezond ≥ 30-40%.
+- RENTABILITEIT (hoeveel verdien ik op het geïnvesteerde vermogen?):
+   - REV (Rentabiliteit Eigen Vermogen) $= \\dfrac{\\text{nettowinst}}{\\text{eigen vermogen}} \\times 100\\%$.
+   - RTV (Rentabiliteit Totaal Vermogen) $= \\dfrac{\\text{bedrijfsresultaat}}{\\text{totaal vermogen}} \\times 100\\%$.
+   - Hefboomeffect: REV > RTV als rente vreemd vermogen < RTV.
+
+COACHING:
+- Voor balans-vragen: vraag eerst "Aan welke kant van de balans hoort dit thuis, en waarom?". Test de boekhoudkundige vergelijking elke keer.
+- Voor begrotingen: vraag "Is dit ontvangst (kas) of omzet (resultaat)?" — leerlingen halen die twee vaak door elkaar.
+- Voor ratio's: laat de leerling EERST conceptueel uitleggen wat de ratio meet, vóór ze de formule invullen. Anders is het puur cijfermatig zonder begrip.
+- Onbekende termen ([[afschrijving]], [[agio]], [[disagio]], [[hefboomeffect]], [[FIFO]], [[LIFO]], [[NCW]], [[crediteuren]], [[voorzieningen]]) eerst kort uitleggen (2-3 zinnen) voor toepassing.`,
   },
 };
 
-const SYSTEM_PROMPT = (subject, name, languageName, subjectStyle) => `You are a patient, friendly homework tutor for a high school student named ${name}. The subject is ${subject}.
+const SYSTEM_PROMPT = (subject, name, languageName, subjectStyle, studentProfile, profileContext) => `You are a patient, friendly homework tutor for a student named ${name}. The subject is ${subject}.
 
 CRITICAL LANGUAGE RULE: Respond ONLY in ${languageName}. Never switch to another language, even if asked. Every message you write must be in ${languageName}.
 
 Address ${name} by their first name now and then (not every sentence — just occasionally, like a real tutor would).
+
+LEERLINGPROFIEL — STEM JE TAALGEBRUIK, DIEPGANG EN VOORBEELDEN AF OP DIT NIVEAU:
+${profileContext}
+This is the most important context: a basisschool student needs short, concrete explanations with everyday examples; a VWO/Gymnasium/university student can handle abstract reasoning and academic vocabulary. ADAPT accordingly.
+
+STUDENT MEMORY — what ${name} has already demonstrated mastery of in previous sessions:
+${studentProfile}
+If a skill is listed above, DO NOT re-explain it, DO NOT ask "weet je nog hoe X werkt?", DO NOT do the recap. Skip straight to applying that knowledge. Trust the profile.
 
 YOUR MISSION: Help ${name} solve THIS assignment themselves through a Socratic conversation. You may teach concepts and methods, but ${name} must do the actual problem-solving work.
 
@@ -1742,6 +3223,27 @@ CONVERSATION FLOW:
 SUBJECT-SPECIFIC GUIDANCE for ${subject}:
 ${subjectStyle}
 
+MASTERY MARKING — when you become CONFIDENT during this conversation that ${name} has truly mastered a sub-skill (multiple correct uses without hints, clear understanding), add a marker on its OWN line at the very END of your response so the app can remember it next time:
+[[KNOWS:skill_id]]
+
+Allowed skill_id values (use exactly these, lowercase, snake_case):
+- duits_cases, duits_articles
+- latijn_cases, latijn_conjugations
+- grieks_alphabet, grieks_cases, grieks_aspect
+- scheikunde_mol, scheikunde_redox
+- wiskunde_abc, wiskunde_derivatives
+- natuurkunde_units
+- frans_etre_avoir
+- spaans_ser_estar
+- engels_perfect
+
+Rules for marking:
+- Only mark when you are VERY confident — usually after 2+ correct independent uses.
+- NEVER mark something already in STUDENT MEMORY (above).
+- Maximum ONE marker per response.
+- The marker is invisible to ${name} — it just updates the profile silently.
+- Do NOT announce the marker ("I'll remember this" etc.) — just emit it at the end.
+
 DIFFICULT TERMS — IMPORTANT FORMATTING RULE:
 When you use a specialized or technical term that a high school student may not immediately know, wrap it in double square brackets like this: [[term]]. The student can then tap that term to get a separate explanation.
 - Only wrap genuinely technical / specialised words (e.g. [[discriminant]], [[stoichiometrie]], [[ablativus]], [[feodaliteit]], [[ser vs estar]]).
@@ -1755,8 +3257,19 @@ STYLE:
 - Max 4 sentences per turn — short enough to read on a phone, long enough to teach when needed.
 - Tone: warm, patient, like sitting next to ${name} at the table.
 - No emoji unless ${name} uses them.
-- For formulas: plain notation (e.g. x^2, not LaTeX).
 - For language-learning subjects: you may quote short fragments in the target language inside your ${languageName} response.
+
+MATH NOTATION — IMPORTANT:
+Whenever you write a mathematical formula, fraction, power, root, equation, or chemistry formula, ALWAYS wrap it in single dollar signs so the app renders it as a real formula. Examples:
+- Fractions: $\\frac{1}{2}$ for one half, $\\frac{x+1}{x-1}$ for complex fractions, $\\frac{-b \\pm \\sqrt{b^2-4ac}}{2a}$ for the quadratic formula.
+- Powers: $x^2$, $x^{n+1}$, $e^{i\\pi}$.
+- Roots: $\\sqrt{2}$, $\\sqrt[3]{x}$.
+- Greek letters: $\\pi$, $\\theta$, $\\alpha$, $\\Delta$.
+- Operators: $\\leq$, $\\geq$, $\\neq$, $\\pm$, $\\cdot$, $\\times$, $\\div$, $\\approx$.
+- Subscripts: $x_1$, $a_n$, $H_2O$, $CO_2$.
+- Equations: $f(x) = x^2 + 3x - 5$, $a^2 + b^2 = c^2$.
+- For a larger centred display formula, use double dollar signs: $$\\int_0^1 x^2 \\, dx = \\frac{1}{3}$$
+NEVER write fractions as "1/2" in plain text when LaTeX would render them properly. Plain "/" is fine only for simple division in a sentence (e.g. "deel door 2"), but actual fraction notation must use $\\frac{}{}$.
 
 START NOW: look at the photo, name the topic in one sentence, then ask ${name} where they are in solving it (in ${languageName}).`;
 
@@ -1768,7 +3281,36 @@ const state = {
   apiKey: localStorage.getItem('claude_api_key') || null,
   name: localStorage.getItem('user_name') || null,
   language: localStorage.getItem('user_language') || 'nl',
+  skills: (() => {
+    try { return JSON.parse(localStorage.getItem('user_skills') || '{}'); }
+    catch { return {}; }
+  })(),
+  profile: (() => {
+    try {
+      const p = JSON.parse(localStorage.getItem('user_profile') || 'null');
+      return p && p.educationLevel ? p : null;
+    } catch { return null; }
+  })(),
   isLoading: false,
+};
+
+// Skills the AI is allowed to "remember" via [[KNOWS:xxx]] markers
+const KNOWN_SKILL_LABELS = {
+  duits_cases:          'Duitse naamvallen (Nominativ/Akkusativ/Dativ/Genitiv)',
+  duits_articles:       'Duitse lidwoorden (der/die/das volledige verbuiging)',
+  latijn_cases:         'Latijnse naamvallen (Nom/Voc/Acc/Gen/Dat/Abl)',
+  latijn_conjugations:  'Latijnse conjugaties (1-4)',
+  grieks_alphabet:      'Grieks alfabet (vlot lezen)',
+  grieks_cases:         'Griekse naamvallen (Nom/Gen/Dat/Acc/Voc)',
+  grieks_aspect:        'Grieks aspect-systeem (praes/aor/perf)',
+  scheikunde_mol:       'Het molbegrip + basis molberekeningen',
+  scheikunde_redox:     'Redox / oxidatiegetallen',
+  wiskunde_abc:         'De abc-formule',
+  wiskunde_derivatives: 'Basisregels afgeleiden (product/kettingregel)',
+  natuurkunde_units:    'Eenheden checken in natuurkunde-antwoorden',
+  frans_etre_avoir:     'Frans: keuze tussen être en avoir (passé composé)',
+  spaans_ser_estar:     'Spaans: keuze tussen ser en estar',
+  engels_perfect:       'Engels: present perfect vs simple past',
 };
 
 const $ = id => document.getElementById(id);
@@ -1782,6 +3324,13 @@ const startBtn = $('startBtn');
 const stepSubject = $('step-subject');
 const stepPhoto = $('step-photo');
 const stepChat = $('step-chat');
+const subjectView = $('subjectView');
+const subjectHero = $('subjectHero');
+const subjectHeroIcon = $('subjectHeroIcon');
+const subjectHeroTitle = $('subjectHeroTitle');
+const subjectHeroText = $('subjectHeroText');
+const backToSubjectsBtn = $('backToSubjectsBtn');
+const heroEl = document.querySelector('.hero');
 const chatMessages = $('chatMessages');
 const chatInput = $('chatInput');
 const sendBtn = $('sendBtn');
@@ -1794,6 +3343,15 @@ const welcomeModal = $('welcomeModal');
 const welcomeNameInput = $('welcomeNameInput');
 const welcomeStartBtn = $('welcomeStartBtn');
 const welcomeLangPicker = $('welcomeLangPicker');
+const welcomeNextBtn = $('welcomeNextBtn');
+const welcomeBackBtn = $('welcomeBackBtn');
+const welcomeStep1 = $('welcomeStep1');
+const welcomeStep2 = $('welcomeStep2');
+const educationPicker = $('educationPicker');
+const schoolLevelPicker = $('schoolLevelPicker');
+const schoolLevelField = $('schoolLevelField');
+const gradeYearField = $('gradeYearField');
+const gradeYearSelect = $('gradeYearSelect');
 
 const apiKeyModal = $('apiKeyModal');
 const apiKeyInput = $('apiKeyInput');
@@ -1803,6 +3361,9 @@ const settingsModal = $('settingsModal');
 const settingsNameInput = $('settingsNameInput');
 const settingsKeyInput = $('settingsKeyInput');
 const settingsLangPicker = $('settingsLangPicker');
+const skillsList = $('skillsList');
+const profileSummary = $('profileSummary');
+const editProfileBtn = $('editProfileBtn');
 
 function svgIcon(id) { return `<svg class="icon"><use href="#${id}"/></svg>`; }
 function t(key) { return (TRANSLATIONS[state.language] || TRANSLATIONS.nl)[key] || key; }
@@ -1832,6 +3393,10 @@ function applyLanguage() {
   if (state.subject) {
     const key = SUBJECTS[state.subject].key;
     chatHeaderTitle.textContent = `${t('subj_' + key)} ${t('tutor_suffix')}`;
+    // Also rebuild the subject hero (intro text) if we're on a subject page
+    if (subjectView && !subjectView.classList.contains('hidden')) {
+      buildSubjectIntro();
+    }
   }
 }
 
@@ -1852,17 +3417,156 @@ function buildLangPicker(container, currentLang, onChange) {
   });
 }
 
+// Build the profile summary box inside settings
+function buildProfileSummary() {
+  const p = state.profile;
+  if (!p || !p.educationLevel) {
+    profileSummary.innerHTML = '<span class="muted">' + t('profile_empty') + '</span>';
+    return;
+  }
+  const eduLabel = {
+    basisschool: t('edu_primary'),
+    middelbare:  t('edu_secondary'),
+    mbo: 'MBO', hbo: 'HBO',
+    uni: t('edu_university'),
+  }[p.educationLevel] || p.educationLevel;
+  const yearWord = {
+    basisschool: t('year_groep'),
+    middelbare:  t('year_klas'),
+    mbo: t('year_jaar'), hbo: t('year_jaar'), uni: t('year_jaar'),
+  }[p.educationLevel] || t('year_jaar');
+  const levelPart = (p.educationLevel === 'middelbare' && p.schoolLevel)
+    ? ` · <strong>${p.schoolLevel.toUpperCase()}</strong>` : '';
+  profileSummary.innerHTML = `<strong>${eduLabel}</strong>${levelPart} · ${yearWord} <strong>${p.gradeYear}</strong>`;
+}
+
+// Build the "wat ken je al" list inside settings
+function buildSkillsList() {
+  skillsList.innerHTML = '';
+  const known = Object.keys(state.skills).filter(k => state.skills[k] && KNOWN_SKILL_LABELS[k]);
+  if (known.length === 0) {
+    const empty = document.createElement('div');
+    empty.className = 'skills-empty';
+    empty.textContent = t('skills_empty');
+    skillsList.appendChild(empty);
+    return;
+  }
+  known.forEach(skillId => {
+    const pill = document.createElement('div');
+    pill.className = 'skill-pill';
+    const label = document.createElement('span');
+    label.textContent = KNOWN_SKILL_LABELS[skillId];
+    const remove = document.createElement('button');
+    remove.type = 'button';
+    remove.className = 'skill-remove';
+    remove.textContent = '×';
+    remove.title = t('skills_forget');
+    remove.setAttribute('aria-label', t('skills_forget'));
+    remove.addEventListener('click', () => {
+      delete state.skills[skillId];
+      localStorage.setItem('user_skills', JSON.stringify(state.skills));
+      buildSkillsList();
+    });
+    pill.appendChild(label);
+    pill.appendChild(remove);
+    skillsList.appendChild(pill);
+  });
+}
+
+// ============ Multi-step welcome onboarding ============
+let pendingProfile = {};
+
+function showWelcomeStep(n) {
+  welcomeStep1.classList.toggle('hidden', n !== 1);
+  welcomeStep2.classList.toggle('hidden', n !== 2);
+}
+
+function selectEducation(edu) {
+  pendingProfile.educationLevel = edu;
+  pendingProfile.schoolLevel = null; // reset on change
+  educationPicker.querySelectorAll('.opt-pill').forEach(b =>
+    b.classList.toggle('active', b.dataset.edu === edu)
+  );
+  schoolLevelPicker.querySelectorAll('.opt-pill').forEach(b => b.classList.remove('active'));
+  schoolLevelField.classList.toggle('hidden', edu !== 'middelbare');
+  gradeYearField.classList.remove('hidden');
+  updateGradeYearOptions();
+}
+
+function selectSchoolLevel(level) {
+  pendingProfile.schoolLevel = level;
+  schoolLevelPicker.querySelectorAll('.opt-pill').forEach(b =>
+    b.classList.toggle('active', b.dataset.level === level)
+  );
+}
+
+function updateGradeYearOptions() {
+  const max = {
+    basisschool: 8,
+    middelbare:  6,
+    mbo:         4,
+    hbo:         4,
+    uni:         6,
+  }[pendingProfile.educationLevel] || 6;
+  const labelKey = {
+    basisschool: 'year_groep',
+    middelbare:  'year_klas',
+    mbo:         'year_jaar',
+    hbo:         'year_jaar',
+    uni:         'year_jaar',
+  }[pendingProfile.educationLevel] || 'year_jaar';
+  const prefix = t(labelKey);
+
+  gradeYearSelect.innerHTML = '';
+  const placeholder = document.createElement('option');
+  placeholder.value = '';
+  placeholder.textContent = t('select_placeholder');
+  gradeYearSelect.appendChild(placeholder);
+
+  for (let i = 1; i <= max; i++) {
+    const opt = document.createElement('option');
+    opt.value = String(i);
+    opt.textContent = `${prefix} ${i}`;
+    if (pendingProfile.gradeYear === i) opt.selected = true;
+    gradeYearSelect.appendChild(opt);
+  }
+}
+
+function setupProfileStep() {
+  pendingProfile = state.profile ? { ...state.profile } : {};
+  // Reset all UI
+  educationPicker.querySelectorAll('.opt-pill').forEach(b => b.classList.remove('active'));
+  schoolLevelPicker.querySelectorAll('.opt-pill').forEach(b => b.classList.remove('active'));
+  schoolLevelField.classList.add('hidden');
+  gradeYearField.classList.add('hidden');
+  gradeYearSelect.innerHTML = '<option value="">' + t('select_placeholder') + '</option>';
+  // Pre-fill from existing profile
+  if (pendingProfile.educationLevel) {
+    selectEducation(pendingProfile.educationLevel);
+    if (pendingProfile.schoolLevel) selectSchoolLevel(pendingProfile.schoolLevel);
+    if (pendingProfile.gradeYear) gradeYearSelect.value = String(pendingProfile.gradeYear);
+  }
+}
+
 function openWelcomeModal() {
   buildLangPicker(welcomeLangPicker, state.language, code => {
     state.language = code;
     applyLanguage();
   });
   welcomeNameInput.value = state.name || '';
+  // If user already has a name (existing user) but no profile yet, jump straight to step 2
+  const startStep = (state.name && !state.profile) ? 2 : 1;
+  if (startStep === 2) setupProfileStep();
+  showWelcomeStep(startStep);
   welcomeModal.classList.add('active');
-  setTimeout(() => welcomeNameInput.focus(), 50);
+  setTimeout(() => {
+    if (startStep === 1) welcomeNameInput.focus();
+  }, 50);
 }
 function closeWelcomeModal() { welcomeModal.classList.remove('active'); }
-welcomeStartBtn.addEventListener('click', () => {
+
+// Step 1 → Step 2
+welcomeNextBtn.addEventListener('click', () => {
   const name = welcomeNameInput.value.trim();
   if (!name) {
     welcomeNameInput.focus();
@@ -1870,15 +3574,51 @@ welcomeStartBtn.addEventListener('click', () => {
     return;
   }
   state.name = name;
-  localStorage.setItem('user_name', name);
+  setupProfileStep();
+  showWelcomeStep(2);
+});
+welcomeNameInput.addEventListener('keydown', e => {
+  if (e.key === 'Enter') welcomeNextBtn.click();
+  welcomeNameInput.style.borderColor = '';
+});
+
+// Step 2 → back
+welcomeBackBtn.addEventListener('click', () => showWelcomeStep(1));
+
+// Step 2 education picker
+educationPicker.querySelectorAll('.opt-pill').forEach(btn => {
+  btn.addEventListener('click', () => selectEducation(btn.dataset.edu));
+});
+
+// Step 2 school level picker
+schoolLevelPicker.querySelectorAll('.opt-pill').forEach(btn => {
+  btn.addEventListener('click', () => selectSchoolLevel(btn.dataset.level));
+});
+
+// Step 2 → finish onboarding
+welcomeStartBtn.addEventListener('click', () => {
+  if (!pendingProfile.educationLevel) {
+    alert(t('err_pick_education'));
+    return;
+  }
+  if (pendingProfile.educationLevel === 'middelbare' && !pendingProfile.schoolLevel) {
+    alert(t('err_pick_level'));
+    return;
+  }
+  const yr = parseInt(gradeYearSelect.value, 10);
+  if (!yr) {
+    alert(t('err_pick_year'));
+    return;
+  }
+  pendingProfile.gradeYear = yr;
+  // Persist everything
+  state.profile = pendingProfile;
+  localStorage.setItem('user_profile', JSON.stringify(state.profile));
+  localStorage.setItem('user_name', state.name);
   localStorage.setItem('user_language', state.language);
   closeWelcomeModal();
   applyLanguage();
   if (!state.apiKey) openApiKeyModal();
-});
-welcomeNameInput.addEventListener('keydown', e => {
-  if (e.key === 'Enter') welcomeStartBtn.click();
-  welcomeNameInput.style.borderColor = '';
 });
 
 function openApiKeyModal() {
@@ -1903,8 +3643,18 @@ function openSettingsModal() {
   });
   settingsNameInput.value = state.name || '';
   settingsKeyInput.value = state.apiKey || '';
+  buildProfileSummary();
+  buildSkillsList();
   settingsModal.classList.add('active');
 }
+
+// Profiel aanpassen vanuit instellingen → opent stap 2 van de welkomstmodal
+editProfileBtn.addEventListener('click', () => {
+  closeSettingsModal();
+  setupProfileStep();
+  showWelcomeStep(2);
+  welcomeModal.classList.add('active');
+});
 function closeSettingsModal() { settingsModal.classList.remove('active'); }
 $('settingsBtn').addEventListener('click', openSettingsModal);
 $('settingsCancelBtn').addEventListener('click', () => {
@@ -1944,7 +3694,8 @@ function openTermPopup(term) {
   const cacheKey = `${state.subject}|${state.language}|${term.toLowerCase()}`;
   if (termCache.has(cacheKey)) {
     termPopupBody.classList.remove('loading');
-    termPopupBody.textContent = termCache.get(cacheKey);
+    termPopupBody.innerHTML = escapeHtml(termCache.get(cacheKey));
+    renderMathIn(termPopupBody);
     return;
   }
 
@@ -1952,7 +3703,8 @@ function openTermPopup(term) {
     if (!termPopup.classList.contains('active') || termPopupTitle.textContent !== term) return;
     termCache.set(cacheKey, explanation);
     termPopupBody.classList.remove('loading');
-    termPopupBody.textContent = explanation;
+    termPopupBody.innerHTML = escapeHtml(explanation);
+    renderMathIn(termPopupBody);
   }).catch(err => {
     if (!termPopup.classList.contains('active') || termPopupTitle.textContent !== term) return;
     console.error(err);
@@ -2016,15 +3768,78 @@ Rules:
   return data.content.map(c => c.text).filter(Boolean).join('\n').trim();
 }
 
+// ============ View navigation (home ↔ subject page) ============
+function resetSubjectWorkspace() {
+  state.imageBase64 = null;
+  state.imageMediaType = null;
+  state.messages = [];
+  previewImg.classList.add('hidden');
+  previewImg.src = '';
+  uploadPrompt.classList.remove('hidden');
+  uploadZone.classList.remove('has-image');
+  fileInput.value = '';
+  cameraInput.value = '';
+  startBtn.disabled = true;
+  chatMessages.innerHTML = '';
+  chatInput.value = '';
+  stepPhoto.classList.add('hidden');
+  stepChat.classList.add('hidden');
+}
+
+function buildSubjectIntro() {
+  const meta = SUBJECTS[state.subject];
+  if (!meta) return;
+  const subjName = t('subj_' + meta.key);
+  const topicsRaw = t('subj_' + meta.key + '_sub');
+  // Lowercase topics so the sentence flows ("ik help je met algebra, ...")
+  const topics = topicsRaw.charAt(0).toLowerCase() + topicsRaw.slice(1);
+
+  subjectHero.dataset.subject = state.subject;
+  subjectHeroIcon.innerHTML = svgIcon(meta.icon);
+
+  const replacements = {
+    '{name}': state.name || '',
+    '{subj}': subjName,
+    '{subjLower}': subjName.toLowerCase(),
+    '{topics}': topics,
+  };
+  const apply = tpl => Object.entries(replacements).reduce(
+    (s, [k, v]) => s.split(k).join(v), tpl
+  );
+
+  subjectHeroTitle.textContent = apply(t('intro_title'));
+  subjectHeroText.textContent  = apply(t('intro_text'));
+}
+
+function showSubjectView(subject) {
+  state.subject = subject;
+  resetSubjectWorkspace();
+  // Hide home
+  if (heroEl) heroEl.classList.add('hidden');
+  stepSubject.classList.add('hidden');
+  // Show subject page
+  subjectView.classList.remove('hidden');
+  stepPhoto.classList.remove('hidden');
+  buildSubjectIntro();
+  // Top of page
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function showHomeView() {
+  state.subject = null;
+  resetSubjectWorkspace();
+  subjectCards.forEach(c => c.classList.remove('active'));
+  subjectView.classList.add('hidden');
+  if (heroEl) heroEl.classList.remove('hidden');
+  stepSubject.classList.remove('hidden');
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
 subjectCards.forEach(card => {
-  card.addEventListener('click', () => {
-    subjectCards.forEach(c => c.classList.remove('active'));
-    card.classList.add('active');
-    state.subject = card.dataset.subject;
-    stepPhoto.classList.remove('hidden');
-    stepPhoto.scrollIntoView({ behavior: 'smooth', block: 'start' });
-  });
+  card.addEventListener('click', () => showSubjectView(card.dataset.subject));
 });
+
+backToSubjectsBtn.addEventListener('click', showHomeView);
 
 uploadZone.addEventListener('click', () => {
   if (!state.imageBase64) fileInput.click();
@@ -2110,6 +3925,87 @@ function parseTermMarkers(text) {
   });
 }
 
+// Strip [[KNOWS:skill_id]] markers from AI text and update the student profile
+function preprocessAiText(text) {
+  let changed = false;
+  const cleaned = text.replace(/\[\[KNOWS:([a-z_]+)\]\]/gi, (_, skill) => {
+    const id = skill.toLowerCase();
+    if (KNOWN_SKILL_LABELS[id] && !state.skills[id]) {
+      state.skills[id] = true;
+      changed = true;
+    }
+    return '';
+  });
+  if (changed) {
+    localStorage.setItem('user_skills', JSON.stringify(state.skills));
+  }
+  return cleaned.replace(/\n{3,}/g, '\n\n').trim();
+}
+
+// Describe what the student already knows for the system prompt
+function studentProfileText() {
+  const known = Object.keys(state.skills).filter(k => state.skills[k] && KNOWN_SKILL_LABELS[k]);
+  if (known.length === 0) return '(Nothing recorded yet — assume the student has not mastered any sub-skill.)';
+  return known.map(k => '- ' + KNOWN_SKILL_LABELS[k]).join('\n');
+}
+
+// Describe the student's education level for the system prompt — controls depth & vocabulary
+function profileContextText() {
+  const p = state.profile;
+  if (!p || !p.educationLevel) return '(No education level recorded — assume middle/late secondary school.)';
+  const eduLabel = {
+    basisschool: 'Dutch primary school (basisschool, ages 4-12)',
+    middelbare:  `Dutch secondary school${p.schoolLevel ? ` — ${p.schoolLevel.toUpperCase()}` : ''} (ages 12-18)`,
+    mbo:         'Dutch MBO (vocational secondary education, ages 16-20)',
+    hbo:         'Dutch HBO (university of applied sciences, ages 18+)',
+    uni:         'Dutch research university (WO, ages 18+)',
+  }[p.educationLevel] || p.educationLevel;
+  const yearWord = {
+    basisschool: 'groep',
+    middelbare:  'klas',
+    mbo: 'jaar', hbo: 'jaar', uni: 'jaar',
+  }[p.educationLevel] || 'jaar';
+  const depth = {
+    basisschool: 'Use VERY simple words. No technical jargon. Concrete, everyday examples (apples, sweets, schoolyard scenes). Short sentences. Be warm and patient.',
+    middelbare_vmbo: 'Use simple, practical language. Concrete examples over abstract concepts. Skip heavy math derivations. Real-life framing.',
+    middelbare_havo: 'Standard secondary-school level. Mix practical and abstract. Introduce formal vocabulary but explain it.',
+    middelbare_vwo: 'Pre-university level. Use precise academic vocabulary. Expect abstract reasoning. More depth and rigour allowed.',
+    middelbare_gymnasium: 'Pre-university level with classical context. Use precise academic vocabulary. Link to Latin/Greek roots when relevant.',
+    middelbare: 'Standard secondary-school level.',
+    mbo: 'Practical, professional level. Job-relevant examples. Less abstract theory.',
+    hbo: 'University-of-applied-sciences level. Mix theory with practical application. Treat as adult learner.',
+    uni: 'Full academic research level. Precise vocabulary, theoretical depth, treat as adult.',
+  };
+  const depthKey = p.educationLevel === 'middelbare' && p.schoolLevel
+    ? `middelbare_${p.schoolLevel}`
+    : p.educationLevel;
+  const depthGuidance = depth[depthKey] || depth.middelbare;
+
+  return `- Education: ${eduLabel}
+- Year: ${yearWord} ${p.gradeYear}
+- Depth & vocabulary: ${depthGuidance}`;
+}
+
+// Render LaTeX math ($...$ and $$...$$) inside a DOM element using KaTeX
+function renderMathIn(element) {
+  if (typeof renderMathInElement === 'undefined') return;
+  try {
+    renderMathInElement(element, {
+      delimiters: [
+        { left: '$$', right: '$$', display: true },
+        { left: '$',  right: '$',  display: false },
+        { left: '\\(', right: '\\)', display: false },
+        { left: '\\[', right: '\\]', display: true  },
+      ],
+      throwOnError: false,
+      ignoredTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code'],
+      ignoredClasses: ['term'],
+    });
+  } catch (e) {
+    console.warn('KaTeX render error:', e);
+  }
+}
+
 function renderMessage(role, text) {
   const row = document.createElement('div');
   row.className = 'message-row ' + role;
@@ -2126,7 +4022,9 @@ function renderMessage(role, text) {
   const bubble = document.createElement('div');
   bubble.className = 'message';
   if (role === 'ai') {
-    bubble.innerHTML = parseTermMarkers(text);
+    const cleaned = preprocessAiText(text);
+    bubble.innerHTML = parseTermMarkers(cleaned);
+    renderMathIn(bubble);
   } else {
     bubble.textContent = text;
   }
@@ -2163,11 +4061,33 @@ function showError(msg) {
   setTimeout(() => errorBox.classList.add('hidden'), 8000);
 }
 
+// Create an empty AI message bubble (used during streaming, before any text arrives)
+function createAiBubble() {
+  const row = document.createElement('div');
+  row.className = 'message-row ai';
+
+  const avatar = document.createElement('div');
+  avatar.className = 'avatar ' + (state.subject || '');
+  avatar.innerHTML = svgIcon(SUBJECTS[state.subject]?.icon || 'i-cap');
+
+  const bubble = document.createElement('div');
+  bubble.className = 'message streaming';
+
+  row.appendChild(avatar);
+  row.appendChild(bubble);
+  chatMessages.appendChild(row);
+  chatMessages.scrollTop = chatMessages.scrollHeight;
+  return { row, bubble };
+}
+
 async function callClaude() {
   if (!state.apiKey) { openApiKeyModal(); return; }
   state.isLoading = true;
   sendBtn.disabled = true;
   const thinkingEl = renderThinking();
+
+  let messageBubble = null;
+  let fullText = '';
 
   try {
     const subjMeta = SUBJECTS[state.subject];
@@ -2184,8 +4104,9 @@ async function callClaude() {
       body: JSON.stringify({
         model: 'claude-sonnet-4-6',
         max_tokens: 500,
-        system: SYSTEM_PROMPT(subjMeta.en, state.name || 'the student', languageName, subjMeta.style),
+        system: SYSTEM_PROMPT(subjMeta.en, state.name || 'the student', languageName, subjMeta.style, studentProfileText(), profileContextText()),
         messages: state.messages,
+        stream: true,
       }),
     });
 
@@ -2194,14 +4115,69 @@ async function callClaude() {
       throw new Error(`API ${response.status}: ${errText}`);
     }
 
-    const data = await response.json();
-    const aiText = data.content.map(c => c.text).filter(Boolean).join('\n');
+    // Read the SSE stream chunk by chunk
+    const reader = response.body.getReader();
+    const decoder = new TextDecoder();
+    let buffer = '';
+    let lastRender = 0;
 
-    thinkingEl.remove();
-    renderMessage('ai', aiText);
-    state.messages.push({ role: 'assistant', content: aiText });
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      buffer += decoder.decode(value, { stream: true });
+
+      // SSE events are separated by blank lines
+      const events = buffer.split('\n\n');
+      buffer = events.pop(); // keep incomplete tail in buffer
+
+      for (const evt of events) {
+        // Each event has lines like "event: foo" and "data: {...}". We only care about data.
+        for (const line of evt.split('\n')) {
+          if (!line.startsWith('data:')) continue;
+          const dataStr = line.slice(5).trim();
+          if (!dataStr || dataStr === '[DONE]') continue;
+          let data;
+          try { data = JSON.parse(dataStr); } catch { continue; }
+
+          if (data.type === 'content_block_delta' && data.delta?.type === 'text_delta') {
+            const chunk = data.delta.text || '';
+            if (!chunk) continue;
+            // On the first chunk, swap the thinking indicator for a real bubble
+            if (!messageBubble) {
+              thinkingEl.remove();
+              ({ bubble: messageBubble } = createAiBubble());
+            }
+            fullText += chunk;
+            // Update the visible text. Use textContent during streaming for safety —
+            // formulas and term-links render only once the full message has arrived.
+            messageBubble.textContent = fullText;
+            // Throttle scroll to bottom (don't trigger layout every keystroke)
+            const now = performance.now();
+            if (now - lastRender > 60) {
+              chatMessages.scrollTop = chatMessages.scrollHeight;
+              lastRender = now;
+            }
+          } else if (data.type === 'message_stop') {
+            // End of message — nothing extra to do here, the while loop ends naturally
+          }
+        }
+      }
+    }
+
+    if (messageBubble && fullText) {
+      // Stream finished: now do the full post-processing (KNOWS markers, [[term]] spans, KaTeX math)
+      messageBubble.classList.remove('streaming');
+      const cleaned = preprocessAiText(fullText);
+      messageBubble.innerHTML = parseTermMarkers(cleaned);
+      renderMathIn(messageBubble);
+      chatMessages.scrollTop = chatMessages.scrollHeight;
+      state.messages.push({ role: 'assistant', content: fullText });
+    } else if (thinkingEl.parentNode) {
+      thinkingEl.remove();
+    }
   } catch (err) {
-    thinkingEl.remove();
+    if (thinkingEl.parentNode) thinkingEl.remove();
+    if (messageBubble) messageBubble.classList.remove('streaming');
     console.error(err);
     showError(t('error_prefix') + err.message + t('error_check_key'));
   } finally {
@@ -2211,28 +4187,30 @@ async function callClaude() {
   }
 }
 
-$('resetBtn').addEventListener('click', () => {
-  state.subject = null;
-  state.imageBase64 = null;
-  state.imageMediaType = null;
-  state.messages = [];
-  subjectCards.forEach(c => c.classList.remove('active'));
-  previewImg.classList.add('hidden');
-  previewImg.src = '';
-  uploadPrompt.classList.remove('hidden');
-  uploadZone.classList.remove('has-image');
-  fileInput.value = '';
-  cameraInput.value = '';
-  startBtn.disabled = true;
-  chatMessages.innerHTML = '';
-  chatInput.value = '';
-  stepPhoto.classList.add('hidden');
-  stepChat.classList.add('hidden');
-  stepSubject.scrollIntoView({ behavior: 'smooth', block: 'start' });
+// ============ Help modal ============
+const helpModal = $('helpModal');
+const helpBody = $('helpBody');
+
+function buildHelpBody() {
+  // Build the explainer with a live demo of a clickable term
+  const html = t('help_body_html').replace('{demoTerm}', `<span class="term-demo">${t('help_demo_term')}</span>`);
+  helpBody.innerHTML = html;
+}
+
+function openHelpModal() {
+  buildHelpBody();
+  helpModal.classList.add('active');
+}
+function closeHelpModal() { helpModal.classList.remove('active'); }
+
+$('helpBtn').addEventListener('click', openHelpModal);
+$('helpCloseBtn').addEventListener('click', closeHelpModal);
+helpModal.addEventListener('click', e => {
+  if (e.target === helpModal) closeHelpModal();
 });
 
 applyLanguage();
-if (!state.name) {
+if (!state.name || !state.profile) {
   openWelcomeModal();
 } else if (!state.apiKey) {
   openApiKeyModal();
