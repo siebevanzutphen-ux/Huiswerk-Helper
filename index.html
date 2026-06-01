@@ -5473,7 +5473,7 @@
 <div class="wordrain-overlay" id="wordrainOverlay">
   <div class="wordrain-hud">
     <button type="button" class="back-link" id="wordrainCloseBtn">
-      <svg class="icon"><use href="#i-arrow-right"/></svg>
+      <svg class="icon"><use href="#i-arrow-left"/></svg>
       <span data-i18n="btn_back">Terug</span>
     </button>
     <div class="wordrain-score-block">
@@ -5523,7 +5523,7 @@
   <div class="runner-hud">
     <div class="runner-hud-left">
       <button type="button" class="back-link" id="runnerCloseBtn" style="padding:0;">
-        <svg class="icon"><use href="#i-arrow-right"/></svg>
+        <svg class="icon"><use href="#i-arrow-left"/></svg>
         <span data-i18n="btn_back">Terug</span>
       </button>
       <div class="runner-hearts" id="runnerHearts">
@@ -5594,7 +5594,7 @@
 <div class="game-overlay" id="matchOverlay">
   <div class="game-header">
     <button type="button" class="back-link" id="matchCloseBtn">
-      <svg class="icon"><use href="#i-arrow-right"/></svg>
+      <svg class="icon"><use href="#i-arrow-left"/></svg>
       <span data-i18n="btn_back">Terug</span>
     </button>
     <div class="game-info">
@@ -5623,7 +5623,7 @@
 <div class="game-overlay" id="tijdraceOverlay">
   <div class="game-header">
     <button type="button" class="back-link" id="tijdraceCloseBtn">
-      <svg class="icon"><use href="#i-arrow-right"/></svg>
+      <svg class="icon"><use href="#i-arrow-left"/></svg>
       <span data-i18n="btn_back">Terug</span>
     </button>
     <div class="game-info">
@@ -5974,7 +5974,6 @@ const TRANSLATIONS = {
     chat_placeholder: 'Typ je antwoord of vraag...',
     tutor_suffix: 'begeleider',
     thinking: 'Aan het nadenken',
-    welcome_title: 'Welkom!',
     welcome_intro: 'Vul je naam in en kies je taal, dan kunnen we beginnen.',
     label_language: 'Taal',
     label_sound: 'Geluidseffecten in spelletjes',
@@ -6018,7 +6017,6 @@ const TRANSLATIONS = {
     badge_level_10_name: 'Topper', badge_level_10_desc: 'Level 10 bereikt',
     badge_allrounder_name: 'Allrounder', badge_allrounder_desc: 'Spel, les én Studeer gedaan',
     badge_dedicated_name: 'Toegewijd', badge_dedicated_desc: '25 sessies voltooid',
-    btn_close: 'Sluiten',
     skills_empty: 'Nog niets onthouden — terwijl je leert, vult dit zich vanzelf.',
     skills_forget: 'Vergeten',
     welcome_title: 'Hoi, ik ben Max!',
@@ -6553,9 +6551,8 @@ const TRANSLATIONS = {
     chat_subtitle: 'Stellt Fragen, um dir weiterzuhelfen',
     chat_placeholder: 'Tippe deine Antwort oder Frage...',
     tutor_suffix: 'Tutor',
-    thinking: 'Denke nach',
-    welcome_title: 'Willkommen!',
-    welcome_intro: 'Gib deinen Namen ein und wähle deine Sprache, dann kann’s losgehen.',
+    thinking: ‘Denke nach’,
+    welcome_intro: ‘Gib deinen Namen ein und wähle deine Sprache, dann kann’s losgehen.’,
     label_language: 'Sprache',
     label_sound: 'Soundeffekte in Spielen',
     label_name: 'Dein Name',
@@ -6596,7 +6593,6 @@ const TRANSLATIONS = {
     badge_level_10_name: 'Spitzenreiter', badge_level_10_desc: 'Level 10 erreicht',
     badge_allrounder_name: 'Allrounder', badge_allrounder_desc: 'Spiel, Stunde und Lernen gemacht',
     badge_dedicated_name: 'Engagiert', badge_dedicated_desc: '25 Sitzungen abgeschlossen',
-    btn_close: 'Schließen',
     label_skills: 'Was du schon kannst',
     skills_hint: 'Der Tutor merkt sich automatisch, was du schon beherrschst. Hier kannst du es einsehen und entfernen.',
     skills_empty: 'Noch nichts gespeichert — das füllt sich, während du lernst.',
@@ -8794,6 +8790,7 @@ const state = {
     topic: '',             // what the student wants taught
     images: [],            // [{ base64, mediaType }, ...]
     messages: [],          // conversation history for the lesson
+    history: [],           // navigation history for back/forward
     step: 0,               // current step number
     total: 0,              // total steps planned
     busy: false,           // a lesson request is in flight
@@ -9085,7 +9082,7 @@ function updateGradeYearOptions() {
     const opt = document.createElement('option');
     opt.value = String(i);
     opt.textContent = `${prefix} ${i}`;
-    if (pendingProfile.gradeYear === i) opt.selected = true;
+    if (Number(pendingProfile.gradeYear) === i) opt.selected = true;
     gradeYearSelect.appendChild(opt);
   }
 }
@@ -9794,7 +9791,8 @@ function parseTermMarkers(text) {
   const escaped = escapeHtml(text);
   return escaped.replace(/\[\[([^\[\]\n]{1,80}?)\]\]/g, (_, term) => {
     const safe = term.trim();
-    return `<span class="term" data-term="${safe}">${safe}</span>`;
+    const safeAttr = safe.replace(/"/g, '&quot;');
+    return `<span class="term" data-term="${safeAttr}">${escapeHtml(safe)}</span>`;
   });
 }
 
@@ -12659,7 +12657,7 @@ function levenshtein(a, b) {
 function normaliseStudyAnswer(s) {
   return s.toLowerCase()
     .normalize('NFD')
-    .replace(/[̀-ͯ]/g, '')      // strip accents — typo-tolerant
+    .replace(/[̀-ͯ]/g, '')  // strip accents — typo-tolerant
     .replace(/[.,!?;:¡¿"'`]/g, '')        // strip light punctuation
     .replace(/^(the|a|an|de|het|een|der|die|das|le|la|les|el|los|las|un|una)\s+/i, '') // leading articles
     .replace(/\s+/g, ' ')
