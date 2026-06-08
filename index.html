@@ -14,8 +14,30 @@
 <!-- mhchem extension for chemistry notation (must load after katex.min.js) -->
 <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/mhchem.min.js" crossorigin="anonymous"></script>
 <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js" crossorigin="anonymous"></script>
+<!-- p5.js for the animated loading screen -->
+<script src="https://cdn.jsdelivr.net/npm/p5@1.9.4/lib/p5.min.js"></script>
 <style>
   * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+
+  /* Tell the browser this is a dark UI (correct native scrollbars, form controls, etc.) */
+  :root { color-scheme: dark; }
+
+  /* ===== Accessibility & interaction baseline (Web Interface Guidelines) ===== */
+  /* Visible keyboard focus everywhere — replaces the many `outline:none` rules so
+     keyboard/switch users can always see where they are. Pointer users don't see it. */
+  :where(button, a, input, textarea, select, [tabindex], .subject-card, .opt-pill,
+         .deck-action, .choice-btn, .help-tab, .help-ask-chip):focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+    border-radius: 6px;
+  }
+  /* Snappier taps on mobile: no 300ms double-tap-zoom delay on controls */
+  button, a, .subject-card, .opt-pill, .deck-action, .choice-btn,
+  .runner-touch-zone, label, .help-tab, .help-ask-chip, .lang-pill {
+    touch-action: manipulation;
+  }
+  /* Headings wrap nicely instead of leaving one lonely word on a line */
+  h1, h2, h3 { text-wrap: balance; }
 
   :root {
     --bg: #0d0d1a;
@@ -69,6 +91,66 @@
     background-attachment: fixed;
   }
 
+  /* ===== p5.js loading screen ===== */
+  #loadingScreen {
+    position: fixed;
+    inset: 0;
+    z-index: 9999;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: radial-gradient(ellipse 90% 70% at 50% 40%, #1a1530 0%, #0d0d1a 70%, #080812 100%);
+    transition: opacity 0.6s ease, visibility 0.6s ease;
+  }
+  #loadingScreen.hidden-fade {
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+  }
+  #loadingCanvas { display: block; }
+  .loading-overlay {
+    position: absolute;
+    bottom: 16%;
+    left: 0; right: 0;
+    text-align: center;
+    pointer-events: none;
+  }
+  .loading-brand {
+    font-size: 22px;
+    font-weight: 800;
+    letter-spacing: -0.02em;
+    background: var(--accent-gradient);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    margin-bottom: 14px;
+  }
+  .loading-bar {
+    width: 180px;
+    height: 6px;
+    margin: 0 auto;
+    border-radius: 999px;
+    background: rgba(255,255,255,0.08);
+    overflow: hidden;
+    position: relative;
+  }
+  .loading-bar::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    width: 40%;
+    border-radius: 999px;
+    background: linear-gradient(90deg, transparent, #a78bfa, #f472b6, transparent);
+    animation: loadingSlide 1.3s ease-in-out infinite;
+  }
+  @keyframes loadingSlide {
+    0% { transform: translateX(-120%); }
+    100% { transform: translateX(320%); }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .loading-bar::after { animation-duration: 2.4s; }
+  }
+
   /* ===== Icons ===== */
   .icon {
     width: 20px;
@@ -102,6 +184,27 @@
   @keyframes robotBlink {
     0%, 93%, 100% { transform: scaleY(1); }
     96% { transform: scaleY(0.08); }
+  }
+  /* Antenna ball pulses (brand spec: r = 4 + sin·0.8) */
+  @media (prefers-reduced-motion: no-preference) {
+    .robot .robot-antenna {
+      transform-origin: center;
+      transform-box: fill-box;
+      animation: antennaPulse 2.2s ease-in-out infinite;
+    }
+    .robot .robot-antenna-glow {
+      transform-origin: center;
+      transform-box: fill-box;
+      animation: antennaGlow 2.2s ease-in-out infinite;
+    }
+  }
+  @keyframes antennaPulse {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.22); }
+  }
+  @keyframes antennaGlow {
+    0%, 100% { transform: scale(1); opacity: 0.25; }
+    50% { transform: scale(1.5); opacity: 0.5; }
   }
   /* Cute "boop" when a new emotion appears */
   @keyframes robotAppear {
@@ -315,7 +418,53 @@
     overflow: hidden;
   }
   .account-avatar .robot { width: 80%; height: 80%; }
+  .account-avatar img { width: 100%; height: 100%; object-fit: cover; }
   .account-info { flex: 1; min-width: 0; }
+
+  /* Profile photo picker in the profile modal */
+  .profile-photo-row {
+    display: flex; align-items: center; gap: 16px; margin-bottom: 20px;
+  }
+  .profile-photo {
+    position: relative;
+    width: 76px; height: 76px; flex-shrink: 0;
+    border-radius: 50%;
+    border: none; padding: 0; cursor: pointer;
+    background: var(--accent-gradient);
+    box-shadow: var(--shadow-glow);
+    overflow: visible;
+  }
+  .profile-photo-inner {
+    width: 100%; height: 100%;
+    border-radius: 50%; overflow: hidden;
+    display: flex; align-items: center; justify-content: center;
+    background: var(--card-soft);
+  }
+  .profile-photo-inner img { width: 100%; height: 100%; object-fit: cover; }
+  .profile-photo-inner .robot { width: 78%; height: 78%; }
+  .profile-photo-inner .profile-initials {
+    font-size: 30px; font-weight: 800; color: #fff;
+    width: 100%; height: 100%; display: flex; align-items: center; justify-content: center;
+    background: var(--accent-gradient);
+  }
+  .profile-photo-edit {
+    position: absolute; right: -2px; bottom: -2px;
+    width: 26px; height: 26px; border-radius: 50%;
+    background: var(--accent); color: #fff;
+    display: flex; align-items: center; justify-content: center;
+    border: 2px solid var(--card);
+    box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+  }
+  .profile-photo-edit .icon { width: 14px; height: 14px; }
+  .profile-photo-side { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 8px; }
+  .profile-photo-remove {
+    background: none; border: none; cursor: pointer;
+    color: var(--muted); font-size: 12px; font-weight: 600;
+    text-align: left; padding: 0; font-family: inherit;
+    text-decoration: underline; align-self: flex-start;
+  }
+  .profile-photo-remove:hover { color: var(--accent-2); }
+  .profile-photo-remove.hidden { display: none; }
   .account-name {
     font-size: 18px; font-weight: 800; color: var(--text);
     display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
@@ -371,8 +520,9 @@
   }
   .account-stat-num { font-size: 18px; font-weight: 800; color: var(--text); font-variant-numeric: tabular-nums; }
   .account-stat-label { font-size: 10.5px; color: var(--muted); margin-top: 1px; }
+  .account-btn-row { display: flex; gap: 8px; margin-top: 12px; }
   .account-achievements-btn {
-    margin-top: 12px; width: 100%;
+    flex: 1;
     display: flex; align-items: center; justify-content: center; gap: 8px;
     background: rgba(255,255,255,0.05);
     border: 1px solid var(--border-strong);
@@ -382,6 +532,61 @@
     font-family: inherit; transition: background 0.15s;
   }
   .account-achievements-btn:hover { background: rgba(255,255,255,0.10); }
+
+  /* ===== Statistics screen ===== */
+  .stats-section-title {
+    font-size: 12px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.06em;
+    color: var(--muted); margin: 18px 0 10px;
+  }
+  .stats-section-title:first-of-type { margin-top: 4px; }
+  /* Hero summary tiles */
+  .stats-hero {
+    display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px;
+  }
+  @media (max-width: 460px) { .stats-hero { grid-template-columns: repeat(2, 1fr); } }
+  .stats-tile {
+    background: linear-gradient(140deg, rgba(167,139,250,0.12), rgba(244,114,182,0.08));
+    border: 1px solid var(--border); border-radius: var(--radius-md);
+    padding: 12px 8px; text-align: center;
+  }
+  .stats-tile-num { font-size: 22px; font-weight: 900; color: var(--text); font-variant-numeric: tabular-nums; line-height: 1.1; }
+  .stats-tile-label { font-size: 10.5px; color: var(--muted); margin-top: 3px; }
+  .stats-tile-icon { font-size: 18px; }
+  /* Insight chips (favourite / weakest etc.) */
+  .stats-insight {
+    display: flex; align-items: center; gap: 12px;
+    background: var(--bg-2); border: 1px solid var(--border);
+    border-radius: var(--radius-md); padding: 12px 14px; margin-bottom: 8px;
+  }
+  .stats-insight-emoji { font-size: 26px; flex-shrink: 0; }
+  .stats-insight-body { flex: 1; min-width: 0; }
+  .stats-insight-label { font-size: 11px; color: var(--muted); font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em; }
+  .stats-insight-value { font-size: 15px; font-weight: 700; color: var(--text); margin-top: 1px; }
+  /* Per-subject bars */
+  .stats-subject-row {
+    display: flex; align-items: center; gap: 10px; margin-bottom: 10px;
+  }
+  .stats-subject-icon {
+    width: 34px; height: 34px; flex-shrink: 0; border-radius: 10px;
+    background: rgba(167,139,250,0.15); display: flex; align-items: center; justify-content: center;
+  }
+  .stats-subject-icon .icon { width: 18px; height: 18px; color: var(--accent); }
+  .stats-subject-main { flex: 1; min-width: 0; }
+  .stats-subject-top { display: flex; justify-content: space-between; font-size: 13px; margin-bottom: 4px; }
+  .stats-subject-name { font-weight: 700; color: var(--text); }
+  .stats-subject-xp { color: var(--muted); font-variant-numeric: tabular-nums; }
+  .stats-subject-bar { height: 7px; border-radius: 999px; background: rgba(255,255,255,0.07); overflow: hidden; }
+  .stats-subject-fill { height: 100%; border-radius: 999px; background: var(--accent-gradient); transition: width 0.6s cubic-bezier(.34,1.56,.64,1); }
+  .stats-empty { color: var(--muted); font-size: 13px; text-align: center; padding: 16px; }
+  /* Activity split */
+  .stats-activity { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+  .stats-act {
+    background: var(--bg-2); border: 1px solid var(--border);
+    border-radius: var(--radius-md); padding: 12px 8px; text-align: center;
+  }
+  .stats-act-emoji { font-size: 22px; }
+  .stats-act-num { font-size: 18px; font-weight: 800; color: var(--text); margin-top: 2px; }
+  .stats-act-label { font-size: 10.5px; color: var(--muted); }
 
   /* Level-up / reward toast */
   .reward-toast {
@@ -403,6 +608,63 @@
   .reward-toast-icon { font-size: 30px; line-height: 1; }
   .reward-toast-title { font-size: 14px; font-weight: 800; color: var(--text); }
   .reward-toast-sub { font-size: 12px; color: var(--muted); }
+
+  /* PlayStation-style trophy popup — slides in TOP-LEFT for unlocked achievements */
+  .trophy-toast {
+    position: fixed;
+    top: calc(14px + var(--safe-top));
+    left: 14px;
+    z-index: 320;
+    display: flex; align-items: center; gap: 12px;
+    width: 320px; max-width: calc(100vw - 28px);
+    padding: 12px 16px 12px 12px;
+    border-radius: 14px;
+    background: linear-gradient(135deg, rgba(28,28,51,0.97), rgba(36,28,58,0.97));
+    border: 1px solid rgba(255,255,255,0.14);
+    box-shadow: 0 14px 40px rgba(0,0,0,0.5), 0 0 30px rgba(167,139,250,0.3);
+    backdrop-filter: blur(12px);
+    transform: translateX(calc(-100% - 24px));
+    opacity: 0;
+    transition: transform 0.55s cubic-bezier(.16,1,.3,1), opacity 0.4s;
+  }
+  .trophy-toast.show { transform: translateX(0); opacity: 1; }
+  .trophy-toast-badge {
+    width: 48px; height: 48px; flex-shrink: 0;
+    border-radius: 12px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 26px;
+    background: linear-gradient(135deg, #facc15, #f97316);
+    box-shadow: 0 0 18px rgba(250,204,21,0.55);
+    position: relative;
+    overflow: hidden;
+  }
+  /* subtle shine sweep across the badge */
+  .trophy-toast.show .trophy-toast-badge::after {
+    content: '';
+    position: absolute; top: 0; left: -60%;
+    width: 50%; height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.7), transparent);
+    transform: skewX(-20deg);
+    animation: trophyShine 0.9s ease-out 0.35s;
+  }
+  @keyframes trophyShine { from { left: -60%; } to { left: 160%; } }
+  .trophy-toast-body { flex: 1; min-width: 0; }
+  .trophy-toast-label {
+    font-size: 10.5px; font-weight: 800; letter-spacing: 0.08em; text-transform: uppercase;
+    color: #fbbf24;
+  }
+  .trophy-toast-name {
+    font-size: 15px; font-weight: 800; color: #fff;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  }
+  .trophy-toast-desc {
+    font-size: 11.5px; color: var(--muted);
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .trophy-toast { transition: opacity 0.3s; transform: translateX(0); }
+    .trophy-toast.show .trophy-toast-badge::after { animation: none; }
+  }
 
   /* Achievements modal grid */
   .ach-grid {
@@ -531,6 +793,10 @@
   .subject-card[data-subject="bedrijfseconomie"] {
     background: linear-gradient(140deg, #475569 0%, #1e3a8a 100%);
     box-shadow: 0 14px 36px -12px rgba(30, 58, 138, 0.5);
+  }
+  .subject-card[data-subject="anders"] {
+    background: linear-gradient(140deg, #64748b 0%, #334155 100%);
+    box-shadow: 0 14px 36px -12px rgba(51, 65, 85, 0.55);
   }
 
   .subject-card::before {
@@ -902,6 +1168,7 @@
     width: 100%;
     max-height: calc(100dvh - 32px);
     overflow-y: auto;
+    overscroll-behavior: contain;
     box-shadow: var(--shadow-lg);
     animation: slideUp 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   }
@@ -1582,6 +1849,7 @@
   .subject-hero[data-subject="aardrijkskunde"]   { background: linear-gradient(140deg, #22c55e 0%, #0d9488 100%); }
   .subject-hero[data-subject="economie"]         { background: linear-gradient(140deg, #16a34a 0%, #65a30d 100%); }
   .subject-hero[data-subject="bedrijfseconomie"] { background: linear-gradient(140deg, #475569 0%, #1e3a8a 100%); }
+  .subject-hero[data-subject="anders"] { background: linear-gradient(140deg, #64748b 0%, #334155 100%); }
   .subject-hero::before {
     content: '';
     position: absolute;
@@ -2049,6 +2317,92 @@
     font-weight: 800;
     flex-shrink: 0;
   }
+  /* richer help content */
+  .help-body .help-example {
+    background: var(--bg-2);
+    border-left: 3px solid var(--accent);
+    border-radius: 8px;
+    padding: 8px 12px;
+    margin: 6px 0 12px;
+    font-size: 13.5px;
+    color: var(--text-soft);
+  }
+  .help-body .help-example b { color: #fbcfe8; font-weight: 700; }
+  .help-body ul { margin: 6px 0 12px 4px; list-style: none; }
+  .help-body li { margin-bottom: 7px; padding-left: 22px; position: relative; }
+  .help-body li::before { content: '→'; position: absolute; left: 0; color: var(--accent); font-weight: 700; }
+
+  /* Help tabs */
+  .help-tabs { display: flex; gap: 6px; margin-bottom: 14px; }
+  .help-tab {
+    flex: 1; padding: 9px 10px; border-radius: 999px;
+    border: 1px solid var(--border-strong); background: transparent;
+    color: var(--text-soft); font-size: 13px; font-weight: 700; cursor: pointer;
+    font-family: inherit; transition: all 0.15s;
+  }
+  .help-tab.active { background: var(--accent-gradient); color: #fff; border-color: transparent; }
+
+  /* Ask-Max chat inside help */
+  .help-ask { display: flex; flex-direction: column; gap: 10px; }
+  .help-ask.hidden { display: none; }
+  .help-ask-log {
+    max-height: 46vh; overflow-y: auto;
+    overscroll-behavior: contain;
+    display: flex; flex-direction: column; gap: 10px;
+    padding: 2px;
+  }
+  .help-ask-msg { max-width: 88%; padding: 10px 13px; border-radius: 14px; font-size: 14px; line-height: 1.5; }
+  .help-ask-msg.user { align-self: flex-end; background: var(--accent-gradient); color: #fff; border-bottom-right-radius: 4px; }
+  .help-ask-msg.bot { align-self: flex-start; background: var(--bg-2); color: var(--text-soft); border-bottom-left-radius: 4px; }
+  .help-ask-msg.bot strong { color: var(--text); }
+  .help-ask-msg.is-thinking { padding: 8px 12px; }
+  /* "Max is thinking" indicator */
+  .help-think { display: inline-flex; align-items: center; gap: 9px; }
+  .help-think-bot {
+    width: 30px; height: 30px; flex-shrink: 0;
+    border-radius: 50%; background: rgba(167,139,250,0.15);
+    display: flex; align-items: center; justify-content: center;
+    animation: helpThinkBob 1.4s ease-in-out infinite;
+  }
+  .help-think-bot .robot { width: 26px; height: 26px; }
+  @keyframes helpThinkBob {
+    0%, 100% { transform: translateY(0) rotate(-3deg); }
+    50% { transform: translateY(-3px) rotate(3deg); }
+  }
+  .help-think-text { font-size: 14px; color: var(--muted); font-weight: 600; display: inline-flex; align-items: baseline; }
+  .help-think-dots { display: inline-flex; margin-left: 2px; }
+  .help-think-dots i {
+    width: 4px; height: 4px; margin-left: 3px; border-radius: 50%;
+    background: var(--accent); display: inline-block;
+    animation: helpThinkDot 1.2s ease-in-out infinite;
+  }
+  .help-think-dots i:nth-child(2) { animation-delay: 0.18s; }
+  .help-think-dots i:nth-child(3) { animation-delay: 0.36s; }
+  @keyframes helpThinkDot {
+    0%, 60%, 100% { opacity: 0.25; transform: translateY(0); }
+    30% { opacity: 1; transform: translateY(-3px); }
+  }
+  .help-ask-empty { text-align: center; color: var(--muted); font-size: 13.5px; padding: 14px 8px; }
+  .help-ask-suggest { display: flex; flex-wrap: wrap; gap: 6px; }
+  .help-ask-chip {
+    background: rgba(167,139,250,0.12); border: 1px solid var(--border-strong);
+    color: var(--text-soft); border-radius: 999px; padding: 6px 11px;
+    font-size: 12px; cursor: pointer; font-family: inherit; transition: background 0.15s;
+  }
+  .help-ask-chip:hover { background: rgba(167,139,250,0.22); color: var(--text); }
+  .help-ask-row { display: flex; gap: 8px; }
+  .help-ask-input {
+    flex: 1; background: var(--bg-2); border: 1.5px solid var(--border-strong);
+    border-radius: 999px; padding: 11px 16px; color: var(--text); font-size: 14px; font-family: inherit;
+  }
+  .help-ask-input:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 4px rgba(167,139,250,0.16); }
+  .help-ask-send {
+    background: var(--accent-gradient); border: none; border-radius: 50%;
+    width: 44px; height: 44px; flex-shrink: 0; cursor: pointer;
+    display: flex; align-items: center; justify-content: center; color: #fff;
+  }
+  .help-ask-send svg { width: 20px; height: 20px; }
+  .help-ask-send:disabled { opacity: 0.5; cursor: default; }
 
   /* Profile summary in settings */
   .profile-summary {
@@ -2834,6 +3188,7 @@
       0 14px 30px rgba(0,0,0,0.45);
     padding: 22px 24px;
     overflow-y: auto;
+    overscroll-behavior: contain;
     -webkit-overflow-scrolling: touch;
   }
   /* wood frame highlight */
@@ -2997,18 +3352,34 @@
     transform-origin: 50% 100%;
   }
   .classroom-teacher .robot { width: 100%; height: 100%; }
-  /* gentle idle sway + pointer wave while teaching */
-  .classroom-teacher.teaching { animation: teacherSway 3.2s ease-in-out infinite; }
+  /* gentle full-body sway while teaching (brand spec: rotate around the base) */
+  .classroom-teacher { transform-origin: 50% 100%; }
+  .classroom-teacher.teaching { animation: teacherSway 3.6s ease-in-out infinite; }
   @keyframes teacherSway {
-    0%, 100% { transform: rotate(-1deg); }
-    50% { transform: rotate(1.5deg); }
+    0%, 100% { transform: rotate(-1.6deg); }
+    50% { transform: rotate(1.6deg); }
   }
-  .classroom-teacher .teacher-arm { transform-origin: 34px 110px; }
+  /* Pointer arm rotates around its shoulder pivot (34,110 in the 140×220 viewBox) */
+  .classroom-teacher .teacher-arm { transform-origin: 24% 50%; }
   .classroom-teacher.teaching .teacher-arm { animation: teacherPoint 2.4s ease-in-out infinite; }
   @keyframes teacherPoint {
-    0%, 100% { transform: rotate(0deg); }
-    40% { transform: rotate(-12deg); }
-    60% { transform: rotate(-8deg); }
+    0%, 100% { transform: rotate(-4deg); }
+    45% { transform: rotate(-13deg); }
+    70% { transform: rotate(-9deg); }
+  }
+  /* Celebrate pose — both-arms-up energy when a lesson finishes */
+  .classroom-teacher.celebrate { animation: teacherCelebrate 0.7s ease-out; }
+  .classroom-teacher.celebrate .teacher-arm { animation: teacherArmCelebrate 0.7s ease-out; }
+  @keyframes teacherCelebrate {
+    0% { transform: translateY(0) rotate(0); }
+    30% { transform: translateY(-10px) rotate(-3deg); }
+    60% { transform: translateY(0) rotate(3deg); }
+    100% { transform: translateY(0) rotate(0); }
+  }
+  @keyframes teacherArmCelebrate {
+    0% { transform: rotate(-4deg); }
+    35% { transform: rotate(-150deg); }
+    100% { transform: rotate(-4deg); }
   }
   /* Speech bubble next to teacher */
   .classroom-speech {
@@ -4531,9 +4902,57 @@
     header { position: relative; }
     #step-chat .chat-container { min-height: 280px; }
   }
+
+  /* ===== Final responsive polish: make every screen comfortable on phones ===== */
+  @media (max-width: 720px) {
+    /* Account card: tighter padding, streak chip stays readable */
+    .account-card { padding: 14px; }
+    .account-name { font-size: 16px; }
+    .account-streak { padding: 6px 10px; }
+    .account-streak-num { font-size: 18px; }
+    /* Classroom: teacher + speech stack better, board uses more height */
+    .classroom-teacher { width: 64px; height: 100px; }
+    .classroom-speech { font-size: 14px; padding: 10px 12px; }
+    .board-title { font-size: clamp(18px, 5.5vw, 24px); }
+    .board-body { font-size: clamp(15px, 4.4vw, 18px); }
+    .classroom-controls { padding: 10px 12px calc(10px + var(--safe-bottom)); }
+    .crt-btn { padding: 12px 14px; }
+    /* Study + quiz buttons full friendly height */
+    .study-card-question { font-size: 22px; }
+    .study-mc { grid-template-columns: 1fr; }
+    /* Library cards 1 column on small phones already handled; keep preview tidy */
+    .library-grid { grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); }
+    /* Reward + trophy toasts never overflow a narrow screen */
+    .reward-toast { left: 12px; right: 12px; transform: translateY(140%); max-width: none; }
+    .reward-toast.show { transform: translateY(0); }
+    .trophy-toast { width: auto; left: 10px; right: 10px; }
+  }
+
+  /* Guarantee comfortable tap targets (min 44px) on touch devices */
+  @media (pointer: coarse) {
+    button, .subject-card, .opt-pill, .deck-action, .choice-btn,
+    .crt-btn, .board-quiz-btn, .study-mc-btn, .help-tab, .lang-pill,
+    .icon-btn, .back-link { min-height: 44px; }
+    .library-card-remove { width: 30px; height: 30px; }
+  }
+
+  /* Very small phones: keep the classroom controls from crowding */
+  @media (max-width: 380px) {
+    .classroom-understand { flex-wrap: wrap; }
+    .crt-btn.next { flex: 1 1 100%; }
+    .board-quiz-opts { grid-template-columns: 1fr; }
+  }
 </style>
 </head>
 <body>
+
+<!-- p5.js animated loading screen -->
+<div id="loadingScreen">
+  <div class="loading-overlay">
+    <div class="loading-brand" data-i18n="app_name">Huiswerk helper</div>
+    <div class="loading-bar"></div>
+  </div>
+</div>
 
 <svg xmlns="http://www.w3.org/2000/svg" style="display:none">
   <defs>
@@ -4548,7 +4967,7 @@
     <symbol id="i-robot" viewBox="0 0 64 64">
       <!-- Antenna -->
       <line x1="32" y1="4" x2="32" y2="11" stroke="#fff" stroke-width="2" stroke-linecap="round"/>
-      <circle cx="32" cy="3" r="2" fill="#fff"/>
+      <circle class="robot-antenna" cx="32" cy="3" r="2" fill="#fff"/>
       <!-- Ear / side panels -->
       <rect x="4" y="28" width="4.5" height="10" rx="1.5" fill="#cbd5e1"/>
       <rect x="55.5" y="28" width="4.5" height="10" rx="1.5" fill="#cbd5e1"/>
@@ -4735,8 +5154,8 @@
       </g>
       <!-- Antenna -->
       <line x1="62" y1="16" x2="62" y2="26" stroke="#fff" stroke-width="3" stroke-linecap="round"/>
-      <circle cx="62" cy="13" r="4" fill="#facc15"/>
-      <circle cx="62" cy="13" r="7" fill="#facc15" opacity="0.3"/>
+      <circle class="robot-antenna-glow" cx="62" cy="13" r="7" fill="#facc15" opacity="0.3"/>
+      <circle class="robot-antenna" cx="62" cy="13" r="4" fill="#facc15"/>
       <!-- Head -->
       <rect x="33" y="26" width="58" height="50" rx="13" fill="#e2e8f0"/>
       <!-- side ears -->
@@ -4765,6 +5184,14 @@
       <line x1="1" y1="14" x2="7" y2="14"/><line x1="9" y1="8" x2="15" y2="8"/>
       <line x1="17" y1="16" x2="23" y2="16"/>
     </symbol>
+    <symbol id="i-user" viewBox="0 0 24 24">
+      <circle cx="12" cy="8" r="4"/>
+      <path d="M4 21c0-4 3.5-6 8-6s8 2 8 6"/>
+    </symbol>
+    <symbol id="i-camera-plus" viewBox="0 0 24 24">
+      <path d="M3 8a2 2 0 0 1 2-2h2l1.5-2h7L19 6h0a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
+      <circle cx="12" cy="13" r="3.2"/>
+    </symbol>
     <symbol id="i-plus" viewBox="0 0 24 24">
       <path d="M12 5v14"/><path d="M5 12h14"/>
     </symbol>
@@ -4772,6 +5199,10 @@
       <circle cx="12" cy="12" r="10"/>
       <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/>
       <line x1="12" y1="17" x2="12.01" y2="17"/>
+    </symbol>
+    <symbol id="i-question" viewBox="0 0 24 24">
+      <path d="M8.5 8.5a3.5 3.5 0 1 1 5.2 3.05c-1.1.65-1.7 1.2-1.7 2.45"/>
+      <line x1="12" y1="18" x2="12.01" y2="18"/>
     </symbol>
     <symbol id="i-camera" viewBox="0 0 24 24">
       <path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"/>
@@ -4868,8 +5299,8 @@
       <span class="btn-label" data-i18n="btn_help">Help</span>
     </button>
     <button class="icon-btn" id="settingsBtn">
-      <svg class="icon"><use href="#i-sliders"/></svg>
-      <span class="btn-label" data-i18n="settings_title">Instellingen</span>
+      <svg class="icon"><use href="#i-user"/></svg>
+      <span class="btn-label" data-i18n="profile_title">Profiel</span>
     </button>
   </div>
 </header>
@@ -4878,8 +5309,8 @@
   <div id="errorBox" class="error hidden"></div>
 
   <section class="hero" id="hero">
-    <h2 data-i18n="hero_title">Word slimmer, niet alleen klaar.</h2>
-    <p data-i18n="hero_subtitle">Maak een foto van je opdracht. Je krijgt geen kant-en-klaar antwoord — wel vragen die je verder helpen.</p>
+    <h2 data-i18n="hero_title">Je eigen bijles, altijd binnen handbereik.</h2>
+    <p data-i18n="hero_subtitle">Max legt uit, overhoort en daagt je uit met spelletjes — tot je het écht snapt. Jouw persoonlijke leermaatje, dag en nacht.</p>
   </section>
 
   <!-- Account / progress card (shows once the student has a name) -->
@@ -4910,9 +5341,14 @@
       <div class="account-stat"><div class="account-stat-num" id="accountStatSessions">0</div><div class="account-stat-label" data-i18n="acc_sessions">sessies</div></div>
       <div class="account-stat"><div class="account-stat-num" id="accountStatBadges">0</div><div class="account-stat-label" data-i18n="acc_badges">badges</div></div>
     </div>
-    <button type="button" class="account-achievements-btn" id="accountAchBtn">
-      <span>🏅</span><span data-i18n="acc_view_ach">Bekijk je prestaties</span>
-    </button>
+    <div class="account-btn-row">
+      <button type="button" class="account-achievements-btn" id="accountStatsBtn">
+        <span>📊</span><span data-i18n="acc_view_stats">Statistieken</span>
+      </button>
+      <button type="button" class="account-achievements-btn" id="accountAchBtn">
+        <span>🏅</span><span data-i18n="acc_view_ach">Prestaties</span>
+      </button>
+    </div>
   </section>
 
   <section id="step-subject">
@@ -5035,6 +5471,17 @@
       </button>
     </div>
 
+    <div class="subject-category" data-i18n="cat_other">Anders</div>
+    <div class="subject-grid">
+      <button class="subject-card" data-subject="anders">
+        <span class="subject-card-icon"><svg class="icon"><use href="#i-question"/></svg></span>
+        <div class="subject-card-body">
+          <div class="subject-card-title" data-i18n="subj_other">Anders</div>
+          <div class="subject-card-sub" data-i18n="subj_other_sub">Een ander vak? Vul het zelf in</div>
+        </div>
+      </button>
+    </div>
+
     <!-- Learn-mode entry: prominent card BELOW all subjects, for the second focus on the page -->
     <div class="subject-category" data-i18n="learn_section_label">Of leer iets uit je hoofd</div>
     <button type="button" class="learn-entry-card" id="openLearnModeBtn">
@@ -5125,10 +5572,10 @@
           <div class="chat-header-sub" data-i18n="chat_subtitle">Stelt vragen om je verder te helpen</div>
         </div>
       </div>
-      <div class="chat-messages" id="chatMessages"></div>
+      <div class="chat-messages" id="chatMessages" aria-live="polite" aria-atomic="false"></div>
       <div class="chat-input-area">
-        <textarea id="chatInput" rows="1" data-i18n-placeholder="chat_placeholder" placeholder="Typ je antwoord of vraag..."></textarea>
-        <button class="send-btn" id="sendBtn" aria-label="Verstuur"><svg class="icon"><use href="#i-send"/></svg></button>
+        <textarea id="chatInput" rows="1" autocomplete="off" enterkeyhint="send" data-i18n-placeholder="chat_placeholder" placeholder="Typ je antwoord of vraag..."></textarea>
+        <button class="send-btn" id="sendBtn" aria-label="Verstuur" data-i18n-aria="aria_send"><svg class="icon" aria-hidden="true"><use href="#i-send"/></svg></button>
       </div>
     </div>
   </section>
@@ -5229,7 +5676,7 @@
       </div>
       <div class="form-field">
         <label class="form-field-label" data-i18n="label_name">Je naam</label>
-        <input type="text" id="welcomeNameInput" data-i18n-placeholder="placeholder_name" placeholder="Bijv. Lisa" maxlength="40">
+        <input type="text" id="welcomeNameInput" autocomplete="given-name" enterkeyhint="next" data-i18n-placeholder="placeholder_name" placeholder="Bijv. Lisa" maxlength="40">
       </div>
       <div class="welcome-progress"><span class="dot active"></span><span class="dot"></span></div>
       <button class="primary-btn" id="welcomeNextBtn" style="width: 100%;">
@@ -5242,7 +5689,7 @@
     <div class="welcome-step hidden" id="welcomeStep2">
       <div class="welcome-header">
         <div class="welcome-icon"><svg class="robot"><use href="#i-robot"/></svg></div>
-        <h2 data-i18n="profile_title">Vertel iets over jezelf</h2>
+        <h2 data-i18n="profile_step_title">Top! Nog twee dingen.</h2>
         <p data-i18n="profile_intro">Zo kunnen we de uitleg op jouw niveau afstemmen.</p>
       </div>
 
@@ -5463,8 +5910,8 @@
       <button type="button" class="crt-btn no" id="crtNoBtn" data-i18n="crt_no">Nog niet</button>
     </div>
     <div class="classroom-ask-row hidden" id="classroomAskRow">
-      <input type="text" class="classroom-ask-input" id="classroomAskInput" data-i18n-placeholder="crt_ask_ph" placeholder="Typ je vraag aan Meester Max...">
-      <button type="button" class="classroom-ask-send" id="classroomAskSend"><svg class="icon"><use href="#i-arrow-right"/></svg></button>
+      <input type="text" class="classroom-ask-input" id="classroomAskInput" autocomplete="off" enterkeyhint="send" data-i18n-placeholder="crt_ask_ph" placeholder="Typ je vraag aan Meester Max...">
+      <button type="button" class="classroom-ask-send" id="classroomAskSend" aria-label="Verstuur" data-i18n-aria="aria_send"><svg class="icon" aria-hidden="true"><use href="#i-arrow-right"/></svg></button>
     </div>
   </div>
 </div>
@@ -5824,7 +6271,19 @@
 <div class="modal-overlay" id="helpModal">
   <div class="modal help-modal">
     <h2 data-i18n="help_title">Hoe werkt de Huiswerk helper?</h2>
+    <div class="help-tabs">
+      <button type="button" class="help-tab active" data-help-tab="guide" data-i18n="help_tab_guide">📖 Uitleg</button>
+      <button type="button" class="help-tab" data-help-tab="ask" data-i18n="help_tab_ask">💬 Vraag het Max</button>
+    </div>
     <div class="help-body" id="helpBody"></div>
+    <div class="help-ask hidden" id="helpAsk">
+      <div class="help-ask-log" id="helpAskLog"></div>
+      <div class="help-ask-suggest" id="helpAskSuggest"></div>
+      <div class="help-ask-row">
+        <input type="text" id="helpAskInput" class="help-ask-input" autocomplete="off" enterkeyhint="send" data-i18n-placeholder="help_ask_ph" placeholder="Stel een vraag over de app...">
+        <button type="button" class="help-ask-send" id="helpAskSend" aria-label="Verstuur" data-i18n-aria="aria_send"><svg class="icon" aria-hidden="true"><use href="#i-arrow-right"/></svg></button>
+      </div>
+    </div>
     <div class="modal-actions">
       <button class="primary-btn" id="helpCloseBtn" data-i18n="btn_close">Begrepen</button>
     </div>
@@ -5836,7 +6295,7 @@
   <div class="modal">
     <h2 data-i18n="api_title">Eenmalig: voer je API key in</h2>
     <p id="apiKeyExplain"></p>
-    <input type="password" id="apiKeyInput" placeholder="sk-ant-...">
+    <input type="password" id="apiKeyInput" placeholder="sk-ant-…" autocomplete="off" spellcheck="false" autocapitalize="off">
     <div class="modal-actions">
       <button class="secondary-btn" id="cancelKeyBtn" data-i18n="btn_cancel">Annuleren</button>
       <button class="primary-btn" id="saveKeyBtn" data-i18n="btn_save">Opslaan</button>
@@ -5867,6 +6326,18 @@
   </div>
 </div>
 
+<!-- Statistics Modal -->
+<div class="modal-overlay" id="statsModal">
+  <div class="modal">
+    <h2 data-i18n="stats_title">Jouw statistieken</h2>
+    <p style="color: var(--muted); font-size: 13px; margin-bottom: 14px;" data-i18n="stats_subtitle">Alles wat je tot nu toe hebt bereikt, op een rij.</p>
+    <div id="statsBody"></div>
+    <div class="modal-actions">
+      <button class="primary-btn" id="statsCloseBtn" data-i18n="btn_close">Sluiten</button>
+    </div>
+  </div>
+</div>
+
 <!-- Reward toast -->
 <div class="reward-toast" id="rewardToast">
   <div class="reward-toast-icon" id="rewardToastIcon">⭐</div>
@@ -5876,10 +6347,37 @@
   </div>
 </div>
 
-<!-- Settings Modal -->
+<!-- PlayStation-style trophy popup (top-left) -->
+<div class="trophy-toast" id="trophyToast">
+  <div class="trophy-toast-badge" id="trophyToastBadge">🏅</div>
+  <div class="trophy-toast-body">
+    <div class="trophy-toast-label" id="trophyToastLabel">Trofee ontgrendeld</div>
+    <div class="trophy-toast-name" id="trophyToastName"></div>
+    <div class="trophy-toast-desc" id="trophyToastDesc"></div>
+  </div>
+</div>
+
+<!-- Profile Modal -->
 <div class="modal-overlay" id="settingsModal">
   <div class="modal">
-    <h2 data-i18n="settings_title">Instellingen</h2>
+    <h2 data-i18n="profile_title">Jouw profiel</h2>
+
+    <!-- Profile photo + name header -->
+    <div class="profile-photo-row">
+      <button type="button" class="profile-photo" id="profilePhotoBtn" aria-label="Profielfoto">
+        <div class="profile-photo-inner" id="profilePhotoInner"></div>
+        <span class="profile-photo-edit"><svg class="icon icon-sm"><use href="#i-camera-plus"/></svg></span>
+      </button>
+      <div class="profile-photo-side">
+        <div class="form-field" style="margin:0;">
+          <label class="form-field-label" data-i18n="label_name">Je naam</label>
+          <input type="text" id="settingsNameInput" maxlength="40">
+        </div>
+        <button type="button" class="profile-photo-remove hidden" id="profilePhotoRemove" data-i18n="profile_remove_photo">Foto weghalen</button>
+      </div>
+    </div>
+    <input type="file" id="profilePhotoInput" accept="image/*" hidden>
+
     <div class="form-field">
       <label class="form-field-label" data-i18n="label_language">Taal</label>
       <div class="lang-picker" id="settingsLangPicker"></div>
@@ -5891,17 +6389,13 @@
       </label>
     </div>
     <div class="form-field">
-      <label class="form-field-label" data-i18n="label_name">Je naam</label>
-      <input type="text" id="settingsNameInput" maxlength="40">
-    </div>
-    <div class="form-field">
       <label class="form-field-label" data-i18n="label_api_key">API key</label>
-      <input type="password" id="settingsKeyInput" placeholder="sk-ant-...">
+      <input type="password" id="settingsKeyInput" placeholder="sk-ant-…" autocomplete="off" spellcheck="false" autocapitalize="off">
       <span class="form-field-hint" data-i18n="api_key_hint">Blijft in je eigen browser. Wordt nergens anders opgeslagen.</span>
     </div>
 
     <div class="form-field">
-      <label class="form-field-label" data-i18n="label_profile">Jouw profiel</label>
+      <label class="form-field-label" data-i18n="label_level">Je niveau</label>
       <div class="profile-summary" id="profileSummary"></div>
       <button type="button" class="secondary-btn" id="editProfileBtn" style="margin-top: 8px; width: 100%; justify-content: center;">
         <svg class="icon icon-sm"><use href="#i-sliders"/></svg>
@@ -5945,8 +6439,8 @@ const TRANSLATIONS = {
     btn_start: 'Begin met uitleg',
     btn_camera: 'Camera',
     btn_gallery: 'Uit galerij',
-    hero_title: 'Word slimmer, niet alleen klaar.',
-    hero_subtitle: 'Maak een foto van je opdracht. Je krijgt geen kant-en-klaar antwoord — wel vragen die je verder helpen.',
+    hero_title: 'Je eigen bijles, altijd binnen handbereik.',
+    hero_subtitle: 'Max legt uit, overhoort en daagt je uit met spelletjes — tot je het écht snapt. Jouw persoonlijke leermaatje, dag en nacht.',
     step1: 'Welk vak?',
     step2: 'Foto van je opdracht',
     step3: 'Werk samen aan de opdracht',
@@ -5968,6 +6462,8 @@ const TRANSLATIONS = {
     subj_geo: 'Aardrijkskunde', subj_geo_sub: 'Aarde, kaarten, klimaat',
     subj_econ: 'Economie', subj_econ_sub: 'Markten, geld, vraag & aanbod',
     subj_biz: 'Bedrijfseconomie', subj_biz_sub: 'Bedrijven, balans, winst',
+    cat_other: 'Anders', subj_other: 'Anders', subj_other_sub: 'Een ander vak? Vul het zelf in',
+    other_prompt: 'Welk vak wil je hulp bij? Typ het hier:',
     upload_main: 'Klik om een foto te kiezen',
     upload_sub: 'Of gebruik een van de knoppen hieronder',
     chat_subtitle: 'Stelt vragen om je verder te helpen',
@@ -5981,6 +6477,8 @@ const TRANSLATIONS = {
     label_api_key: 'API key',
     placeholder_name: 'Bijv. Lisa',
     settings_title: 'Instellingen',
+    profile_title: 'Jouw profiel', label_level: 'Je niveau',
+    profile_remove_photo: 'Foto weghalen', err_photo: 'Foto kon niet worden opgeslagen (te groot).',
     api_title: 'Eenmalig: voer je API key in',
     api_key_hint: 'Blijft in je eigen browser. Wordt nergens anders opgeslagen.',
     api_explain_html: 'Deze app draait op de Claude API van Anthropic. Daarvoor heb je eenmalig een eigen key nodig.<br><br><strong>Hoe krijg je er een?</strong><br>1. Ga naar <a href="https://console.anthropic.com" target="_blank">console.anthropic.com</a><br>2. Maak een account aan (of log in)<br>3. Open "API Keys" en klik op "Create Key"<br>4. Kopieer de key (begint met <code>sk-ant-</code>) en plak hieronder<br><br>De key blijft in je eigen browser. Hij wordt nergens anders opgeslagen of verstuurd.',
@@ -6001,9 +6499,20 @@ const TRANSLATIONS = {
     about_hard_ph: 'Wat vind je lastig? Bijv. breuken, lange teksten, formules onthouden...',
     about_likes_ph: 'Wat vind je leuk? Bijv. voetbal, gamen, dieren, muziek...',
     acc_level: 'Level', acc_streak: 'dagen 🔥', acc_total_xp: 'totaal XP', acc_sessions: 'sessies', acc_badges: 'badges',
-    acc_to_next: 'naar level {n}', acc_view_ach: 'Bekijk je prestaties',
+    acc_to_next: 'naar level {n}', acc_view_ach: 'Prestaties', acc_view_stats: 'Statistieken',
+    stats_title: 'Jouw statistieken', stats_subtitle: 'Alles wat je tot nu toe hebt bereikt, op een rij.',
+    stats_streak_days: 'dag-streak', stats_active_days: 'actieve dagen',
+    stats_insights: 'Inzichten', stats_fav_subject: 'Favoriete vak', stats_least_subject: 'Verdient aandacht',
+    stats_accuracy: 'Gemiddelde score', stats_best_combo: 'Beste combo',
+    stats_likes: 'Vindt leuk', stats_works_on: 'Werkt aan', stats_strong: 'Sterk in',
+    stats_none: 'Begin met leren om je statistieken te vullen!',
+    stats_per_subject: 'Per vak', stats_no_subjects: 'Nog geen vak geoefend. Kies een vak om te beginnen!',
+    stats_activities: 'Activiteiten', stats_games: 'spelletjes', stats_lessons: 'lessen', stats_study: 'studeer',
     ach_title: 'Jouw prestaties', ach_subtitle: 'Verdien badges door te oefenen, spelletjes te spelen en lessen te volgen.',
-    reward_levelup: 'Level {n}!', reward_badge: 'Nieuwe badge!', reward_newday: 'Welkom terug!',
+    reward_levelup: 'Level {n} bereikt! Goed bezig.', reward_badge: 'Nieuwe badge!', reward_newday: 'Welkom terug!',
+    reward_streak: '{n} dagen op rij!', reward_streak_sub: 'Je bent on fire. 🔥',
+    trophy_unlocked: 'Trofee ontgrendeld',
+    aria_send: 'Verstuur',
     level_titles: ['Beginner', 'Leerling', 'Kenner', 'Talent', 'Expert', 'Meester', 'Genie'],
     badge_first_step_name: 'Eerste stap', badge_first_step_desc: 'Je eerste activiteit voltooid',
     badge_streak_3_name: 'Op dreef', badge_streak_3_desc: '3 dagen op rij geleerd',
@@ -6021,7 +6530,7 @@ const TRANSLATIONS = {
     skills_forget: 'Vergeten',
     welcome_title: 'Hoi, ik ben Max!',
     welcome_intro: 'Ik ben jouw robotje. Voordat we beginnen — hoe heet jij, en in welke taal wil je liefst praten?',
-    profile_title: 'Top! Nog twee dingen.',
+    profile_step_title: 'Top! Nog twee dingen.',
     profile_intro: 'Op welk niveau zit je? Dan stem ik mijn uitleg precies op jou af.',
     label_education: 'Wat voor onderwijs volg je?',
     label_school_level: 'Welk niveau?',
@@ -6048,7 +6557,44 @@ const TRANSLATIONS = {
     btn_close: 'Begrepen',
     help_title: 'Hoe werkt de Huiswerk helper?',
     help_demo_term: 'discriminant',
-    help_body_html: '<h3><span class="help-icon">1</span>Geen kant-en-klaar antwoord</h3><p>De begeleider werkt <strong>Socratisch</strong>: in plaats van een antwoord krijg je vragen en hints die je helpen het zélf op te lossen. Ook als je erom smeekt — hij blijft vragen stellen. Zo leer je het écht.</p><h3><span class="help-icon">2</span>Hoe begin je?</h3><p>Kies een vak op het startscherm → maak of upload een foto van je opdracht → klik op "Begin met uitleg". De begeleider analyseert de foto en vraagt eerst hoever je al bent.</p><h3><span class="help-icon">3</span>Klikbare moeilijke termen</h3><p>Komt er een vakterm langs zoals {demoTerm}? Tik erop voor een korte uitleg in een popup. Handig voor jargon dat je nog niet kent.</p><h3><span class="help-icon">4</span>De begeleider onthoudt je</h3><p>Als je iets goed beheerst (bijvoorbeeld Duitse naamvallen), onthoudt de app dat automatisch. De volgende keer slaat hij de uitleg over. Bij <strong>Instellingen → "Wat ken je al"</strong> zie je het overzicht en kun je dingen weghalen.</p><h3><span class="help-icon">5</span>Elk vak een eigen begeleider</h3><p>Wiskunde, Natuurkunde, Frans, Geschiedenis ... elk vak heeft zijn eigen aanpak en kleur. Klik op "<strong>← Andere vak</strong>" boven een vak-pagina om te wisselen.</p><h3><span class="help-icon">6</span>Aanpassen</h3><p>Klik op <strong>Instellingen</strong> rechtsboven om je naam, taal, niveau, profiel of API key aan te passen.</p>',
+    help_tab_guide: '📖 Uitleg', help_tab_ask: '💬 Vraag het Max',
+    help_ask_ph: 'Stel een vraag over de app...',
+    help_ask_welcome: 'Stel een vraag over de app — bijv. "Wat is de klas-modus?" of "Hoe verdien ik badges?"',
+    help_ask_suggestions: ['Wat is het verschil tussen Leren en Studeer?', 'Hoe werkt de klas-modus?', 'Hoe verdien ik XP en badges?', 'Hoe maak ik flashcards?'],
+    help_ask_nokey: 'Stel eerst je API key in via Profiel (rechtsboven).',
+    help_ask_error: 'Sorry, er ging iets mis. Probeer het nog eens.',
+    help_ask_thinking: 'Max denkt na',
+    help_body_html:
+      '<h3><span class="help-icon">🎯</span>Geen kant-en-klaar antwoord</h3>' +
+      '<p>Max werkt <strong>Socratisch</strong>: in plaats van het antwoord krijg je vragen en hints zodat je het zélf oplost. Ook als je erom smeekt — hij blijft je begeleiden. Zo leer je het écht.</p>' +
+      '<div class="help-example">📸 <b>Voorbeeld:</b> je stuurt een foto van een wiskundesom. Max zegt niet "x = 5", maar vraagt: "Welke formule herken je hier? En wat is stap 1?"</div>' +
+
+      '<h3><span class="help-icon">📚</span>Huiswerkhulp per vak</h3>' +
+      '<p>Kies een vak op het startscherm → maak of upload een foto van je opdracht → klik op <strong>Begin met uitleg</strong>. Elk vak (wiskunde, scheikunde, Frans, geschiedenis …) heeft zijn eigen aanpak.</p>' +
+      '<p>Moeilijke termen zoals {demoTerm} worden gemarkeerd — <strong>tik erop</strong> voor een korte uitleg in een popup.</p>' +
+
+      '<h3><span class="help-icon">🧠</span>Leermodus — uit je hoofd leren</h3>' +
+      '<p>Foto\'s van woordjes, termen of formules insturen. Max overhoort je met multiple choice, zelf typen, flashcards of een spelletje.</p>' +
+      '<div class="help-example">📝 <b>Voorbeeld:</b> foto van 20 Franse woordjes → kies "Flashcards" → Max maakt meteen een setje dat je kunt oefenen.</div>' +
+
+      '<h3><span class="help-icon">🎓</span>Studeer — tot je het kent</h3>' +
+      '<p>Een slimme modus die een setje blijft herhalen tot je elke kaart beheerst (nieuw → aan het leren → vertrouwd → gemasterd). Typefouten worden vergeven.</p>' +
+
+      '<h3><span class="help-icon">🏫</span>Klas — les van Meester Max</h3>' +
+      '<p>Een echte stap-voor-stap les op een schoolbord, mét tekeningen. Max legt uit, stelt tussendoor vragen, en je kunt zelf vragen stellen. Met <strong>← Terug</strong> ga je naar een vorige stap.</p>' +
+      '<div class="help-example">💡 <b>Voorbeeld:</b> typ "leg de stelling van Pythagoras uit" → Max tekent een driehoek en bouwt de uitleg rustig op.</div>' +
+
+      '<h3><span class="help-icon">🎮</span>Spelletjes</h3>' +
+      '<p>Van elk opgeslagen setje kun je een spel spelen: <strong>MaxRunner</strong> (ren door 3 banen), <strong>WoordRain</strong> (vang vallende woorden), <strong>Match</strong> (paren) en <strong>Tijdrace</strong> (60 sec). Je verdient er XP mee!</p>' +
+
+      '<h3><span class="help-icon">📊</span>Voortgang, XP & badges</h3>' +
+      '<p>Alles wat je doet geeft <strong>XP</strong> en levels. Je bouwt een dagelijkse <strong>streak</strong> 🔥 op en verdient <strong>badges</strong>. Op het startscherm zie je je accountkaart; via <strong>Statistieken</strong> zie je per vak hoe je het doet, je favoriete vak en je gemiddelde score.</p>' +
+
+      '<h3><span class="help-icon">👤</span>Je eigen profiel</h3>' +
+      '<p>Klik rechtsboven op <strong>Profiel</strong> voor je naam, profielfoto, taal, niveau, geluid, en een stukje "over jezelf" (waar je goed/slecht in bent en wat je leuk vindt). Max past zijn uitleg en voorbeelden daarop aan.</p>' +
+
+      '<h3><span class="help-icon">💬</span>Iets anders weten?</h3>' +
+      '<p>Klik bovenaan op <strong>"Vraag het Max"</strong> en stel je vraag over de app in je eigen woorden. Max legt het je uit!</p>',
     intro_skip: 'Overslaan →',
     intro_prev: '← Vorige',
     intro_next: 'Volgende →',
@@ -6233,8 +6779,8 @@ const TRANSLATIONS = {
     btn_start: 'Start explanation',
     btn_camera: 'Camera',
     btn_gallery: 'From gallery',
-    hero_title: 'Get smarter, not just done.',
-    hero_subtitle: 'Take a photo of your assignment. You won’t get a ready answer — but questions that move you forward.',
+    hero_title: 'Your own tutor, always within reach.',
+    hero_subtitle: 'Max explains, quizzes and challenges you with games — until you truly get it. Your personal study buddy, day and night.',
     step1: 'Which subject?',
     step2: 'Photo of your assignment',
     step3: 'Work on it together',
@@ -6256,6 +6802,8 @@ const TRANSLATIONS = {
     subj_geo: 'Geography', subj_geo_sub: 'Earth, maps, climate',
     subj_econ: 'Economics', subj_econ_sub: 'Markets, money, supply & demand',
     subj_biz: 'Business studies', subj_biz_sub: 'Companies, balance sheets, profit',
+    cat_other: 'Other', subj_other: 'Other', subj_other_sub: 'A different subject? Type it yourself',
+    other_prompt: 'Which subject do you want help with? Type it here:',
     upload_main: 'Click to pick a photo',
     upload_sub: 'Or use one of the buttons below',
     chat_subtitle: 'Asks questions to help you forward',
@@ -6270,6 +6818,8 @@ const TRANSLATIONS = {
     label_api_key: 'API key',
     placeholder_name: 'e.g. Alex',
     settings_title: 'Settings',
+    profile_title: 'Your profile', label_level: 'Your level',
+    profile_remove_photo: 'Remove photo', err_photo: 'Could not save photo (too large).',
     api_title: 'One-time: enter your API key',
     api_key_hint: 'Stays in your browser. Not stored anywhere else.',
     api_explain_html: 'This app runs on Anthropic’s Claude API. You’ll need your own key (once).<br><br><strong>How do you get one?</strong><br>1. Go to <a href="https://console.anthropic.com" target="_blank">console.anthropic.com</a><br>2. Create an account (or log in)<br>3. Open "API Keys" and click "Create Key"<br>4. Copy the key (starts with <code>sk-ant-</code>) and paste below<br><br>The key stays in your own browser. It is not stored or sent anywhere else.',
@@ -6288,9 +6838,20 @@ const TRANSLATIONS = {
     about_hard_ph: 'What do you find hard? E.g. fractions, long texts, remembering formulas...',
     about_likes_ph: 'What do you enjoy? E.g. football, gaming, animals, music...',
     acc_level: 'Level', acc_streak: 'days 🔥', acc_total_xp: 'total XP', acc_sessions: 'sessions', acc_badges: 'badges',
-    acc_to_next: 'to level {n}', acc_view_ach: 'View your achievements',
+    acc_to_next: 'to level {n}', acc_view_ach: 'Achievements', acc_view_stats: 'Statistics',
+    stats_title: 'Your statistics', stats_subtitle: 'Everything you have achieved so far, at a glance.',
+    stats_streak_days: 'day streak', stats_active_days: 'active days',
+    stats_insights: 'Insights', stats_fav_subject: 'Favourite subject', stats_least_subject: 'Needs attention',
+    stats_accuracy: 'Average score', stats_best_combo: 'Best combo',
+    stats_likes: 'Enjoys', stats_works_on: 'Working on', stats_strong: 'Strong at',
+    stats_none: 'Start learning to fill up your stats!',
+    stats_per_subject: 'Per subject', stats_no_subjects: 'No subject practised yet. Pick one to begin!',
+    stats_activities: 'Activities', stats_games: 'games', stats_lessons: 'lessons', stats_study: 'study',
     ach_title: 'Your achievements', ach_subtitle: 'Earn badges by practising, playing games and following lessons.',
-    reward_levelup: 'Level {n}!', reward_badge: 'New badge!', reward_newday: 'Welcome back!',
+    reward_levelup: 'Reached level {n}! Nice work.', reward_badge: 'New badge!', reward_newday: 'Welcome back!',
+    reward_streak: '{n} days in a row!', reward_streak_sub: "You're on fire. 🔥",
+    trophy_unlocked: 'Trophy unlocked',
+    aria_send: 'Send',
     level_titles: ['Beginner', 'Learner', 'Knower', 'Talent', 'Expert', 'Master', 'Genius'],
     badge_first_step_name: 'First step', badge_first_step_desc: 'Completed your first activity',
     badge_streak_3_name: 'On a roll', badge_streak_3_desc: 'Learned 3 days in a row',
@@ -6311,7 +6872,7 @@ const TRANSLATIONS = {
     skills_forget: 'Forget',
     welcome_title: 'Hi, I’m Max!',
     welcome_intro: 'I’m your little robot. Before we start — what’s your name, and which language do you prefer?',
-    profile_title: 'Nice! Two more things.',
+    profile_step_title: 'Nice! Two more things.',
     profile_intro: 'What level are you at? Then I can tune my explanations exactly to you.',
     label_education: 'What kind of education are you in?',
     label_school_level: 'Which level?',
@@ -6338,6 +6899,13 @@ const TRANSLATIONS = {
     btn_close: 'Got it',
     help_title: 'How does Homework helper work?',
     help_demo_term: 'discriminant',
+    help_tab_guide: '📖 Guide', help_tab_ask: '💬 Ask Max',
+    help_ask_ph: 'Ask a question about the app...',
+    help_ask_welcome: 'Ask anything about the app — e.g. "What is classroom mode?" or "How do I earn badges?"',
+    help_ask_suggestions: ['What\'s the difference between Learn and Study?', 'How does classroom mode work?', 'How do I earn XP and badges?', 'How do I make flashcards?'],
+    help_ask_nokey: 'Set your API key first via Profile (top right).',
+    help_ask_error: 'Sorry, something went wrong. Try again.',
+    help_ask_thinking: 'Max is thinking',
     help_body_html: '<h3><span class="help-icon">1</span>No ready answers, just guidance</h3><p>The tutor works <strong>Socratically</strong>: instead of a finished answer, you get questions and hints that help you figure it out yourself. Even if you beg — it keeps asking. That is how you actually learn.</p><h3><span class="help-icon">2</span>How to start</h3><p>Pick a subject on the home screen → take or upload a photo of your assignment → click "Start explanation". The tutor reads the photo and first asks how far you have got.</p><h3><span class="help-icon">3</span>Tappable difficult terms</h3><p>See a specialised word like {demoTerm}? Tap it for a short pop-up explanation. Handy for jargon you do not know yet.</p><h3><span class="help-icon">4</span>The tutor remembers you</h3><p>When you have clearly mastered something (for example German cases), the app remembers automatically. Next time it skips the recap. Under <strong>Settings → "What you already know"</strong> you can review and remove items.</p><h3><span class="help-icon">5</span>Each subject is its own bot</h3><p>Maths, physics, French, history... every subject has its own approach and colour. Use "<strong>← Other subject</strong>" at the top of a subject page to switch.</p><h3><span class="help-icon">6</span>Customising</h3><p>Click <strong>Settings</strong> in the top right to change your name, language, education level, profile or API key.</p>',
     intro_skip: 'Skip →',
     intro_prev: '← Previous',
@@ -6523,8 +7091,8 @@ const TRANSLATIONS = {
     btn_start: 'Erklärung starten',
     btn_camera: 'Kamera',
     btn_gallery: 'Aus Galerie',
-    hero_title: 'Werde schlauer, nicht nur fertig.',
-    hero_subtitle: 'Mach ein Foto deiner Aufgabe. Du bekommst keine fertige Antwort — sondern Fragen, die dich weiterbringen.',
+    hero_title: 'Deine eigene Nachhilfe, immer griffbereit.',
+    hero_subtitle: 'Max erklärt, fragt ab und fordert dich mit Spielen heraus — bis du es wirklich verstehst. Dein persönlicher Lernbuddy, Tag und Nacht.',
     step1: 'Welches Fach?',
     step2: 'Foto deiner Aufgabe',
     step3: 'Gemeinsam an der Aufgabe arbeiten',
@@ -6546,19 +7114,23 @@ const TRANSLATIONS = {
     subj_geo: 'Geografie', subj_geo_sub: 'Erde, Karten, Klima',
     subj_econ: 'Wirtschaft', subj_econ_sub: 'Märkte, Geld, Angebot & Nachfrage',
     subj_biz: 'BWL', subj_biz_sub: 'Unternehmen, Bilanz, Gewinn',
+    cat_other: 'Andere', subj_other: 'Andere', subj_other_sub: 'Ein anderes Fach? Gib es selbst ein',
+    other_prompt: 'Bei welchem Fach brauchst du Hilfe? Tippe es hier:',
     upload_main: 'Klicke, um ein Foto zu wählen',
     upload_sub: 'Oder benutze einen der Buttons unten',
     chat_subtitle: 'Stellt Fragen, um dir weiterzuhelfen',
     chat_placeholder: 'Tippe deine Antwort oder Frage...',
     tutor_suffix: 'Tutor',
-    thinking: ‘Denke nach’,
-    welcome_intro: ‘Gib deinen Namen ein und wähle deine Sprache, dann kann’s losgehen.’,
+    thinking: 'Denke nach',
+    welcome_intro: "Gib deinen Namen ein und wähle deine Sprache, dann kann's losgehen.",
     label_language: 'Sprache',
     label_sound: 'Soundeffekte in Spielen',
     label_name: 'Dein Name',
     label_api_key: 'API key',
     placeholder_name: 'z. B. Lena',
     settings_title: 'Einstellungen',
+    profile_title: 'Dein Profil', label_level: 'Dein Niveau',
+    profile_remove_photo: 'Foto entfernen', err_photo: 'Foto konnte nicht gespeichert werden (zu groß).',
     api_title: 'Einmalig: API key eingeben',
     api_key_hint: 'Bleibt in deinem Browser. Wird nirgendwo sonst gespeichert.',
     api_explain_html: 'Diese App nutzt die Claude API von Anthropic. Dafür brauchst du einmalig einen eigenen Key.<br><br><strong>Wie bekommst du einen?</strong><br>1. Gehe zu <a href="https://console.anthropic.com" target="_blank">console.anthropic.com</a><br>2. Erstelle ein Konto (oder logge dich ein)<br>3. Öffne "API Keys" und klicke "Create Key"<br>4. Kopiere den Key (beginnt mit <code>sk-ant-</code>) und füge ihn unten ein<br><br>Der Key bleibt in deinem Browser. Er wird nirgendwo sonst gespeichert oder gesendet.',
@@ -6577,9 +7149,20 @@ const TRANSLATIONS = {
     about_hard_ph: 'Was fällt dir schwer? Z.B. Brüche, lange Texte, Formeln merken...',
     about_likes_ph: 'Was magst du? Z.B. Fußball, Gaming, Tiere, Musik...',
     acc_level: 'Level', acc_streak: 'Tage 🔥', acc_total_xp: 'Gesamt-XP', acc_sessions: 'Sitzungen', acc_badges: 'Abzeichen',
-    acc_to_next: 'bis Level {n}', acc_view_ach: 'Deine Erfolge ansehen',
+    acc_to_next: 'bis Level {n}', acc_view_ach: 'Erfolge', acc_view_stats: 'Statistik',
+    stats_title: 'Deine Statistik', stats_subtitle: 'Alles, was du bisher erreicht hast, auf einen Blick.',
+    stats_streak_days: 'Tage-Serie', stats_active_days: 'aktive Tage',
+    stats_insights: 'Einblicke', stats_fav_subject: 'Lieblingsfach', stats_least_subject: 'Braucht Aufmerksamkeit',
+    stats_accuracy: 'Durchschnitt', stats_best_combo: 'Beste Combo',
+    stats_likes: 'Mag', stats_works_on: 'Arbeitet an', stats_strong: 'Stark in',
+    stats_none: 'Fang an zu lernen, um deine Statistik zu füllen!',
+    stats_per_subject: 'Pro Fach', stats_no_subjects: 'Noch kein Fach geübt. Wähle eins zum Starten!',
+    stats_activities: 'Aktivitäten', stats_games: 'Spiele', stats_lessons: 'Stunden', stats_study: 'Lernen',
     ach_title: 'Deine Erfolge', ach_subtitle: 'Verdiene Abzeichen durch Üben, Spielen und Unterricht.',
-    reward_levelup: 'Level {n}!', reward_badge: 'Neues Abzeichen!', reward_newday: 'Willkommen zurück!',
+    reward_levelup: 'Level {n} erreicht! Gut gemacht.', reward_badge: 'Neues Abzeichen!', reward_newday: 'Willkommen zurück!',
+    reward_streak: '{n} Tage in Folge!', reward_streak_sub: 'Du bist on fire. 🔥',
+    trophy_unlocked: 'Trophäe freigeschaltet',
+    aria_send: 'Senden',
     level_titles: ['Anfänger', 'Lernende', 'Kenner', 'Talent', 'Experte', 'Meister', 'Genie'],
     badge_first_step_name: 'Erster Schritt', badge_first_step_desc: 'Erste Aktivität abgeschlossen',
     badge_streak_3_name: 'In Fahrt', badge_streak_3_desc: '3 Tage in Folge gelernt',
@@ -6599,7 +7182,7 @@ const TRANSLATIONS = {
     skills_forget: 'Vergessen',
     welcome_title: 'Hallo, ich bin Max!',
     welcome_intro: 'Ich bin dein kleiner Roboter. Bevor es losgeht — wie heißt du, und welche Sprache magst du am liebsten?',
-    profile_title: 'Super! Noch zwei Sachen.',
+    profile_step_title: 'Super! Noch zwei Sachen.',
     profile_intro: 'Auf welchem Niveau lernst du? So passe ich meine Erklärungen genau an dich an.',
     label_education: 'Welche Schulart besuchst du?',
     label_school_level: 'Welches Niveau?',
@@ -6626,6 +7209,13 @@ const TRANSLATIONS = {
     btn_close: 'Verstanden',
     help_title: 'Wie funktioniert der Hausaufgaben-Helfer?',
     help_demo_term: 'Diskriminante',
+    help_tab_guide: '📖 Anleitung', help_tab_ask: '💬 Frag Max',
+    help_ask_ph: 'Stell eine Frage zur App...',
+    help_ask_welcome: 'Frag etwas über die App — z.B. "Was ist der Klassenmodus?" oder "Wie bekomme ich Abzeichen?"',
+    help_ask_suggestions: ['Unterschied zwischen Lernen und Studieren?', 'Wie funktioniert der Klassenmodus?', 'Wie bekomme ich XP und Abzeichen?', 'Wie erstelle ich Karteikarten?'],
+    help_ask_nokey: 'Gib zuerst deinen API-Key im Profil ein (oben rechts).',
+    help_ask_error: 'Entschuldigung, etwas ist schiefgelaufen. Versuch es nochmal.',
+    help_ask_thinking: 'Max denkt nach',
     help_body_html: '<h3><span class="help-icon">1</span>Keine fertigen Antworten, nur Hilfe</h3><p>Der Tutor arbeitet <strong>sokratisch</strong>: statt einer fertigen Antwort bekommst du Fragen und Hinweise, die dir helfen, es selbst zu lösen. Auch wenn du bettelst — er stellt weiter Fragen. So lernst du wirklich.</p><h3><span class="help-icon">2</span>So fängst du an</h3><p>Wähle ein Fach auf dem Startbildschirm → mache oder lade ein Foto deiner Aufgabe hoch → klicke auf "Erklärung starten". Der Tutor liest das Foto und fragt erst, wie weit du schon bist.</p><h3><span class="help-icon">3</span>Anklickbare Fachbegriffe</h3><p>Siehst du ein Fachwort wie {demoTerm}? Tippe darauf für eine kurze Erklärung in einem Pop-up. Praktisch für Begriffe, die du noch nicht kennst.</p><h3><span class="help-icon">4</span>Der Tutor merkt sich dich</h3><p>Wenn du etwas sicher beherrschst (zum Beispiel die deutschen Fälle), merkt sich die App das automatisch. Beim nächsten Mal überspringt er die Wiederholung. Unter <strong>Einstellungen → "Was du schon kannst"</strong> siehst du die Übersicht und kannst Einträge entfernen.</p><h3><span class="help-icon">5</span>Jedes Fach ein eigener Bot</h3><p>Mathematik, Physik, Französisch, Geschichte ... jedes Fach hat seinen eigenen Ansatz und seine eigene Farbe. Mit "<strong>← Anderes Fach</strong>" oben auf einer Fachseite kannst du wechseln.</p><h3><span class="help-icon">6</span>Anpassen</h3><p>Klicke oben rechts auf <strong>Einstellungen</strong>, um deinen Namen, deine Sprache, dein Niveau, dein Profil oder deinen API key zu ändern.</p>',
     intro_skip: 'Überspringen →',
     intro_prev: '← Zurück',
@@ -6811,8 +7401,8 @@ const TRANSLATIONS = {
     btn_start: 'Lancer l’explication',
     btn_camera: 'Caméra',
     btn_gallery: 'Depuis la galerie',
-    hero_title: 'Deviens plus malin, pas juste avancé.',
-    hero_subtitle: 'Prends une photo de ton exercice. Tu n’auras pas de réponse toute faite — mais des questions qui t’aident à avancer.',
+    hero_title: 'Ton prof particulier, toujours à portée de main.',
+    hero_subtitle: 'Max explique, t’interroge et te défie avec des jeux — jusqu’à ce que tu comprennes vraiment. Ton copain d’étude, jour et nuit.',
     step1: 'Quelle matière ?',
     step2: 'Photo de ton exercice',
     step3: 'Travaillons ensemble',
@@ -6834,6 +7424,8 @@ const TRANSLATIONS = {
     subj_geo: 'Géographie', subj_geo_sub: 'Terre, cartes, climat',
     subj_econ: 'Économie', subj_econ_sub: 'Marchés, argent, offre & demande',
     subj_biz: 'Éco d’entreprise', subj_biz_sub: 'Entreprises, bilan, profit',
+    cat_other: 'Autre', subj_other: 'Autre', subj_other_sub: 'Une autre matière ? Saisis-la toi-même',
+    other_prompt: 'Pour quelle matière veux-tu de l’aide ? Tape-la ici :',
     upload_main: 'Clique pour choisir une photo',
     upload_sub: 'Ou utilise un des boutons ci-dessous',
     chat_subtitle: 'Pose des questions pour t’aider à avancer',
@@ -6848,6 +7440,8 @@ const TRANSLATIONS = {
     label_api_key: 'Clé API',
     placeholder_name: 'Ex. Léa',
     settings_title: 'Paramètres',
+    profile_title: 'Ton profil', label_level: 'Ton niveau',
+    profile_remove_photo: 'Retirer la photo', err_photo: 'Impossible d’enregistrer la photo (trop grande).',
     api_title: 'Une fois  : entre ta clé API',
     api_key_hint: 'Reste dans ton navigateur. N’est stockée nulle part ailleurs.',
     api_explain_html: 'Cette appli utilise l’API Claude d’Anthropic. Tu as besoin d’une clé personnelle (une seule fois).<br><br><strong>Comment l’obtenir  ?</strong><br>1. Va sur <a href="https://console.anthropic.com" target="_blank">console.anthropic.com</a><br>2. Crée un compte (ou connecte-toi)<br>3. Ouvre "API Keys" puis "Create Key"<br>4. Copie la clé (commence par <code>sk-ant-</code>) et colle-la ci-dessous<br><br>La clé reste dans ton navigateur. Elle n’est ni stockée ni envoyée ailleurs.',
@@ -6866,9 +7460,20 @@ const TRANSLATIONS = {
     about_hard_ph: 'Qu’est-ce qui te semble difficile ? Ex. fractions, longs textes, retenir les formules...',
     about_likes_ph: 'Qu’est-ce que tu aimes ? Ex. foot, jeux vidéo, animaux, musique...',
     acc_level: 'Niveau', acc_streak: 'jours 🔥', acc_total_xp: 'XP total', acc_sessions: 'sessions', acc_badges: 'badges',
-    acc_to_next: 'vers niveau {n}', acc_view_ach: 'Voir tes réussites',
+    acc_to_next: 'vers niveau {n}', acc_view_ach: 'Réussites', acc_view_stats: 'Statistiques',
+    stats_title: 'Tes statistiques', stats_subtitle: 'Tout ce que tu as accompli jusqu’ici, en un coup d’œil.',
+    stats_streak_days: 'jours de suite', stats_active_days: 'jours actifs',
+    stats_insights: 'Aperçus', stats_fav_subject: 'Matière préférée', stats_least_subject: 'À travailler',
+    stats_accuracy: 'Score moyen', stats_best_combo: 'Meilleur combo',
+    stats_likes: 'Aime', stats_works_on: 'Travaille sur', stats_strong: 'Fort en',
+    stats_none: 'Commence à apprendre pour remplir tes stats !',
+    stats_per_subject: 'Par matière', stats_no_subjects: 'Aucune matière encore. Choisis-en une pour commencer !',
+    stats_activities: 'Activités', stats_games: 'jeux', stats_lessons: 'cours', stats_study: 'révision',
     ach_title: 'Tes réussites', ach_subtitle: 'Gagne des badges en t’entraînant, en jouant et en suivant des cours.',
-    reward_levelup: 'Niveau {n} !', reward_badge: 'Nouveau badge !', reward_newday: 'Bon retour !',
+    reward_levelup: 'Niveau {n} atteint ! Bravo.', reward_badge: 'Nouveau badge !', reward_newday: 'Bon retour !',
+    reward_streak: '{n} jours d’affilée !', reward_streak_sub: 'Tu es en feu. 🔥',
+    trophy_unlocked: 'Trophée débloqué',
+    aria_send: 'Envoyer',
     level_titles: ['Débutant', 'Apprenti', 'Connaisseur', 'Talent', 'Expert', 'Maître', 'Génie'],
     badge_first_step_name: 'Premier pas', badge_first_step_desc: 'Première activité terminée',
     badge_streak_3_name: 'Lancé', badge_streak_3_desc: 'Appris 3 jours d’affilée',
@@ -6889,7 +7494,7 @@ const TRANSLATIONS = {
     skills_forget: 'Oublier',
     welcome_title: 'Salut, je suis Max !',
     welcome_intro: 'Je suis ton petit robot. Avant de commencer — comment tu t’appelles, et dans quelle langue tu préfères parler ?',
-    profile_title: 'Super ! Encore deux choses.',
+    profile_step_title: 'Super ! Encore deux choses.',
     profile_intro: 'À quel niveau es-tu ? Comme ça j’adapte mes explications juste pour toi.',
     label_education: 'Quel type d’enseignement suis-tu ?',
     label_school_level: 'Quel niveau ?',
@@ -6916,6 +7521,13 @@ const TRANSLATIONS = {
     btn_close: 'Compris',
     help_title: 'Comment fonctionne Aide aux devoirs ?',
     help_demo_term: 'discriminant',
+    help_tab_guide: '📖 Guide', help_tab_ask: '💬 Demande à Max',
+    help_ask_ph: 'Pose une question sur l’app...',
+    help_ask_welcome: 'Pose une question sur l’app — ex. "C’est quoi le mode classe ?" ou "Comment gagner des badges ?"',
+    help_ask_suggestions: ['Différence entre Apprendre et Réviser ?', 'Comment marche le mode classe ?', 'Comment gagner XP et badges ?', 'Comment créer des cartes ?'],
+    help_ask_nokey: 'Configure d’abord ta clé API dans Profil (en haut à droite).',
+    help_ask_error: 'Désolé, une erreur est survenue. Réessaie.',
+    help_ask_thinking: 'Max réfléchit',
     help_body_html: '<h3><span class="help-icon">1</span>Pas de réponse toute faite, juste de l’aide</h3><p>Le tuteur fonctionne de manière <strong>socratique</strong> : au lieu d’une réponse, tu reçois des questions et des indices qui t’aident à trouver la solution toi-même. Même si tu insistes — il continue à poser des questions. C’est comme ça qu’on apprend vraiment.</p><h3><span class="help-icon">2</span>Comment démarrer</h3><p>Choisis une matière sur l’écran d’accueil → prends ou télécharge une photo de ton exercice → clique sur "Lancer l’explication". Le tuteur lit la photo et te demande d’abord où tu en es.</p><h3><span class="help-icon">3</span>Termes difficiles cliquables</h3><p>Tu vois un mot spécialisé comme {demoTerm} ? Tape dessus pour une explication courte dans une pop-up. Pratique pour le jargon que tu ne connais pas encore.</p><h3><span class="help-icon">4</span>Le tuteur se souvient de toi</h3><p>Quand tu maîtrises clairement quelque chose (par exemple les cas allemands), l’appli s’en souvient automatiquement. La prochaine fois, il saute le rappel. Dans <strong>Paramètres → "Ce que tu sais déjà"</strong>, tu vois la liste et tu peux supprimer des éléments.</p><h3><span class="help-icon">5</span>Chaque matière a son propre bot</h3><p>Maths, physique, anglais, histoire ... chaque matière a sa propre approche et sa propre couleur. Utilise "<strong>← Autre matière</strong>" en haut d’une page de matière pour changer.</p><h3><span class="help-icon">6</span>Personnaliser</h3><p>Clique sur <strong>Paramètres</strong> en haut à droite pour modifier ton prénom, ta langue, ton niveau, ton profil ou ta clé API.</p>',
     intro_skip: 'Passer →',
     intro_prev: '← Précédent',
@@ -7101,8 +7713,8 @@ const TRANSLATIONS = {
     btn_start: 'Empezar explicación',
     btn_camera: 'Cámara',
     btn_gallery: 'De la galería',
-    hero_title: 'Hazte más listo, no solo termines.',
-    hero_subtitle: 'Haz una foto de tu tarea. No tendrás una respuesta hecha — sino preguntas que te ayudan a avanzar.',
+    hero_title: 'Tu propio profe particular, siempre a mano.',
+    hero_subtitle: 'Max explica, te pregunta y te reta con juegos — hasta que lo entiendes de verdad. Tu compañero de estudio, día y noche.',
     step1: '¿Qué asignatura?',
     step2: 'Foto de tu tarea',
     step3: 'Trabajemos juntos',
@@ -7124,6 +7736,8 @@ const TRANSLATIONS = {
     subj_geo: 'Geografía', subj_geo_sub: 'Tierra, mapas, clima',
     subj_econ: 'Economía', subj_econ_sub: 'Mercados, dinero, oferta y demanda',
     subj_biz: 'Economía empresarial', subj_biz_sub: 'Empresas, balance, beneficio',
+    cat_other: 'Otra', subj_other: 'Otra', subj_other_sub: '¿Otra asignatura? Escríbela tú mismo',
+    other_prompt: '¿Con qué asignatura quieres ayuda? Escríbela aquí:',
     upload_main: 'Haz clic para elegir una foto',
     upload_sub: 'O usa uno de los botones de abajo',
     chat_subtitle: 'Hace preguntas para ayudarte a avanzar',
@@ -7138,6 +7752,8 @@ const TRANSLATIONS = {
     label_api_key: 'Clave API',
     placeholder_name: 'Ej. Carlos',
     settings_title: 'Configuración',
+    profile_title: 'Tu perfil', label_level: 'Tu nivel',
+    profile_remove_photo: 'Quitar foto', err_photo: 'No se pudo guardar la foto (demasiado grande).',
     api_title: 'Una vez: introduce tu clave API',
     api_key_hint: 'Se queda en tu navegador. No se guarda en ningún otro sitio.',
     api_explain_html: 'Esta app usa la API Claude de Anthropic. Necesitas tu propia clave (una sola vez).<br><br><strong>¿Cómo conseguir una?</strong><br>1. Ve a <a href="https://console.anthropic.com" target="_blank">console.anthropic.com</a><br>2. Crea una cuenta (o inicia sesión)<br>3. Abre "API Keys" y haz clic en "Create Key"<br>4. Copia la clave (empieza por <code>sk-ant-</code>) y pégala abajo<br><br>La clave se queda en tu navegador. No se guarda ni se envía a ningún otro sitio.',
@@ -7156,9 +7772,20 @@ const TRANSLATIONS = {
     about_hard_ph: '¿Qué te resulta difícil? Ej. fracciones, textos largos, recordar fórmulas...',
     about_likes_ph: '¿Qué te gusta? Ej. fútbol, videojuegos, animales, música...',
     acc_level: 'Nivel', acc_streak: 'días 🔥', acc_total_xp: 'XP total', acc_sessions: 'sesiones', acc_badges: 'insignias',
-    acc_to_next: 'al nivel {n}', acc_view_ach: 'Ver tus logros',
+    acc_to_next: 'al nivel {n}', acc_view_ach: 'Logros', acc_view_stats: 'Estadísticas',
+    stats_title: 'Tus estadísticas', stats_subtitle: 'Todo lo que has logrado hasta ahora, de un vistazo.',
+    stats_streak_days: 'días seguidos', stats_active_days: 'días activos',
+    stats_insights: 'Datos', stats_fav_subject: 'Asignatura favorita', stats_least_subject: 'Necesita atención',
+    stats_accuracy: 'Puntuación media', stats_best_combo: 'Mejor combo',
+    stats_likes: 'Le gusta', stats_works_on: 'Trabaja en', stats_strong: 'Fuerte en',
+    stats_none: '¡Empieza a aprender para llenar tus estadísticas!',
+    stats_per_subject: 'Por asignatura', stats_no_subjects: 'Aún no has practicado. ¡Elige una para empezar!',
+    stats_activities: 'Actividades', stats_games: 'juegos', stats_lessons: 'clases', stats_study: 'estudio',
     ach_title: 'Tus logros', ach_subtitle: 'Gana insignias practicando, jugando y siguiendo clases.',
-    reward_levelup: '¡Nivel {n}!', reward_badge: '¡Nueva insignia!', reward_newday: '¡Bienvenido de nuevo!',
+    reward_levelup: '¡Nivel {n} alcanzado! Bien hecho.', reward_badge: '¡Nueva insignia!', reward_newday: '¡Bienvenido de nuevo!',
+    reward_streak: '¡{n} días seguidos!', reward_streak_sub: 'Estás on fire. 🔥',
+    trophy_unlocked: 'Trofeo desbloqueado',
+    aria_send: 'Enviar',
     level_titles: ['Principiante', 'Aprendiz', 'Conocedor', 'Talento', 'Experto', 'Maestro', 'Genio'],
     badge_first_step_name: 'Primer paso', badge_first_step_desc: 'Completaste tu primera actividad',
     badge_streak_3_name: 'En racha', badge_streak_3_desc: 'Aprendiste 3 días seguidos',
@@ -7179,7 +7806,7 @@ const TRANSLATIONS = {
     skills_forget: 'Olvidar',
     welcome_title: '¡Hola, soy Max!',
     welcome_intro: 'Soy tu pequeño robot. Antes de empezar — ¿cómo te llamas, y en qué idioma prefieres hablar?',
-    profile_title: '¡Genial! Dos cosas más.',
+    profile_step_title: '¡Genial! Dos cosas más.',
     profile_intro: '¿En qué nivel estás? Así ajusto mis explicaciones justo para ti.',
     label_education: '¿Qué tipo de educación sigues?',
     label_school_level: '¿Qué nivel?',
@@ -7206,6 +7833,13 @@ const TRANSLATIONS = {
     btn_close: 'Entendido',
     help_title: '¿Cómo funciona el Ayudante de deberes?',
     help_demo_term: 'discriminante',
+    help_tab_guide: '📖 Guía', help_tab_ask: '💬 Pregunta a Max',
+    help_ask_ph: 'Haz una pregunta sobre la app...',
+    help_ask_welcome: 'Pregunta sobre la app — ej. "¿Qué es el modo clase?" o "¿Cómo gano insignias?"',
+    help_ask_suggestions: ['¿Diferencia entre Aprender y Estudiar?', '¿Cómo funciona el modo clase?', '¿Cómo gano XP e insignias?', '¿Cómo hago tarjetas?'],
+    help_ask_nokey: 'Configura primero tu clave API en Perfil (arriba a la derecha).',
+    help_ask_error: 'Lo siento, algo salió mal. Inténtalo de nuevo.',
+    help_ask_thinking: 'Max está pensando',
     help_body_html: '<h3><span class="help-icon">1</span>Sin respuestas hechas, solo ayuda</h3><p>El tutor funciona de forma <strong>socrática</strong>: en lugar de una respuesta, recibes preguntas y pistas que te ayudan a encontrarla tú mismo. Aunque insistas, sigue preguntando. Así se aprende de verdad.</p><h3><span class="help-icon">2</span>Cómo empezar</h3><p>Elige una asignatura en la pantalla de inicio → haz o sube una foto de tu tarea → pulsa "Empezar explicación". El tutor lee la foto y primero te pregunta hasta dónde has llegado.</p><h3><span class="help-icon">3</span>Términos difíciles clicables</h3><p>¿Ves una palabra especializada como {demoTerm}? Tócala para una explicación corta en una ventana emergente. Útil para la jerga que aún no conoces.</p><h3><span class="help-icon">4</span>El tutor se acuerda de ti</h3><p>Cuando dominas algo claramente (por ejemplo los casos alemanes), la app lo recuerda automáticamente. La próxima vez se salta el repaso. En <strong>Configuración → "Lo que ya sabes"</strong> ves la lista y puedes eliminar elementos.</p><h3><span class="help-icon">5</span>Cada asignatura, su propio bot</h3><p>Matemáticas, física, francés, historia ... cada asignatura tiene su enfoque y su color. Usa "<strong>← Otra asignatura</strong>" arriba de una página de asignatura para cambiar.</p><h3><span class="help-icon">6</span>Personalizar</h3><p>Pulsa <strong>Configuración</strong> arriba a la derecha para cambiar tu nombre, idioma, nivel, perfil o clave API.</p>',
     intro_skip: 'Saltar →',
     intro_prev: '← Anterior',
@@ -8340,6 +8974,16 @@ COACHING:
 - Voor ratio's: laat de leerling EERST conceptueel uitleggen wat de ratio meet, vóór ze de formule invullen. Anders is het puur cijfermatig zonder begrip.
 - Onbekende termen ([[afschrijving]], [[agio]], [[disagio]], [[hefboomeffect]], [[FIFO]], [[LIFO]], [[NCW]], [[crediteuren]], [[voorzieningen]]) eerst kort uitleggen (2-3 zinnen) voor toepassing.`,
   },
+  anders: {
+    icon: 'i-question', en: 'a custom subject the student chose', key: 'other',
+    style: `Dit is een VRIJ vak: de leerling heeft zelf ingevuld welk vak/onderwerp het is (zie de naam van het vak hieronder en in het eerste bericht). Pas je aanpak slim aan op dat onderwerp.
+- Bepaal eerst zelf wat voor soort vak dit is: een exact vak (reken stap voor stap, laat de leerling elke stap zelf doen), een taal (oefen woordenschat, grammatica, vertaling), een begripsvak/zaakvak (werk met definities, oorzaak-gevolg, voorbeelden), of een praktisch/creatief vak.
+- Gebruik dezelfde Socratische werkwijze als bij de andere vakken: geef NOOIT meteen het antwoord, maar stel vragen en hints zodat de leerling het zelf oplost.
+- Bij berekeningen: schrijf de formule/aanpak op, laat de leerling de getallen invullen.
+- Bij teksten/talen: laat de leerling eerst zelf proberen, geef gerichte feedback.
+- Onbekende vaktermen die je tegenkomt: markeer ze als [[term]] en leg ze kort uit (2-3 zinnen) voor toepassing.
+- Wees eerlijk als je iets niet zeker weet over een heel specifiek of niche onderwerp, maar doe altijd je best met je algemene kennis.`,
+  },
 };
 
 const SYSTEM_PROMPT = (subject, name, languageName, subjectStyle, studentProfile, profileContext) => `You are Max — a small, friendly robot mascot, the soul of the "Huiswerk helper" app. You are tutoring a student named ${name}. Today's subject is ${subject}.
@@ -8778,6 +9422,8 @@ const state = {
   messages: [],
   apiKey: localStorage.getItem('claude_api_key') || null,
   name: localStorage.getItem('user_name') || null,
+  photo: localStorage.getItem('user_photo') || null,
+  customSubject: null,   // the name the student typed for the "anders" subject
   language: localStorage.getItem('user_language') || 'nl',
   learn: {
     active: false,         // true while in learn mode
@@ -8815,7 +9461,17 @@ const state = {
     catch { return {}; }
   })(),
   progress: (() => {
-    const def = { xp: 0, sessions: 0, streak: 0, lastDay: null, badges: [], counts: {} };
+    const def = {
+      xp: 0, sessions: 0, streak: 0, bestStreak: 0, lastDay: null,
+      badges: [], counts: {},
+      subjects: {},        // per subject: { sessions, xp, lastDay }
+      correct: 0,          // total correct answers across games/study
+      answered: 0,         // total questions answered
+      bestCombo: 0,        // best combo across games
+      timeMs: 0,           // rough total active time (ms)
+      firstDay: null,      // when the student started
+      days: {},            // 'YYYY-M-D' -> activity count (for "active days")
+    };
     try {
       const p = JSON.parse(localStorage.getItem('user_progress') || 'null');
       return p ? Object.assign(def, p) : def;
@@ -8940,14 +9596,16 @@ function applyLanguage() {
   document.querySelectorAll('[data-i18n-placeholder]').forEach(el => {
     el.placeholder = t(el.dataset.i18nPlaceholder);
   });
+  document.querySelectorAll('[data-i18n-aria]').forEach(el => {
+    el.setAttribute('aria-label', t(el.dataset.i18nAria));
+  });
 
   apiKeyExplain.innerHTML = t('api_explain_html');
 
   userGreeting.textContent = state.name ? `· ${t('greeting')}, ${state.name}` : '';
 
   if (state.subject) {
-    const key = SUBJECTS[state.subject].key;
-    chatHeaderTitle.textContent = `${t('subj_' + key)} ${t('tutor_suffix')}`;
+    chatHeaderTitle.textContent = `${subjectDisplayLabel(state.subject)} ${t('tutor_suffix')}`;
     // Also rebuild the subject hero (intro text) if we're on a subject page
     if (subjectView && !subjectView.classList.contains('hidden')) {
       buildSubjectIntro();
@@ -9095,11 +9753,20 @@ function setupProfileStep() {
   schoolLevelField.classList.add('hidden');
   gradeYearField.classList.add('hidden');
   gradeYearSelect.innerHTML = '<option value="">' + t('select_placeholder') + '</option>';
-  // Pre-fill from existing profile
+  // Pre-fill from existing profile.
+  // NOTE: selectEducation() wipes schoolLevel (reset-on-change), so remember the
+  // saved values first and restore them after, otherwise the pre-fill is lost.
   if (pendingProfile.educationLevel) {
+    const savedSchoolLevel = pendingProfile.schoolLevel;
+    const savedGradeYear = pendingProfile.gradeYear;
     selectEducation(pendingProfile.educationLevel);
-    if (pendingProfile.schoolLevel) selectSchoolLevel(pendingProfile.schoolLevel);
-    if (pendingProfile.gradeYear) gradeYearSelect.value = String(pendingProfile.gradeYear);
+    if (savedSchoolLevel) selectSchoolLevel(savedSchoolLevel);
+    if (savedGradeYear) {
+      pendingProfile.gradeYear = savedGradeYear;
+      // re-run options so the right year is marked selected, then sync the value
+      updateGradeYearOptions();
+      gradeYearSelect.value = String(savedGradeYear);
+    }
   }
 }
 
@@ -9204,6 +9871,7 @@ function openSettingsModal() {
   settingsGoodAt.value = about.goodAt || '';
   settingsHardAt.value = about.hardAt || '';
   settingsLikes.value = about.likes || '';
+  renderProfilePhotoPreview();
   buildProfileSummary();
   buildSkillsList();
   settingsModal.classList.add('active');
@@ -9211,6 +9879,67 @@ function openSettingsModal() {
 const settingsGoodAt = $('settingsGoodAt');
 const settingsHardAt = $('settingsHardAt');
 const settingsLikes = $('settingsLikes');
+
+// ----- Profile photo -----
+// Renders the avatar everywhere: the picker (with edit overlay), the home account card,
+// and the loading screen brand. Photo is a data-URL kept in localStorage.
+function avatarMarkup() {
+  if (state.photo) return `<img src="${state.photo}" alt="">`;
+  if (state.name) return `<span class="profile-initials">${escapeHtml(getInitials(state.name) || '🙂')}</span>`;
+  return (typeof ROBOT_SVG !== 'undefined' ? ROBOT_SVG : '🙂');
+}
+function renderProfilePhotoPreview() {
+  const inner = $('profilePhotoInner');
+  if (inner) inner.innerHTML = avatarMarkup();
+  const rm = $('profilePhotoRemove');
+  if (rm) rm.classList.toggle('hidden', !state.photo);
+}
+function applyAvatarToAccountCard() {
+  const av = $('accountAvatar');
+  if (av) { av.innerHTML = avatarMarkup(); av.dataset.filled = '1'; }
+}
+const profilePhotoBtn = $('profilePhotoBtn');
+const profilePhotoInput = $('profilePhotoInput');
+if (profilePhotoBtn) profilePhotoBtn.addEventListener('click', () => profilePhotoInput.click());
+if (profilePhotoInput) profilePhotoInput.addEventListener('change', e => {
+  const file = e.target.files && e.target.files[0];
+  e.target.value = '';
+  if (!file || !file.type.startsWith('image/')) return;
+  // Downscale to a small square so localStorage stays light
+  const reader = new FileReader();
+  reader.onload = ev => {
+    const img = new Image();
+    img.onload = () => {
+      const size = 256;
+      const canvas = document.createElement('canvas');
+      canvas.width = size; canvas.height = size;
+      const ctx = canvas.getContext('2d');
+      // cover-crop to a centered square
+      const s = Math.min(img.width, img.height);
+      const sx = (img.width - s) / 2, sy = (img.height - s) / 2;
+      ctx.drawImage(img, sx, sy, s, s, 0, 0, size, size);
+      try {
+        state.photo = canvas.toDataURL('image/jpeg', 0.82);
+        localStorage.setItem('user_photo', state.photo);
+      } catch (_) {
+        alert(t('err_photo') || 'Foto kon niet worden opgeslagen (te groot).');
+        return;
+      }
+      renderProfilePhotoPreview();
+      applyAvatarToAccountCard();
+      SFX && SFX.play && SFX.play('coin');
+    };
+    img.src = ev.target.result;
+  };
+  reader.readAsDataURL(file);
+});
+const profilePhotoRemove = $('profilePhotoRemove');
+if (profilePhotoRemove) profilePhotoRemove.addEventListener('click', () => {
+  state.photo = null;
+  localStorage.removeItem('user_photo');
+  renderProfilePhotoPreview();
+  applyAvatarToAccountCard();
+});
 
 // Sound toggle — applies instantly and plays a little confirmation blip when turned on
 const settingsSoundCheck = $('settingsSoundCheck');
@@ -9233,11 +9962,17 @@ $('showIntroBtn').addEventListener('click', () => {
   openIntro();
 });
 function closeSettingsModal() { settingsModal.classList.remove('active'); }
-$('settingsBtn').addEventListener('click', openSettingsModal);
-$('settingsCancelBtn').addEventListener('click', () => {
+// Cancel = revert any unsaved language change, then close.
+function cancelSettingsModal() {
   state.language = localStorage.getItem('user_language') || 'nl';
   applyLanguage();
   closeSettingsModal();
+}
+$('settingsBtn').addEventListener('click', openSettingsModal);
+$('settingsCancelBtn').addEventListener('click', cancelSettingsModal);
+// Tap outside the panel (on the dark overlay) to close — same as cancel.
+settingsModal.addEventListener('click', e => {
+  if (e.target === settingsModal) cancelSettingsModal();
 });
 $('settingsSaveBtn').addEventListener('click', () => {
   const name = settingsNameInput.value.trim();
@@ -9259,6 +9994,7 @@ $('settingsSaveBtn').addEventListener('click', () => {
   };
   localStorage.setItem('user_about', JSON.stringify(state.about));
   applyLanguage();
+  renderAccountCard();
   closeSettingsModal();
 });
 
@@ -9318,9 +10054,10 @@ chatMessages.addEventListener('click', e => {
 async function explainTerm(term) {
   if (!state.apiKey) throw new Error('no key');
   const subjMeta = SUBJECTS[state.subject];
+  const subjEn = (state.subject === 'anders' && state.customSubject) ? state.customSubject : subjMeta.en;
   const languageName = TRANSLATIONS[state.language].lang_name_en;
 
-  const sysPrompt = `You explain difficult terms to a high school student named ${state.name || 'the student'}. The subject is ${subjMeta.en}. Respond ONLY in ${languageName}.
+  const sysPrompt = `You explain difficult terms to a high school student named ${state.name || 'the student'}. The subject is ${subjEn}. Respond ONLY in ${languageName}.
 
 Rules:
 - Maximum 2 short sentences. Plain everyday words.
@@ -9370,11 +10107,19 @@ function resetSubjectWorkspace() {
   stepChat.classList.add('hidden');
 }
 
+// Display name for the active subject — uses the custom name for the "anders" subject.
+function subjectDisplayLabel(key) {
+  if (key === 'anders' && state.customSubject) return state.customSubject;
+  const meta = SUBJECTS[key];
+  return meta ? t('subj_' + meta.key) : key;
+}
+
 function buildSubjectIntro() {
   const meta = SUBJECTS[state.subject];
   if (!meta) return;
-  const subjName = t('subj_' + meta.key);
-  const topicsRaw = t('subj_' + meta.key + '_sub');
+  const isOther = state.subject === 'anders';
+  const subjName = subjectDisplayLabel(state.subject);
+  const topicsRaw = isOther ? subjName : t('subj_' + meta.key + '_sub');
   // Lowercase topics so the sentence flows ("ik help je met algebra, ...")
   const topics = topicsRaw.charAt(0).toLowerCase() + topicsRaw.slice(1);
 
@@ -9423,7 +10168,15 @@ function showHomeView() {
 }
 
 subjectCards.forEach(card => {
-  card.addEventListener('click', () => showSubjectView(card.dataset.subject));
+  card.addEventListener('click', () => {
+    const subj = card.dataset.subject;
+    if (subj === 'anders') {
+      const entered = prompt(t('other_prompt') || 'Welk vak wil je hulp bij? Typ het hier:');
+      if (!entered || !entered.trim()) return; // cancelled / empty → stay on home
+      state.customSubject = entered.trim().slice(0, 60);
+    }
+    showSubjectView(subj);
+  });
 });
 
 backToSubjectsBtn.addEventListener('click', showHomeView);
@@ -9636,7 +10389,7 @@ startBtn.addEventListener('click', async () => {
   const subjMeta = SUBJECTS[state.subject];
   chatHeaderAvatar.className = 'avatar ' + state.subject;
   chatHeaderAvatar.innerHTML = ROBOT_SVG;
-  chatHeaderTitle.textContent = `${t('subj_' + subjMeta.key)} ${t('tutor_suffix')}`;
+  chatHeaderTitle.textContent = `${subjectDisplayLabel(state.subject)} ${t('tutor_suffix')}`;
 
   stepChat.classList.remove('hidden');
   stepChat.scrollIntoView({ behavior: 'smooth', block: 'start' });
@@ -9924,14 +10677,34 @@ function touchStreak() {
 }
 
 // Central reward call. kind: 'game'|'lesson'|'study'|'flashcards'|'chat'. amount = XP.
-function awardXp(amount, kind) {
+function awardXp(amount, kind, opts = {}) {
   const p = state.progress;
   const before = levelFromXp(p.xp);
   const newDay = touchStreak();
-  p.xp = (p.xp || 0) + Math.max(0, Math.round(amount));
+  const gain = Math.max(0, Math.round(amount));
+  p.xp = (p.xp || 0) + gain;
   p.sessions = (p.sessions || 0) + 1;
   p.counts = p.counts || {};
   if (kind) p.counts[kind] = (p.counts[kind] || 0) + 1;
+  // First-ever activity timestamp
+  if (!p.firstDay) p.firstDay = Date.now();
+  // Active-days heatmap-ish counter
+  const today = new Date();
+  const dKey = today.getFullYear() + '-' + (today.getMonth()+1) + '-' + today.getDate();
+  p.days = p.days || {};
+  p.days[dKey] = (p.days[dKey] || 0) + 1;
+  // Per-subject stats (subject passed explicitly, else the active one)
+  const subj = opts.subject || state.subject;
+  if (subj) {
+    p.subjects = p.subjects || {};
+    const s = p.subjects[subj] || { sessions: 0, xp: 0, lastDay: null };
+    s.sessions += 1; s.xp += gain; s.lastDay = Date.now();
+    p.subjects[subj] = s;
+  }
+  // Accuracy + combo rollups
+  if (typeof opts.correct === 'number') p.correct = (p.correct || 0) + opts.correct;
+  if (typeof opts.answered === 'number') p.answered = (p.answered || 0) + opts.answered;
+  if (typeof opts.combo === 'number') p.bestCombo = Math.max(p.bestCombo || 0, opts.combo);
   const after = levelFromXp(p.xp);
   // Check for newly unlocked badges
   const newBadges = [];
@@ -9940,27 +10713,49 @@ function awardXp(amount, kind) {
   }
   saveProgress();
   renderAccountCard();
-  // Celebrate: level-up takes priority, then badges, then a small XP nudge
+  // Every newly unlocked achievement gets its own PlayStation-style trophy popup (top-left).
+  newBadges.forEach(b => queueTrophy(b));
+  // Bottom toast: level-up takes priority, then streak milestone, then a small XP nudge.
+  // (Badges are handled by the trophy popups above, so they're skipped here.)
+  const streakMilestone = newDay && [7, 14, 30, 50, 100].includes(p.streak);
   if (after > before) {
     showRewardToast('🎉', (t('reward_levelup') || 'Level {n}!').replace('{n}', after), levelTitle(after));
     SFX && SFX.play && SFX.play('record');
-  } else if (newBadges.length) {
-    const b = newBadges[0];
-    showRewardToast(b.icon, t('reward_badge') || 'Nieuwe badge!', t('badge_' + b.id + '_name') || '');
+  } else if (streakMilestone) {
+    showRewardToast('🔥', (t('reward_streak') || '{n} dagen op rij!').replace('{n}', p.streak), t('reward_streak_sub') || 'Je bent on fire.');
     SFX && SFX.play && SFX.play('levelup');
-  } else if (amount >= 1) {
+  } else if (newBadges.length === 0 && amount >= 1) {
     showRewardToast('⭐', '+' + Math.round(amount) + ' XP', newDay ? (t('reward_newday') || 'Welkom terug!') : '');
   }
-  // Queue any extra badge toasts after the first
-  if (newBadges.length > 1) {
-    let i = 1;
-    const showNext = () => {
-      if (i >= newBadges.length) return;
-      const b = newBadges[i++];
-      setTimeout(() => { showRewardToast(b.icon, t('reward_badge') || 'Nieuwe badge!', t('badge_' + b.id + '_name') || ''); showNext(); }, 2600);
-    };
-    showNext();
-  }
+}
+
+// ----- Trophy popup queue (PlayStation-style, top-left) -----
+const trophyQueue = [];
+let trophyActive = false;
+function queueTrophy(badge) {
+  trophyQueue.push(badge);
+  if (!trophyActive) showNextTrophy();
+}
+function showNextTrophy() {
+  const badge = trophyQueue.shift();
+  if (!badge) { trophyActive = false; return; }
+  trophyActive = true;
+  const toast = $('trophyToast');
+  if (!toast) { trophyActive = false; return; }
+  $('trophyToastBadge').textContent = badge.icon || '🏅';
+  $('trophyToastLabel').textContent = t('trophy_unlocked') || 'Trofee ontgrendeld';
+  $('trophyToastName').textContent = t('badge_' + badge.id + '_name') || badge.id;
+  $('trophyToastDesc').textContent = t('badge_' + badge.id + '_desc') || '';
+  // re-trigger the slide-in animation
+  toast.classList.remove('show');
+  void toast.offsetWidth;
+  toast.classList.add('show');
+  SFX && SFX.play && SFX.play('record');
+  // show ~4s, then slide out, then next in queue
+  setTimeout(() => {
+    toast.classList.remove('show');
+    setTimeout(showNextTrophy, 550);
+  }, 4000);
 }
 
 let rewardToastTimer = null;
@@ -9987,9 +10782,9 @@ function renderAccountCard() {
   const into = p.xp - curBase;
   const span = Math.max(1, nextBase - curBase);
   const pct = Math.min(100, Math.round((into / span) * 100));
-  // Avatar = robot
+  // Avatar = uploaded photo, else initials, else robot
   const av = $('accountAvatar');
-  if (av && !av.dataset.filled) { av.innerHTML = (typeof ROBOT_SVG !== 'undefined' ? ROBOT_SVG : '🤖'); av.dataset.filled = '1'; }
+  if (av) av.innerHTML = avatarMarkup();
   $('accountName').textContent = state.name;
   $('accountLevel').textContent = lvl;
   $('accountTitle').textContent = levelTitle(lvl);
@@ -10018,6 +10813,106 @@ function renderAchievements() {
     el.querySelector('.ach-desc').textContent = t('badge_' + b.id + '_desc') || '';
     grid.appendChild(el);
   }
+}
+
+// ----- Statistics screen -----
+function subjectDisplayName(key) {
+  // The subject tiles use data-i18n="subj_<key>" via SUBJECTS[key].key
+  const meta = SUBJECTS[key];
+  if (!meta) return key;
+  return t('subj_' + meta.key) || meta.en || key;
+}
+function renderStats() {
+  const body = $('statsBody');
+  if (!body) return;
+  const p = state.progress;
+  const lvl = levelFromXp(p.xp);
+  const acc = p.answered ? Math.round((p.correct / p.answered) * 100) : null;
+  const activeDays = p.days ? Object.keys(p.days).length : 0;
+  const esc = (typeof escapeHtml === 'function') ? escapeHtml : (s => s);
+
+  // --- Hero tiles ---
+  let html = '<div class="stats-hero">';
+  const tiles = [
+    ['⭐', p.xp || 0, t('acc_total_xp') || 'totaal XP'],
+    ['🎚️', lvl, t('acc_level') || 'Level'],
+    ['🔥', p.streak || 0, t('stats_streak_days') || 'dag-streak'],
+    ['📅', activeDays, t('stats_active_days') || 'actieve dagen'],
+  ];
+  for (const [ic, num, lab] of tiles) {
+    html += `<div class="stats-tile"><div class="stats-tile-icon">${ic}</div><div class="stats-tile-num">${num}</div><div class="stats-tile-label">${esc(lab)}</div></div>`;
+  }
+  html += '</div>';
+
+  // --- Fun insights ---
+  html += `<div class="stats-section-title">${esc(t('stats_insights') || 'Inzichten')}</div>`;
+  // Favourite subject = most sessions; least practised = a known subject with the fewest (or none)
+  const subjEntries = Object.entries(p.subjects || {});
+  let favSubj = null, leastSubj = null;
+  if (subjEntries.length) {
+    favSubj = subjEntries.slice().sort((a,b) => (b[1].sessions||0) - (a[1].sessions||0))[0];
+    leastSubj = subjEntries.slice().sort((a,b) => (a[1].sessions||0) - (b[1].sessions||0))[0];
+  }
+  const insights = [];
+  // Favourite (from data) OR from the "about you" likes
+  if (favSubj) {
+    insights.push(['💜', t('stats_fav_subject') || 'Favoriete vak', subjectDisplayName(favSubj[0]) + ` · ${favSubj[1].sessions}×`]);
+  }
+  if (subjEntries.length > 1 && leastSubj && leastSubj[0] !== (favSubj && favSubj[0])) {
+    insights.push(['🪴', t('stats_least_subject') || 'Verdient aandacht', subjectDisplayName(leastSubj[0]) + ` · ${leastSubj[1].sessions}×`]);
+  }
+  if (acc != null) insights.push(['🎯', t('stats_accuracy') || 'Gemiddelde score', acc + '%']);
+  if (p.bestCombo) insights.push(['⚡', t('stats_best_combo') || 'Beste combo', '×' + p.bestCombo]);
+  // From the "about you" profile
+  const about = state.about || {};
+  if (about.likes && about.likes.trim()) insights.push(['😎', t('stats_likes') || 'Vindt leuk', about.likes.trim()]);
+  if (about.hardAt && about.hardAt.trim()) insights.push(['💪', t('stats_works_on') || 'Werkt aan', about.hardAt.trim()]);
+  if (about.goodAt && about.goodAt.trim()) insights.push(['🌟', t('stats_strong') || 'Sterk in', about.goodAt.trim()]);
+
+  if (insights.length) {
+    for (const [emoji, label, value] of insights) {
+      html += `<div class="stats-insight"><div class="stats-insight-emoji">${emoji}</div><div class="stats-insight-body"><div class="stats-insight-label">${esc(label)}</div><div class="stats-insight-value">${esc(value)}</div></div></div>`;
+    }
+  } else {
+    html += `<div class="stats-empty">${esc(t('stats_none') || 'Begin met leren om je statistieken te vullen!')}</div>`;
+  }
+
+  // --- Per-subject XP bars ---
+  html += `<div class="stats-section-title">${esc(t('stats_per_subject') || 'Per vak')}</div>`;
+  if (subjEntries.length) {
+    const maxXp = Math.max(...subjEntries.map(e => e[1].xp || 0), 1);
+    const sorted = subjEntries.slice().sort((a,b) => (b[1].xp||0) - (a[1].xp||0));
+    for (const [key, s] of sorted) {
+      const meta = SUBJECTS[key];
+      const iconRef = meta ? meta.icon : 'i-book';
+      const pct = Math.round(((s.xp||0) / maxXp) * 100);
+      html += `<div class="stats-subject-row">
+        <div class="stats-subject-icon"><svg class="icon"><use href="#${iconRef}"/></svg></div>
+        <div class="stats-subject-main">
+          <div class="stats-subject-top"><span class="stats-subject-name">${esc(subjectDisplayName(key))}</span><span class="stats-subject-xp">${s.xp||0} XP · ${s.sessions||0}×</span></div>
+          <div class="stats-subject-bar"><div class="stats-subject-fill" style="width:${pct}%"></div></div>
+        </div>
+      </div>`;
+    }
+  } else {
+    html += `<div class="stats-empty">${esc(t('stats_no_subjects') || 'Nog geen vak geoefend. Kies een vak om te beginnen!')}</div>`;
+  }
+
+  // --- Activity split ---
+  html += `<div class="stats-section-title">${esc(t('stats_activities') || 'Activiteiten')}</div>`;
+  const c = p.counts || {};
+  html += '<div class="stats-activity">';
+  const acts = [
+    ['🎮', c.game || 0, t('stats_games') || 'spelletjes'],
+    ['🎓', c.lesson || 0, t('stats_lessons') || 'lessen'],
+    ['📚', c.study || 0, t('stats_study') || 'studeer'],
+  ];
+  for (const [ic, num, lab] of acts) {
+    html += `<div class="stats-act"><div class="stats-act-emoji">${ic}</div><div class="stats-act-num">${num}</div><div class="stats-act-label">${esc(lab)}</div></div>`;
+  }
+  html += '</div>';
+
+  body.innerHTML = html;
 }
 
 // Render LaTeX math ($...$ and $$...$$) inside a DOM element using KaTeX
@@ -10241,8 +11136,12 @@ async function callClaude() {
       );
     } else {
       const subjMeta = SUBJECTS[state.subject];
+      // For the custom "anders" subject, pass the name the student typed.
+      const subjLabel = (state.subject === 'anders' && state.customSubject)
+        ? state.customSubject
+        : subjMeta.en;
       systemPrompt = SYSTEM_PROMPT(
-        subjMeta.en, state.name || 'the student', languageName,
+        subjLabel, state.name || 'the student', languageName,
         subjMeta.style, studentProfileText(), profileContextText()
       );
     }
@@ -11029,7 +11928,7 @@ function endTijdrace() {
   }
   tijdraceStage.classList.add('hidden');
   tijdraceSummary.classList.remove('hidden');
-  awardXp(15 + Math.min(50, tijdraceState.score * 3), 'game');
+  awardXp(15 + Math.min(50, tijdraceState.score * 3), 'game', { correct: tijdraceState.score, answered: tijdraceState.score });
 }
 
 function closeTijdrace() {
@@ -11392,7 +12291,7 @@ function endWordRain() {
     wordrainOldRecord.textContent = '';
   }
   wordrainSummary.classList.remove('hidden');
-  awardXp(15 + Math.min(50, wordrainState.score * 3), 'game');
+  awardXp(15 + Math.min(50, wordrainState.score * 3), 'game', { correct: wordrainState.score, answered: wordrainState.score, combo: wordrainState.bestCombo });
 }
 
 wordrainCloseBtn.addEventListener('click', closeWordRain);
@@ -12115,8 +13014,18 @@ function renderLessonStep(les, opts = {}) {
     while (state.classroom.reveal.idx < queue.length) {
       appendLessonChunk(queue[state.classroom.reveal.idx++]);
     }
-    if (opts.liveControls) finishStepReveal(les);   // returning to the newest slide
-    else setLessonControls('history');              // viewing a past slide
+    if (opts.liveControls && !les.resolved) {
+      // Returning to the newest, not-yet-answered slide → restore its real controls.
+      finishStepReveal(les);
+    } else if (opts.liveControls) {
+      // Newest slide but already answered/passed → just show normal navigation,
+      // never re-trigger a quiz or check the student already completed.
+      const isLast = state.classroom.total > 0 && state.classroom.step >= state.classroom.total;
+      state.classroom.atLast = isLast;
+      setLessonControls(isLast ? 'finish' : 'next');
+    } else {
+      setLessonControls('history');                 // viewing a past slide
+    }
   } else {
     // Reveal the first chunk straight away so the board isn't blank while Max talks.
     revealNextChunk();
@@ -12220,7 +13129,8 @@ function renderBoardQuiz(les) {
 }
 
 function answerBoardQuiz(btn, opt, les) {
-  if (state.classroom.busy) return;
+  if (state.classroom.busy || les.resolved) return;
+  les.resolved = true; // never let this quiz be answered twice (e.g. after going back)
   // Lock all buttons + reveal correctness
   const allBtns = boardQuiz.querySelectorAll('.board-quiz-btn');
   allBtns.forEach(b => b.disabled = true);
@@ -12292,6 +13202,13 @@ function sendLessonUserTurn(text) {
   requestNextLessonStep();
 }
 
+// Mark the slide currently on screen as resolved so going back won't re-trigger
+// its quiz/check, and the AI conversation history stays consistent.
+function markCurrentSlideResolved() {
+  const h = state.classroom.history;
+  if (h && h.length) { const cur = h[h.length - 1]; if (cur) cur.resolved = true; }
+}
+
 crtNextBtn.addEventListener('click', () => {
   if (state.classroom.busy) return;
   // Mid-step: reveal the next line/drawing instead of advancing.
@@ -12309,6 +13226,7 @@ crtNextBtn.addEventListener('click', () => {
     finishLesson();
     return;
   }
+  markCurrentSlideResolved();
   SFX.play('swap');
   sendLessonUserTurn('Ga door naar de volgende stap.');
 });
@@ -12318,11 +13236,13 @@ crtBackBtn.addEventListener('click', () => {
 });
 crtYesBtn.addEventListener('click', () => {
   if (state.classroom.busy) return;
+  markCurrentSlideResolved();
   SFX.play('correct');
   sendLessonUserTurn('Ja, ik snap het! Ga door naar de volgende stap.');
 });
 crtNoBtn.addEventListener('click', () => {
   if (state.classroom.busy) return;
+  markCurrentSlideResolved();
   SFX.play('tap');
   sendLessonUserTurn('Nog niet helemaal. Kun je deze stap nog een keer uitleggen, maar dan simpeler en met een ander voorbeeld?');
 });
@@ -12336,6 +13256,11 @@ function submitClassroomQuestion() {
   if (!q || state.classroom.busy) return;
   classroomAskInput.value = '';
   classroomAskRow.classList.add('hidden');
+  // If the student was browsing an earlier slide, snap history back to the newest
+  // one so the new answer is appended at the end, keeping the timeline consistent.
+  if (state.classroom.history && state.classroom.history.length) {
+    state.classroom.histIdx = state.classroom.history.length - 1;
+  }
   SFX.play('tap');
   sendLessonUserTurn(`Ik heb een vraag: ${q}`);
 }
@@ -12346,6 +13271,13 @@ classroomAskInput.addEventListener('keydown', e => {
 
 function finishLesson() {
   SFX.play('win');
+  // Max celebrates — both-arms-up pose (brand 'celebrate' recipe)
+  if (classroomTeacher) {
+    classroomTeacher.classList.remove('celebrate');
+    void classroomTeacher.offsetWidth;
+    classroomTeacher.classList.add('celebrate');
+    setTimeout(() => classroomTeacher.classList.remove('celebrate'), 800);
+  }
   classroomDoneText.textContent = (t('crt_done_sub') || 'Goed gewerkt! Je hebt de hele uitleg doorlopen.');
   classroomDone.classList.add('active');
   // Lessons are the most valuable activity → biggest XP reward
@@ -12753,7 +13685,7 @@ function showStudyDone() {
     ? Math.round((study.totalCorrect / study.totalAttempts) * 100)
     : 0;
   // Mastering a whole deck → solid XP, scaled a bit by accuracy
-  awardXp(40 + Math.round(accPct / 5), 'study');
+  awardXp(40 + Math.round(accPct / 5), 'study', { correct: study.totalCorrect, answered: study.totalAttempts });
   studyStage.innerHTML = '';
   const done = document.createElement('div');
   done.className = 'study-done';
@@ -13457,7 +14389,7 @@ function endMaxRunner() {
   }
   runnerSummary.classList.remove('hidden');
   // XP: base for playing + a bonus scaled by score
-  awardXp(15 + Math.min(60, Math.round(runner.score / 5)), 'game');
+  awardXp(15 + Math.min(60, Math.round(runner.score / 5)), 'game', { combo: runner.bestCombo });
 }
 
 // ----- Input -----
@@ -13662,9 +14594,14 @@ document.addEventListener('keydown', e => {
   }
 });
 
-// ============ Help modal ============
+// ============ Help modal (guide + Ask-Max chat) ============
 const helpModal = $('helpModal');
 const helpBody = $('helpBody');
+const helpAsk = $('helpAsk');
+const helpAskLog = $('helpAskLog');
+const helpAskInput = $('helpAskInput');
+const helpAskSend = $('helpAskSend');
+const helpAskSuggest = $('helpAskSuggest');
 
 function buildHelpBody() {
   // Build the explainer with a live demo of a clickable term
@@ -13672,8 +14609,120 @@ function buildHelpBody() {
   helpBody.innerHTML = html;
 }
 
+function setHelpTab(tab) {
+  document.querySelectorAll('.help-tab').forEach(b => b.classList.toggle('active', b.dataset.helpTab === tab));
+  const ask = tab === 'ask';
+  helpBody.classList.toggle('hidden', ask);
+  helpAsk.classList.toggle('hidden', !ask);
+  if (ask) {
+    if (!helpAskLog.dataset.init) { renderHelpAskWelcome(); helpAskLog.dataset.init = '1'; }
+    setTimeout(() => helpAskInput.focus(), 50);
+  }
+}
+document.querySelectorAll('.help-tab').forEach(b => {
+  b.addEventListener('click', () => setHelpTab(b.dataset.helpTab));
+});
+
+function renderHelpAskWelcome() {
+  helpAskLog.innerHTML = `<div class="help-ask-empty">${escapeHtml(t('help_ask_welcome') || 'Stel een vraag over de app — bijv. "Wat is de klas-modus?" of "Hoe verdien ik badges?"')}</div>`;
+  // suggestion chips
+  helpAskSuggest.innerHTML = '';
+  const sugg = t('help_ask_suggestions');
+  (Array.isArray(sugg) ? sugg : []).forEach(q => {
+    const chip = document.createElement('button');
+    chip.type = 'button';
+    chip.className = 'help-ask-chip';
+    chip.textContent = q;
+    chip.addEventListener('click', () => { helpAskInput.value = q; submitHelpAsk(); });
+    helpAskSuggest.appendChild(chip);
+  });
+}
+
+function addHelpAskMsg(text, who) {
+  // drop the empty placeholder on first real message
+  const empty = helpAskLog.querySelector('.help-ask-empty');
+  if (empty) empty.remove();
+  const el = document.createElement('div');
+  el.className = 'help-ask-msg ' + who;
+  if (who === 'bot') el.innerHTML = text; else el.textContent = text;
+  helpAskLog.appendChild(el);
+  helpAskLog.scrollTop = helpAskLog.scrollHeight;
+  return el;
+}
+
+// Knowledge base passed to the AI so it answers accurately about THIS app.
+function appHelpContext() {
+  return `You are Max, the friendly mascot of the "Huiswerk helper" study app. A student is asking a question about HOW THE APP WORKS (not a homework question). Answer warmly, briefly and clearly in ${TRANSLATIONS[state.language].lang_name_en}. Use simple language. You may use short **bold** highlights. If they ask something unrelated to the app, gently steer back, but still be helpful.
+
+WHAT THE APP CAN DO (use this to answer accurately):
+- HOMEWORK HELP per subject: pick a subject on the home screen, take/upload a photo of your assignment, and Max guides you SOCRATICALLY — he never just gives the answer, he asks questions and hints so you learn it yourself. Each subject (maths, physics, chemistry, biology, Dutch, English, French, German, Spanish, Latin, Greek, history, geography, economics, business) has its own tailored approach.
+- CLICKABLE TERMS: difficult terms in Max's replies are highlighted; tap them for a short popup explanation.
+- LEARN MODE ("Leermodus"): upload photos of vocab/terms/formulas (or pick "something else"); Max quizzes you with multiple choice, typing, flashcards or games.
+- STUDY ("Studeer"): an adaptive Quizlet-Learn-style mode that drills a deck until you've mastered every card (new → learning → familiar → mastered), with smart repetition and typo-tolerant answers.
+- CLASSROOM ("Klas"): a live lesson where Teacher Max explains a topic step by step on a blackboard with drawings, asks you quiz questions, lets you ask your own questions, and checks if you understand. You can go back to previous slides.
+- GAMES (from any saved deck): MaxRunner (3-lane endless runner), WoordRain (catch falling translations), Match (pair matching), Tijdrace (60-second quiz). They give XP and sound effects.
+- LIBRARY: every deck you make is saved with a preview so you can replay it later in any game or study mode.
+- PROGRESS: you earn XP and levels, a daily streak 🔥, and badges. The home account card shows your level, streak and stats. "Statistieken" shows per-subject XP, your favourite/weakest subject, accuracy and best combo. "Prestaties" shows all badges.
+- PROFILE: tap "Profiel" top-right to set your name, profile photo, language (5 languages), education level, sound on/off, and an "about you" (what you're good at, find hard, and enjoy) — Max uses this to tailor explanations and examples.
+- Everything is saved in your own browser. The app needs a Claude API key (entered once) to work.`;
+}
+
+let helpAskBusy = false;
+async function submitHelpAsk() {
+  const q = helpAskInput.value.trim();
+  if (!q || helpAskBusy) return;
+  if (!state.apiKey) { addHelpAskMsg(escapeHtml(t('help_ask_nokey') || 'Stel eerst je API key in via Profiel.'), 'bot'); return; }
+  helpAskInput.value = '';
+  helpAskSuggest.innerHTML = '';
+  addHelpAskMsg(q, 'user');
+  helpAskBusy = true;
+  helpAskSend.disabled = true;
+  const thinking = addHelpAskMsg(
+    '<span class="help-think">' +
+      '<span class="help-think-bot"><svg class="robot"><use href="#i-robot-thinking"/></svg></span>' +
+      '<span class="help-think-text">' + escapeHtml(t('help_ask_thinking') || 'Max denkt na') +
+        '<span class="help-think-dots"><i></i><i></i><i></i></span>' +
+      '</span>' +
+    '</span>', 'bot');
+  thinking.classList.add('is-thinking');
+  try {
+    const resp = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {
+        'content-type': 'application/json',
+        'x-api-key': state.apiKey,
+        'anthropic-version': '2023-06-01',
+        'anthropic-dangerous-direct-browser-access': 'true',
+      },
+      body: JSON.stringify({
+        model: 'claude-haiku-4-5',
+        max_tokens: 500,
+        system: appHelpContext(),
+        messages: [{ role: 'user', content: q }],
+      }),
+    });
+    if (!resp.ok) throw new Error('API ' + resp.status);
+    const data = await resp.json();
+    const reply = (data.content || []).filter(b => b.type === 'text').map(b => b.text).join('\n').trim();
+    // simple markdown: **bold** + newlines
+    const safe = escapeHtml(reply).replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>').replace(/\n/g, '<br>');
+    thinking.classList.remove('is-thinking');
+    thinking.innerHTML = safe || escapeHtml(t('help_ask_error') || 'Sorry, ik kon geen antwoord geven.');
+  } catch (err) {
+    thinking.classList.remove('is-thinking');
+    thinking.innerHTML = escapeHtml(t('help_ask_error') || 'Sorry, er ging iets mis. Probeer het nog eens.');
+  } finally {
+    helpAskBusy = false;
+    helpAskSend.disabled = false;
+    helpAskLog.scrollTop = helpAskLog.scrollHeight;
+  }
+}
+helpAskSend.addEventListener('click', submitHelpAsk);
+helpAskInput.addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); submitHelpAsk(); } });
+
 function openHelpModal() {
   buildHelpBody();
+  setHelpTab('guide');
   helpModal.classList.add('active');
 }
 function closeHelpModal() { helpModal.classList.remove('active'); }
@@ -13692,6 +14741,14 @@ $('accountAchBtn').addEventListener('click', openAchModal);
 $('achCloseBtn').addEventListener('click', closeAchModal);
 achModal.addEventListener('click', e => { if (e.target === achModal) closeAchModal(); });
 
+// Statistics modal
+const statsModal = $('statsModal');
+function openStatsModal() { renderStats(); statsModal.classList.add('active'); }
+function closeStatsModal() { statsModal.classList.remove('active'); }
+$('accountStatsBtn').addEventListener('click', openStatsModal);
+$('statsCloseBtn').addEventListener('click', closeStatsModal);
+statsModal.addEventListener('click', e => { if (e.target === statsModal) closeStatsModal(); });
+
 applyLanguage();
 renderLibrary();
 renderAccountCard();
@@ -13703,6 +14760,172 @@ if (!hasSeenIntro) {
 } else if (!state.apiKey) {
   openApiKeyModal();
 }
+</script>
+
+<!-- ===== p5.js animated loading screen ===== -->
+<script>
+(function () {
+  const screenEl = document.getElementById('loadingScreen');
+  if (!screenEl || typeof p5 === 'undefined') {
+    // No p5 available — just hide the loader after a beat so nothing blocks the app.
+    if (screenEl) setTimeout(() => screenEl.classList.add('hidden-fade'), 400);
+    return;
+  }
+
+  const reduceMotion = window.matchMedia &&
+    window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  const sketch = (p) => {
+    let particles = [];
+    let stars = [];
+    let t = 0;
+    let cx, cy;
+    const COL_A = [167, 139, 250]; // purple
+    const COL_B = [244, 114, 182]; // pink
+    const COL_C = [125, 211, 252]; // cyan
+
+    function lerpCol(a, b, m) {
+      return [a[0]+(b[0]-a[0])*m, a[1]+(b[1]-a[1])*m, a[2]+(b[2]-a[2])*m];
+    }
+
+    function spawnParticle() {
+      // start far out on a ring, drift inward through the flow field
+      const ang = p.random(p.TWO_PI);
+      const rad = p.max(p.width, p.height) * p.random(0.45, 0.7);
+      return {
+        x: cx + Math.cos(ang) * rad,
+        y: cy + Math.sin(ang) * rad,
+        vx: 0, vy: 0,
+        life: 0,
+        maxLife: p.random(180, 360),
+        sz: p.random(1.5, 3.8),
+        mix: p.random(),
+      };
+    }
+
+    p.setup = function () {
+      const c = p.createCanvas(window.innerWidth, window.innerHeight);
+      c.id('loadingCanvas');
+      c.parent(screenEl);
+      cx = p.width / 2; cy = p.height / 2;
+      p.pixelDensity(Math.min(2, window.devicePixelRatio || 1));
+      const count = reduceMotion ? 60 : Math.min(220, Math.floor(p.width * p.height / 7000));
+      for (let i = 0; i < count; i++) {
+        const pt = spawnParticle();
+        pt.life = p.random(pt.maxLife);
+        particles.push(pt);
+      }
+      // background stars
+      for (let i = 0; i < 70; i++) {
+        stars.push({ x: p.random(p.width), y: p.random(p.height), r: p.random(0.4, 1.6), tw: p.random(p.TWO_PI) });
+      }
+    };
+
+    p.windowResized = function () {
+      p.resizeCanvas(window.innerWidth, window.innerHeight);
+      cx = p.width / 2; cy = p.height / 2;
+    };
+
+    // flow field angle from position + time (curl-ish noise)
+    function fieldAngle(x, y) {
+      const s = 0.0016;
+      return p.noise(x * s, y * s, t * 0.0006) * p.TWO_PI * 2;
+    }
+
+    p.draw = function () {
+      t++;
+      // soft trailing fade instead of hard clear → silky motion trails
+      p.noStroke();
+      p.fill(8, 8, 18, reduceMotion ? 255 : 38);
+      p.rect(0, 0, p.width, p.height);
+
+      // twinkling stars
+      p.noStroke();
+      for (const st of stars) {
+        const a = 120 + Math.sin(t * 0.03 + st.tw) * 90;
+        p.fill(230, 230, 255, Math.max(0, a) * 0.5);
+        p.circle(st.x, st.y, st.r * 2);
+      }
+
+      // central glow "Max" orb — pulsing
+      const pulse = 1 + Math.sin(t * 0.05) * 0.06;
+      const orbR = Math.min(p.width, p.height) * 0.085 * pulse;
+      for (let i = 6; i >= 1; i--) {
+        const rr = orbR * (i / 1.4);
+        const m = i / 6;
+        const col = lerpCol(COL_B, COL_A, m);
+        p.fill(col[0], col[1], col[2], 16 * (1 - m) + 6);
+        p.circle(cx, cy, rr * 2);
+      }
+      // bright core
+      p.fill(255, 255, 255, 230);
+      p.circle(cx, cy, orbR * 0.7);
+      p.fill(COL_A[0], COL_A[1], COL_A[2], 120);
+      p.circle(cx, cy, orbR * 1.1);
+
+      // particles drift through the field toward the orb
+      for (const pt of particles) {
+        const ang = fieldAngle(pt.x, pt.y);
+        // flow force
+        let fx = Math.cos(ang) * 0.18;
+        let fy = Math.sin(ang) * 0.18;
+        // gentle pull toward centre
+        const dx = cx - pt.x, dy = cy - pt.y;
+        const d = Math.sqrt(dx*dx + dy*dy) + 0.001;
+        fx += (dx / d) * 0.22;
+        fy += (dy / d) * 0.22;
+        pt.vx = pt.vx * 0.94 + fx;
+        pt.vy = pt.vy * 0.94 + fy;
+        const prevX = pt.x, prevY = pt.y;
+        pt.x += pt.vx; pt.y += pt.vy;
+        pt.life++;
+
+        const lifeM = pt.life / pt.maxLife;
+        const fade = Math.sin(lifeM * Math.PI); // fade in + out
+        const col = lerpCol(lerpCol(COL_A, COL_B, pt.mix), COL_C, Math.max(0, Math.sin(t*0.01+pt.mix*6))*0.4);
+        p.stroke(col[0], col[1], col[2], 200 * fade);
+        p.strokeWeight(pt.sz);
+        p.line(prevX, prevY, pt.x, pt.y);
+
+        // respawn when consumed by the orb or expired
+        if (d < orbR * 0.8 || pt.life > pt.maxLife) {
+          Object.assign(pt, spawnParticle());
+        }
+      }
+
+      // orbiting dots around the orb (like electrons / sparkles)
+      if (!reduceMotion) {
+        p.noStroke();
+        for (let i = 0; i < 3; i++) {
+          const a = t * 0.02 + i * (p.TWO_PI / 3);
+          const ox = cx + Math.cos(a) * orbR * 2.1;
+          const oy = cy + Math.sin(a) * orbR * 2.1 * 0.6;
+          p.fill(COL_B[0], COL_B[1], COL_B[2], 220);
+          p.circle(ox, oy, 6);
+        }
+      }
+    };
+  };
+
+  const instance = new p5(sketch);
+
+  // Hide the loader once the page (incl. fonts/CDNs) has loaded — with a min display time
+  // so the animation is actually seen, and a hard fallback so it never gets stuck.
+  const start = performance.now();
+  const MIN_MS = 1400;
+  function dismiss() {
+    const wait = Math.max(0, MIN_MS - (performance.now() - start));
+    setTimeout(() => {
+      screenEl.classList.add('hidden-fade');
+      // free the p5 loop after the fade completes
+      setTimeout(() => { try { instance.remove(); } catch (_) {} }, 700);
+    }, wait);
+  }
+  if (document.readyState === 'complete') dismiss();
+  else window.addEventListener('load', dismiss);
+  // Safety net: never block the app for more than 6s
+  setTimeout(() => screenEl.classList.add('hidden-fade'), 6000);
+})();
 </script>
 
 </body>
