@@ -7319,6 +7319,13 @@
       </label>
     </div>
     <div class="form-field">
+      <label class="sound-toggle-row">
+        <span class="form-field-label" style="margin:0;" data-i18n="label_economy">Voordelige modus (bespaart API-kosten)</span>
+        <input type="checkbox" id="settingsEconomyCheck" checked>
+      </label>
+      <span class="form-field-hint" data-i18n="economy_hint">Gebruikt een sneller, goedkoper AI-model en verkleint je foto's automatisch. Zet uit voor de allerbeste kwaliteit (duurder).</span>
+    </div>
+    <div class="form-field">
       <label class="form-field-label" data-i18n="label_api_key">API key</label>
       <input type="password" id="settingsKeyInput" placeholder="sk-ant-…" autocomplete="off" spellcheck="false" autocapitalize="off">
       <span class="form-field-hint" data-i18n="api_key_hint">Blijft in je eigen browser. Wordt nergens anders opgeslagen.</span>
@@ -7513,6 +7520,8 @@ const TRANSLATIONS = {
     welcome_intro: 'Vul je naam in en kies je taal, dan kunnen we beginnen.',
     label_language: 'Taal',
     label_sound: 'Geluidseffecten in spelletjes',
+    label_economy: 'Voordelige modus (bespaart API-kosten)',
+    economy_hint: "Gebruikt een sneller, goedkoper AI-model en verkleint je foto's automatisch. Zet uit voor de allerbeste kwaliteit (duurder).",
     label_name: 'Je naam',
     label_api_key: 'API key',
     placeholder_name: 'Bijv. Lisa',
@@ -7964,6 +7973,8 @@ const TRANSLATIONS = {
     welcome_intro: 'Enter your name and pick your language to get started.',
     label_language: 'Language',
     label_sound: 'Sound effects in games',
+    label_economy: 'Economy mode (saves API costs)',
+    economy_hint: 'Uses a faster, cheaper AI model and shrinks your photos automatically. Turn off for the very best quality (pricier).',
     label_name: 'Your name',
     label_api_key: 'API key',
     placeholder_name: 'e.g. Alex',
@@ -8385,6 +8396,8 @@ const TRANSLATIONS = {
     welcome_intro: "Gib deinen Namen ein und wähle deine Sprache, dann kann's losgehen.",
     label_language: 'Sprache',
     label_sound: 'Soundeffekte in Spielen',
+    label_economy: 'Sparmodus (senkt API-Kosten)',
+    economy_hint: 'Nutzt ein schnelleres, günstigeres KI-Modell und verkleinert deine Fotos automatisch. Für beste Qualität ausschalten (teurer).',
     label_name: 'Dein Name',
     label_api_key: 'API key',
     placeholder_name: 'z. B. Lena',
@@ -8806,6 +8819,8 @@ const TRANSLATIONS = {
     welcome_intro: 'Entre ton prénom et choisis ta langue pour commencer.',
     label_language: 'Langue',
     label_sound: 'Effets sonores dans les jeux',
+    label_economy: 'Mode économique (réduit les coûts API)',
+    economy_hint: 'Utilise un modèle IA plus rapide et moins cher et réduit tes photos automatiquement. Désactive-le pour la meilleure qualité (plus cher).',
     label_name: 'Ton prénom',
     label_api_key: 'Clé API',
     placeholder_name: 'Ex. Léa',
@@ -9228,6 +9243,8 @@ const TRANSLATIONS = {
     welcome_intro: 'Escribe tu nombre y elige tu idioma para empezar.',
     label_language: 'Idioma',
     label_sound: 'Efectos de sonido en los juegos',
+    label_economy: 'Modo económico (ahorra costes de API)',
+    economy_hint: 'Usa un modelo de IA más rápido y barato y reduce tus fotos automáticamente. Desactívalo para la mejor calidad (más caro).',
     label_name: 'Tu nombre',
     label_api_key: 'Clave API',
     placeholder_name: 'Ej. Carlos',
@@ -11000,6 +11017,7 @@ const state = {
   photo: localStorage.getItem('user_photo') || null,
   customSubject: null,   // the name the student typed for the "anders" subject
   language: localStorage.getItem('user_language') || 'nl',
+  economy: (localStorage.getItem('econ_mode') || '1') !== '0',  // cost-saver: cheaper model + smaller photos
   learn: {
     active: false,         // true while in learn mode
     mode: null,            // 'words' | 'terms' | 'formulas'
@@ -11150,6 +11168,39 @@ function robotSvg(mood) {
 // Backwards-compat constant — the neutral robot, used in places where mood doesn't change (logo etc.)
 const ROBOT_SVG = robotSvg('neutral');
 function t(key) { return (TRANSLATIONS[state.language] || TRANSLATIONS.nl)[key] || key; }
+
+// ---- Cost savers ----
+// Cheaper AI model in "economy" mode (default). Toggle off in Settings for top quality.
+function aiBigModel() { return state.economy === false ? 'claude-sonnet-4-6' : 'claude-haiku-4-5'; }
+// Shrink photos before sending to the API. Vision tokens scale with image size, so
+// capping the long edge (and re-encoding as JPEG) cuts cost a lot with no real loss of legibility.
+function fileToCompressedImage(file, maxDim, quality) {
+  maxDim = maxDim || 1280; quality = quality || 0.75;
+  return new Promise(resolve => {
+    const reader = new FileReader();
+    reader.onload = ev => {
+      const dataUrl = ev.target.result;
+      const fallback = () => resolve({ base64: dataUrl.split(',')[1], mediaType: file.type, dataUrl });
+      if (!file.type || !file.type.startsWith('image/')) { fallback(); return; }
+      const img = new Image();
+      img.onload = () => {
+        try {
+          let w = img.width, h = img.height;
+          const scale = Math.min(1, maxDim / Math.max(w, h));
+          w = Math.max(1, Math.round(w * scale)); h = Math.max(1, Math.round(h * scale));
+          const canvas = document.createElement('canvas');
+          canvas.width = w; canvas.height = h;
+          canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+          const out = canvas.toDataURL('image/jpeg', quality);
+          resolve({ base64: out.split(',')[1], mediaType: 'image/jpeg', dataUrl: out });
+        } catch (_) { fallback(); }
+      };
+      img.onerror = fallback;
+      img.src = dataUrl;
+    };
+    reader.readAsDataURL(file);
+  });
+}
 function getInitials(name) {
   if (!name) return '';
   const parts = name.trim().split(/\s+/);
@@ -11441,6 +11492,7 @@ function openSettingsModal() {
   settingsNameInput.value = state.name || '';
   settingsKeyInput.value = state.apiKey || '';
   settingsSoundCheck.checked = SFX.isEnabled();
+  if (settingsEconomyCheck) settingsEconomyCheck.checked = state.economy !== false;
   // "About you" free-text fields
   const about = state.about || {};
   settingsGoodAt.value = about.goodAt || '';
@@ -11517,6 +11569,11 @@ if (profilePhotoRemove) profilePhotoRemove.addEventListener('click', () => {
 });
 
 // Sound toggle — applies instantly and plays a little confirmation blip when turned on
+const settingsEconomyCheck = $('settingsEconomyCheck');
+if (settingsEconomyCheck) settingsEconomyCheck.addEventListener('change', () => {
+  state.economy = settingsEconomyCheck.checked;
+  try { localStorage.setItem('econ_mode', state.economy ? '1' : '0'); } catch (_) { }
+});
 const settingsSoundCheck = $('settingsSoundCheck');
 settingsSoundCheck.addEventListener('change', () => {
   SFX.setEnabled(settingsSoundCheck.checked);
@@ -11835,15 +11892,7 @@ learnUploadZone.addEventListener('click', e => {
 });
 
 function handleLearnFiles(files) {
-  const promises = Array.from(files).map(file => new Promise(resolve => {
-    const r = new FileReader();
-    r.onload = ev => resolve({
-      base64: ev.target.result.split(',')[1],
-      mediaType: file.type,
-      dataUrl: ev.target.result,
-    });
-    r.readAsDataURL(file);
-  }));
+  const promises = Array.from(files).map(file => fileToCompressedImage(file));
   Promise.all(promises).then(results => {
     state.learn.images.push(...results);
     renderLearnThumbnails();
@@ -11942,18 +11991,15 @@ uploadZone.addEventListener('click', () => {
   input.addEventListener('change', e => {
     const file = e.target.files[0];
     if (!file) return;
-    const reader = new FileReader();
-    reader.onload = ev => {
-      const dataUrl = ev.target.result;
-      state.imageMediaType = file.type;
-      state.imageBase64 = dataUrl.split(',')[1];
-      previewImg.src = dataUrl;
+    fileToCompressedImage(file).then(im => {
+      state.imageMediaType = im.mediaType;
+      state.imageBase64 = im.base64;
+      previewImg.src = im.dataUrl;
       previewImg.classList.remove('hidden');
       uploadPrompt.classList.add('hidden');
       uploadZone.classList.add('has-image');
       startBtn.disabled = false;
-    };
-    reader.readAsDataURL(file);
+    });
   });
 });
 
@@ -12730,7 +12776,7 @@ async function callClaude() {
         'anthropic-dangerous-direct-browser-access': 'true',
       },
       body: JSON.stringify({
-        model: 'claude-sonnet-4-6',
+        model: aiBigModel(),
         max_tokens: state.learn?.active ? 700 : 500,
         system: systemPrompt,
         messages: state.messages,
@@ -13950,21 +13996,14 @@ function closeClassroom() {
 
 // ---- Photo upload (mirrors learn-mode handling) ----
 function handleClassroomFiles(files) {
-  const arr = Array.from(files);
+  const arr = Array.from(files).filter(f => f.type && f.type.startsWith('image/'));
   let pending = arr.length;
   if (!pending) return;
   arr.forEach(file => {
-    if (!file.type.startsWith('image/')) { pending--; return; }
-    const reader = new FileReader();
-    reader.onload = ev => {
-      state.classroom.images.push({
-        base64: ev.target.result.split(',')[1],
-        mediaType: file.type,
-        dataUrl: ev.target.result,
-      });
+    fileToCompressedImage(file).then(im => {
+      state.classroom.images.push(im);
       if (--pending === 0) { renderClassroomThumbs(); updateClassroomStartBtn(); }
-    };
-    reader.readAsDataURL(file);
+    });
   });
 }
 function renderClassroomThumbs() {
@@ -16393,11 +16432,7 @@ function snelNotesText() {
   return raw.replace(/https?:\/\/\S+/gi, ' ').replace(/\s+/g, ' ').trim();
 }
 function handleSnelFiles(files) {
-  const promises = Array.from(files).map(file => new Promise(resolve => {
-    const r = new FileReader();
-    r.onload = ev => resolve({ base64: ev.target.result.split(',')[1], mediaType: file.type, dataUrl: ev.target.result });
-    r.readAsDataURL(file);
-  }));
+  const promises = Array.from(files).map(file => fileToCompressedImage(file));
   Promise.all(promises).then(results => {
     snelState.images.push(...results);
     renderSnelThumbs();
@@ -16495,8 +16530,8 @@ async function generateSnelSet() {
     'anthropic-dangerous-direct-browser-access': 'true',
   };
   const body = {
-    model: 'claude-sonnet-4-6',
-    max_tokens: 8000,
+    model: aiBigModel(),
+    max_tokens: 6000,
     system: sys,
     messages: [{ role: 'user', content }],
   };
@@ -17091,11 +17126,7 @@ function resetPodSetup() {
   updatePodGenerateBtn();
 }
 function handlePodFiles(files) {
-  const proms = Array.from(files).map(file => new Promise(res => {
-    const r = new FileReader();
-    r.onload = ev => res({ base64: ev.target.result.split(',')[1], mediaType: file.type, dataUrl: ev.target.result });
-    r.readAsDataURL(file);
-  }));
+  const proms = Array.from(files).map(file => fileToCompressedImage(file));
   Promise.all(proms).then(results => { podState.images.push(...results); renderPodThumbs(); updatePodGenerateBtn(); });
 }
 function renderPodThumbs() {
@@ -17179,7 +17210,7 @@ async function generatePodcastScript() {
   content.push({ type: 'text', text: parts.join('\n\n') });
 
   const headers = { 'content-type': 'application/json', 'x-api-key': state.apiKey, 'anthropic-version': '2023-06-01', 'anthropic-dangerous-direct-browser-access': 'true' };
-  const body = { model: 'claude-sonnet-4-6', max_tokens: 6000, system: sys, messages: [{ role: 'user', content }] };
+  const body = { model: aiBigModel(), max_tokens: 4000, system: sys, messages: [{ role: 'user', content }] };
   if (links.length) { headers['anthropic-beta'] = 'web-fetch-2025-09-10'; body.tools = [{ type: 'web_fetch_20250910', name: 'web_fetch', max_uses: Math.max(6, links.length * 3) }]; }
   const resp = await fetch('https://api.anthropic.com/v1/messages', { method: 'POST', headers, body: JSON.stringify(body) });
   if (!resp.ok) { const e = await resp.text(); throw new Error('API ' + resp.status + ': ' + e); }
