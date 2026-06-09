@@ -5396,6 +5396,40 @@
   }
   @media (prefers-reduced-motion: reduce){ .celebration-icon{animation:none;} .confetti,.fx-layer{display:none;} .fx-pop{animation:none;} }
 
+  /* ===== Phone hardening: comfortable on every phone size (incl. Snel Leren & Audio-les) ===== */
+  /* Never let long words (chemical names, URLs) push a layout sideways */
+  .pod-now-text, .pod-tline, .snel-entry-card-desc, .snel-entry-card-title { overflow-wrap: anywhere; }
+  /* Bottom safe-area for the podcast player so controls clear the home indicator */
+  .pod-player { padding-bottom: calc(18px + var(--safe-bottom)); }
+
+  @media (pointer: coarse) {
+    .pod-cbtn, .pod-speed, .snel-entry-card, .snel-foot-btn { min-height: 44px; }
+  }
+
+  @media (max-width: 480px) {
+    .snel-entry-card { padding: 14px; gap: 12px; }
+    .snel-entry-card-icon { width: 44px; height: 44px; flex-shrink: 0; }
+    .snel-entry-card-title { font-size: 15px; }
+    .snel-entry-card-desc { font-size: 12px; }
+    .pod-now { padding: 16px 16px; }
+    .pod-now-text { font-size: 18px; }
+    .pod-controls { gap: 10px; }
+    .pod-transcript .pod-tline { font-size: 14.5px; }
+    #podPlayerScreen .snel-summary-actions { flex-direction: column; }
+    #podPlayerScreen .snel-summary-actions .secondary-btn { width: 100%; justify-content: center; }
+  }
+
+  @media (max-width: 360px) {
+    .pod-now-text { font-size: 16.5px; }
+    .pod-cbtn.play { width: 56px; height: 56px; }
+    .pod-cbtn.small { width: 44px; height: 44px; }
+    .pod-speed { min-width: 48px; padding: 0 10px; }
+    .pod-controls { gap: 8px; flex-wrap: wrap; }
+    .snel-perks { gap: 8px; }
+    .snel-section-label { flex-wrap: wrap; }
+    .snel-entry-card-kicker { font-size: 10px; }
+  }
+
 
   /* ===== Audio-les / Podcast player ===== */
   .pod-player { flex: 1; display: flex; flex-direction: column; min-height: 0; padding: 8px 18px 18px; }
