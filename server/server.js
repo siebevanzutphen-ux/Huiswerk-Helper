@@ -270,6 +270,7 @@ app.post('/api/messages', async (req, res) => {
     });
     node.on('end', () => { finish(); res.end(); });
     node.on('error', () => { finish(); try { res.end(); } catch { } });
+    res.on('close', () => { finish(); try { node.destroy(); } catch { } }); // gebruiker brak de stream af? toch afrekenen
     return;
   }
 

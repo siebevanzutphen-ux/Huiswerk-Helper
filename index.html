@@ -5431,6 +5431,25 @@
   .tokens-foot { font-size: 12px; color: var(--muted); text-align: center; margin-top: 14px; }
   @media (max-width: 480px) { .plans-grid { grid-template-columns: 1fr; } }
 
+  /* Waarschuwing als tokens bijna op zijn */
+  .token-toast {
+    position: fixed; top: calc(14px + var(--safe-top)); left: 50%; transform: translate(-50%, -160%);
+    z-index: 4200; display: flex; align-items: center; gap: 10px;
+    background: var(--card); border: 1px solid #f59e0b; color: var(--text);
+    border-radius: 999px; padding: 10px 12px 10px 15px; box-shadow: var(--shadow-lg);
+    max-width: calc(100vw - 24px); transition: transform .35s cubic-bezier(.34, 1.56, .64, 1);
+  }
+  .token-toast.show { transform: translate(-50%, 0); }
+  .token-toast.critical { border-color: #ef4444; }
+  .token-toast .icon { width: 18px; height: 18px; color: #f59e0b; flex-shrink: 0; }
+  .token-toast.critical .icon { color: #ef4444; }
+  .token-toast-msg { font-size: 13.5px; font-weight: 600; line-height: 1.3; }
+  .token-toast-btn { background: var(--accent-gradient); color: #fff; border: none; border-radius: 999px; padding: 7px 13px; font-weight: 800; font-size: 12.5px; cursor: pointer; font-family: inherit; flex-shrink: 0; }
+  @media (max-width: 480px) {
+    .token-toast { left: 12px; right: 12px; transform: translate(0, -180%); max-width: none; }
+    .token-toast.show { transform: translate(0, 0); }
+  }
+
   /* ===== Phone hardening: comfortable on every phone size (incl. Snel Leren & Audio-les) ===== */
   /* Never let long words (chemical names, URLs) push a layout sideways */
   .pod-now-text, .pod-tline, .snel-entry-card-desc, .snel-entry-card-title { overflow-wrap: anywhere; }
@@ -7598,6 +7617,9 @@ const TRANSLATIONS = {
     tok_foot: 'Tokens worden gebruikt voor alles wat Max voor je doet — vragen stellen, lessen, overhoringen en audio-lessen.',
     tok_per_month: 'tokens / maand',
     tok_current: 'Huidig',
+    tok_low: 'Je tokens raken op — nog {n} over.',
+    tok_low_critical: 'Bijna geen tokens meer — nog {n}!',
+    tok_view: 'Bekijk',
     tok_choose: 'Kies dit',
     tok_checkout_soon: 'Betalen kan binnenkort. Neem contact op met de maker voor een upgrade.',
     err_invalid_code: 'Vul je toegangscode in.',
@@ -8065,6 +8087,9 @@ const TRANSLATIONS = {
     tok_foot: 'Tokens are used for everything Max does for you — asking questions, lessons, self-tests and audio lessons.',
     tok_per_month: 'tokens / month',
     tok_current: 'Current',
+    tok_low: "You're running low on tokens — {n} left.",
+    tok_low_critical: 'Almost out of tokens — only {n} left!',
+    tok_view: 'View',
     tok_choose: 'Choose',
     tok_checkout_soon: 'Payments are coming soon. Contact the maker to upgrade.',
     err_invalid_code: 'Enter your access code.',
@@ -8502,6 +8527,9 @@ const TRANSLATIONS = {
     tok_foot: 'Tokens werden für alles verwendet, was Max für dich tut — Fragen, Lektionen, Abfragen und Audio-Lektionen.',
     tok_per_month: 'Tokens / Monat',
     tok_current: 'Aktuell',
+    tok_low: 'Deine Tokens werden knapp — noch {n}.',
+    tok_low_critical: 'Fast keine Tokens mehr — nur noch {n}!',
+    tok_view: 'Ansehen',
     tok_choose: 'Wählen',
     tok_checkout_soon: 'Bezahlen ist bald möglich. Wende dich an den Ersteller für ein Upgrade.',
     err_invalid_code: 'Gib deinen Zugangscode ein.',
@@ -8939,6 +8967,9 @@ const TRANSLATIONS = {
     tok_foot: 'Les tokens servent à tout ce que Max fait pour toi — questions, leçons, interros et leçons audio.',
     tok_per_month: 'tokens / mois',
     tok_current: 'Actuel',
+    tok_low: 'Tes tokens s’épuisent — il en reste {n}.',
+    tok_low_critical: 'Presque plus de tokens — il n’en reste que {n} !',
+    tok_view: 'Voir',
     tok_choose: 'Choisir',
     tok_checkout_soon: 'Le paiement arrive bientôt. Contacte le créateur pour un abonnement supérieur.',
     err_invalid_code: 'Saisis ton code d’accès.',
@@ -9377,6 +9408,9 @@ const TRANSLATIONS = {
     tok_foot: 'Los tokens se usan para todo lo que Max hace por ti — preguntas, lecciones, exámenes y lecciones de audio.',
     tok_per_month: 'tokens / mes',
     tok_current: 'Actual',
+    tok_low: 'Te quedan pocos tokens — quedan {n}.',
+    tok_low_critical: '¡Casi sin tokens — solo quedan {n}!',
+    tok_view: 'Ver',
     tok_choose: 'Elegir',
     tok_checkout_soon: 'El pago llegará pronto. Contacta con el creador para mejorar tu plan.',
     err_invalid_code: 'Introduce tu código de acceso.',
@@ -17581,9 +17615,43 @@ async function refreshTokens() {
     if (!r.ok) return;
     tokenInfo = await r.json();
     updateTokenChip();
+    checkLowTokens();
   } catch (_) { }
 }
-function scheduleTokenRefresh() { clearTimeout(tokenRefreshTimer); tokenRefreshTimer = setTimeout(refreshTokens, 1400); }
+// Waarschuw zodra het tegoed laag (<15%) of bijna leeg (<5%) is — zonder te blijven herhalen.
+const TOK_LOW = 0.15, TOK_CRIT = 0.05;
+let tokenWarnLevel = 0, tokenToastTimer = null;
+function checkLowTokens() {
+  if (!tokenInfo || !tokenInfo.allowance) return;
+  const ratio = tokenInfo.remaining / tokenInfo.allowance;
+  let level = 0;
+  if (tokenInfo.remaining <= 0) level = 3;       // leeg → het 402-scherm regelt dit al
+  else if (ratio < TOK_CRIT) level = 2;          // bijna leeg
+  else if (ratio < TOK_LOW) level = 1;           // laag
+  if (level > tokenWarnLevel && level === 1) showTokenToast(false);
+  else if (level > tokenWarnLevel && level === 2) showTokenToast(true);
+  tokenWarnLevel = level;                          // gaat saldo weer omhoog, dan kan er later opnieuw gewaarschuwd worden
+}
+function showTokenToast(critical) {
+  let el = $('tokenToast');
+  if (!el) { el = document.createElement('div'); el.id = 'tokenToast'; document.body.appendChild(el); }
+  const n = tokenInfo ? fmtTokens(tokenInfo.remaining) : '';
+  const msg = (critical ? (t('tok_low_critical') || 'Bijna geen tokens meer — nog {n}!') : (t('tok_low') || 'Je tokens raken op — nog {n} over.')).replace('{n}', n);
+  el.className = 'token-toast' + (critical ? ' critical' : '');
+  el.innerHTML = '<svg class="icon"><use href="#i-bolt"/></svg><span class="token-toast-msg"></span><button type="button" class="token-toast-btn"></button>';
+  el.querySelector('.token-toast-msg').textContent = msg;
+  const btn = el.querySelector('.token-toast-btn');
+  btn.textContent = t('tok_view') || 'Bekijk';
+  btn.addEventListener('click', () => { hideTokenToast(); openTokensModal(false); });
+  el.classList.remove('show'); void el.offsetWidth; el.classList.add('show');
+  clearTimeout(tokenToastTimer); tokenToastTimer = setTimeout(hideTokenToast, 8000);
+}
+function hideTokenToast() { const el = $('tokenToast'); if (el) el.classList.remove('show'); }
+let tokenRefreshTimer2 = null;
+function scheduleTokenRefresh() {
+  clearTimeout(tokenRefreshTimer); tokenRefreshTimer = setTimeout(refreshTokens, 2000);
+  clearTimeout(tokenRefreshTimer2); tokenRefreshTimer2 = setTimeout(refreshTokens, 6000); // streaming-verbruik komt pas aan het eind binnen
+}
 async function renderPlans() {
   const grid = $('plansGrid'); if (!grid) return;
   let plans = null;
