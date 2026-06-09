@@ -4942,6 +4942,460 @@
     .crt-btn.next { flex: 1 1 100%; }
     .board-quiz-opts { grid-template-columns: 1fr; }
   }
+
+  /* ===== Snel Leren (overgezet) ===== */
+  /* ===== Snel Leren — full-screen study-sprint mode ===== */
+  .snel-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 170;
+    background: var(--bg);
+    background-image:
+      radial-gradient(ellipse 90% 55% at 15% -5%, rgba(167, 139, 250, 0.20) 0px, transparent 60%),
+      radial-gradient(ellipse 70% 50% at 90% 105%, rgba(244, 114, 182, 0.16) 0px, transparent 60%);
+    display: none;
+    flex-direction: column;
+  }
+  .snel-overlay.active { display: flex; }
+  .snel-screen { display: none; flex: 1; min-height: 0; flex-direction: column; }
+  .snel-screen.active { display: flex; }
+
+  /* Entry card on the home page (sits next to the learn-mode card) */
+  .snel-entry-card {
+    position: relative;
+    overflow: hidden;
+    width: 100%;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    text-align: left;
+    cursor: pointer;
+    font-family: inherit;
+    color: #fff;
+    border: 1px solid rgba(255, 255, 255, 0.14);
+    border-radius: var(--radius-lg);
+    padding: 20px 20px;
+    background:
+      linear-gradient(135deg, rgba(167, 139, 250, 0.28) 0%, rgba(244, 114, 182, 0.24) 100%),
+      var(--card);
+    box-shadow: var(--shadow-md);
+    transition: transform var(--transition), box-shadow var(--transition), border-color var(--transition);
+  }
+  .snel-entry-card::after {
+    content: '';
+    position: absolute;
+    top: -40%;
+    right: -10%;
+    width: 220px;
+    height: 220px;
+    background: radial-gradient(circle, rgba(167, 139, 250, 0.35) 0%, transparent 70%);
+    pointer-events: none;
+  }
+  .snel-entry-card:hover { transform: translateY(-3px); box-shadow: var(--shadow-glow); border-color: rgba(167, 139, 250, 0.55); }
+  .snel-entry-card:active { transform: translateY(-1px) scale(0.995); }
+  .snel-entry-card-icon {
+    flex-shrink: 0;
+    width: 56px;
+    height: 56px;
+    border-radius: 16px;
+    display: grid;
+    place-items: center;
+    background: var(--accent-gradient);
+    box-shadow: var(--shadow-glow);
+  }
+  .snel-entry-card-icon .icon { width: 30px; height: 30px; color: #fff; }
+  .snel-entry-card-body { flex: 1; display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+  .snel-entry-card-kicker {
+    display: inline-flex; align-items: center; gap: 6px; width: fit-content;
+    font-size: 11px; font-weight: 800; letter-spacing: 0.06em; text-transform: uppercase;
+    color: #fff; background: rgba(255,255,255,0.16); padding: 3px 9px; border-radius: 999px;
+    margin-bottom: 3px;
+  }
+  .snel-entry-card-title { font-size: 18px; font-weight: 800; letter-spacing: -0.01em; }
+  .snel-entry-card-desc { font-size: 13.5px; color: var(--text-soft); line-height: 1.45; }
+  .snel-entry-card-arrow { flex-shrink: 0; opacity: 0.85; }
+  .snel-entry-card-arrow .icon { width: 22px; height: 22px; }
+
+  /* Shared top bar inside the overlay */
+  .snel-topbar {
+    display: flex; align-items: center; justify-content: space-between; gap: 12px;
+    padding: calc(12px + var(--safe-top)) 16px 6px;
+    flex-shrink: 0;
+  }
+  .snel-topbar-title { font-size: 15px; font-weight: 800; color: var(--text); letter-spacing: -0.01em; opacity: 0.95; }
+  .snel-xp-chip {
+    display: inline-flex; align-items: center; gap: 5px;
+    background: rgba(167, 139, 250, 0.14); border: 1px solid rgba(167, 139, 250, 0.32);
+    color: var(--accent); font-weight: 800; font-size: 13px; padding: 6px 12px; border-radius: 999px;
+    font-variant-numeric: tabular-nums;
+  }
+  .snel-xp-chip .icon { width: 14px; height: 14px; }
+
+  /* ---- Setup screen ---- */
+  .snel-setup-scroll { flex: 1; overflow-y: auto; padding: 4px 16px calc(28px + var(--safe-bottom)); }
+  .snel-setup-inner { max-width: 640px; margin: 0 auto; display: flex; flex-direction: column; gap: 22px; }
+  .snel-hero {
+    position: relative; overflow: hidden;
+    border-radius: var(--radius-lg);
+    padding: 26px 24px;
+    background:
+      linear-gradient(135deg, rgba(167, 139, 250, 0.30) 0%, rgba(244, 114, 182, 0.24) 100%),
+      var(--card);
+    border: 1px solid rgba(255, 255, 255, 0.10);
+    box-shadow: var(--shadow-md);
+  }
+  .snel-hero-badge {
+    display: inline-flex; align-items: center; gap: 7px;
+    background: rgba(255,255,255,0.14); color: #fff;
+    font-size: 12px; font-weight: 800; letter-spacing: 0.04em; text-transform: uppercase;
+    padding: 5px 12px; border-radius: 999px; margin-bottom: 12px;
+  }
+  .snel-hero-badge .icon { width: 14px; height: 14px; }
+  .snel-hero h2 { font-size: 24px; font-weight: 900; letter-spacing: -0.02em; margin-bottom: 8px; line-height: 1.15; }
+  .snel-hero p { font-size: 14.5px; color: var(--text-soft); line-height: 1.5; }
+  .snel-perks { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-top: 18px; }
+  .snel-perk {
+    background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.08);
+    border-radius: var(--radius-sm); padding: 12px 10px; text-align: center;
+  }
+  .snel-perk-num { font-size: 20px; font-weight: 900; background: var(--accent-gradient); -webkit-background-clip: text; background-clip: text; color: transparent; }
+  .snel-perk-label { font-size: 11.5px; color: var(--text-soft); margin-top: 3px; line-height: 1.3; }
+
+  .snel-section-label {
+    display: flex; align-items: center; gap: 9px;
+    font-size: 14px; font-weight: 800; color: var(--text); margin-bottom: 10px;
+  }
+  .snel-section-num {
+    width: 24px; height: 24px; border-radius: 50%; display: grid; place-items: center;
+    background: var(--accent-gradient); color: #fff; font-size: 13px; font-weight: 800; flex-shrink: 0;
+  }
+  .snel-section-hint { font-size: 12.5px; color: var(--muted); font-weight: 600; margin-left: auto; }
+  .snel-description {
+    width: 100%; resize: vertical; min-height: 70px;
+    background: var(--card); border: 1px solid var(--border-strong); border-radius: var(--radius-md);
+    color: var(--text); font-family: inherit; font-size: 14.5px; line-height: 1.5; padding: 14px 16px;
+    transition: border-color var(--transition);
+  }
+  .snel-description:focus { border-color: var(--accent); outline: none; }
+  .snel-description::placeholder { color: var(--muted); }
+  .snel-link-input {
+    width: 100%;
+    background: var(--card); border: 1px solid var(--border-strong); border-radius: var(--radius-md);
+    color: var(--text); font-family: inherit; font-size: 14.5px; padding: 14px 16px;
+    transition: border-color var(--transition);
+  }
+  .snel-link-input:focus { border-color: var(--accent); outline: none; }
+  .snel-link-input::placeholder { color: var(--muted); }
+  .snel-link-note { font-size: 12.5px; color: var(--muted); line-height: 1.5; margin-top: 9px; }
+  .snel-generate-wrap { text-align: center; padding-top: 4px; }
+  .snel-generate-note { font-size: 12.5px; color: var(--muted); margin-top: 12px; line-height: 1.5; }
+
+  /* ---- Loading screen ---- */
+  .snel-loading { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 24px; text-align: center; padding: 30px; }
+  .snel-spinner { position: relative; width: 96px; height: 96px; }
+  .snel-spinner::before, .snel-spinner::after {
+    content: ''; position: absolute; inset: 0; border-radius: 50%;
+    border: 4px solid transparent;
+  }
+  .snel-spinner::before { border-top-color: var(--accent); border-right-color: var(--accent); animation: snelSpin 0.9s linear infinite; }
+  .snel-spinner::after { inset: 14px; border-bottom-color: var(--accent-2); border-left-color: var(--accent-2); animation: snelSpin 1.3s linear infinite reverse; }
+  @keyframes snelSpin { to { transform: rotate(360deg); } }
+  .snel-spinner-icon { position: absolute; inset: 0; display: grid; place-items: center; }
+  .snel-spinner-icon .icon { width: 30px; height: 30px; color: var(--accent); animation: snelPulse 1.4s ease-in-out infinite; }
+  @keyframes snelPulse { 0%,100% { opacity: 0.6; transform: scale(0.92); } 50% { opacity: 1; transform: scale(1.06); } }
+  .snel-loading h2 { font-size: 22px; font-weight: 900; letter-spacing: -0.02em; }
+  .snel-loading p { font-size: 14.5px; color: var(--text-soft); max-width: 380px; line-height: 1.5; }
+  .snel-loading-status { font-size: 13.5px; color: var(--accent); font-weight: 700; min-height: 20px; }
+
+  /* ---- Recap screen (study summary before the questions) ---- */
+  .snel-recap-scroll { flex: 1; overflow-y: auto; padding: 4px 16px 18px; }
+  .snel-recap-inner { max-width: 640px; margin: 0 auto; animation: snelCardIn 0.34s var(--ease-spring) both; }
+  .snel-recap-badge {
+    display: inline-flex; align-items: center; gap: 7px;
+    background: rgba(167, 139, 250, 0.14); border: 1px solid rgba(167, 139, 250, 0.30);
+    color: var(--accent); font-size: 12px; font-weight: 800; letter-spacing: 0.04em; text-transform: uppercase;
+    padding: 5px 12px; border-radius: 999px; margin-bottom: 14px;
+  }
+  .snel-recap-badge .icon { width: 14px; height: 14px; }
+  .snel-recap-title { font-size: 26px; font-weight: 900; letter-spacing: -0.02em; line-height: 1.15; margin-bottom: 10px; }
+  .snel-recap-summary { font-size: 16px; line-height: 1.6; color: var(--text-soft); margin-bottom: 22px; }
+  .snel-recap-summary:empty { display: none; }
+  .snel-recap-label {
+    font-size: 12px; font-weight: 800; letter-spacing: 0.05em; text-transform: uppercase;
+    color: var(--muted); margin-bottom: 12px;
+  }
+  .snel-recap-list { list-style: none; display: flex; flex-direction: column; gap: 10px; }
+  .snel-recap-list li {
+    position: relative;
+    background: var(--card); border: 1px solid var(--border-strong); border-left: 3px solid var(--accent);
+    border-radius: var(--radius-md); padding: 13px 16px 13px 44px;
+    font-size: 15px; line-height: 1.5; color: var(--text); font-weight: 500;
+    animation: snelRecapItemIn 0.4s var(--ease) both;
+  }
+  .snel-recap-list li::before {
+    content: ''; position: absolute; left: 17px; top: 50%; width: 9px; height: 9px; margin-top: -4.5px;
+    border-radius: 50%; background: var(--accent-gradient); box-shadow: 0 0 0 4px rgba(167, 139, 250, 0.14);
+  }
+  @keyframes snelRecapItemIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+  .snel-recap-foot {
+    flex-shrink: 0; padding: 12px 16px calc(16px + var(--safe-bottom));
+    width: 100%; max-width: 640px; margin: 0 auto; border-top: 1px solid var(--border);
+  }
+  .snel-recap-foot .primary-btn { width: 100%; }
+
+  /* ---- Session screen ---- */
+  .snel-session-head { padding: 4px 16px 0; width: 100%; max-width: 720px; margin: 0 auto; flex-shrink: 0; }
+  .snel-phasenav { display: flex; gap: 8px; margin-bottom: 14px; }
+  .snel-seg {
+    flex: 1; cursor: pointer; font-family: inherit; color: var(--text-soft);
+    background: var(--card); border: 1.5px solid var(--border); border-radius: 14px;
+    padding: 10px 6px 9px; text-align: center; transition: all var(--transition);
+    display: flex; flex-direction: column; align-items: center; gap: 3px; min-width: 0;
+  }
+  .snel-seg:hover:not(.active) { border-color: var(--border-strong); transform: translateY(-1px); }
+  .snel-seg-label { font-size: 12.5px; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%; }
+  .snel-seg-meta { font-size: 10.5px; font-weight: 700; opacity: 0.7; font-variant-numeric: tabular-nums; display: inline-flex; align-items: center; gap: 3px; }
+  .snel-seg.active { color: #fff; background: var(--accent-gradient); border-color: transparent; box-shadow: var(--shadow-glow); }
+  .snel-seg.active .snel-seg-meta { opacity: 0.92; }
+  .snel-seg.done .snel-seg-meta { color: #4ade80; opacity: 1; }
+  .snel-seg.done.active .snel-seg-meta { color: #fff; }
+  .snel-seg-check { width: 12px; height: 12px; }
+  .snel-seg.review-seg { border-style: dashed; }
+  .snel-seg.review-seg.active { border-style: solid; }
+
+  .snel-progress { height: 8px; border-radius: 999px; background: rgba(255,255,255,0.08); overflow: hidden; }
+  .snel-progress-fill { height: 100%; border-radius: 999px; background: var(--accent-gradient); width: 0%; transition: width 0.4s var(--ease); }
+  .snel-progress-row { display: flex; align-items: center; justify-content: space-between; margin-top: 8px; }
+  .snel-counter { font-size: 13px; font-weight: 700; color: var(--text-soft); font-variant-numeric: tabular-nums; }
+  .snel-phase-name { font-size: 13px; font-weight: 800; color: var(--accent); }
+
+  .snel-stage { flex: 1; overflow-y: auto; display: flex; align-items: flex-start; justify-content: center; padding: 16px; }
+  .snel-card {
+    width: 100%; max-width: 600px; margin: 0 auto;
+    background: var(--card); border: 1px solid var(--border-strong); border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-md); padding: 26px 24px; display: flex; flex-direction: column; gap: 18px;
+    animation: snelCardIn 0.34s var(--ease-spring) both;
+  }
+  @keyframes snelCardIn { from { opacity: 0; transform: translateY(14px) scale(0.98); } to { opacity: 1; transform: none; } }
+  .snel-card-tag {
+    display: inline-flex; align-items: center; gap: 7px; width: fit-content;
+    font-size: 11.5px; font-weight: 800; letter-spacing: 0.04em; text-transform: uppercase;
+    color: var(--accent); background: rgba(167, 139, 250, 0.12); padding: 5px 11px; border-radius: 999px;
+  }
+  .snel-card-tag .icon { width: 13px; height: 13px; }
+  .snel-card-tag.review { color: #fb923c; background: rgba(251, 146, 60, 0.14); }
+  .snel-q { font-size: 21px; font-weight: 800; line-height: 1.35; letter-spacing: -0.01em; color: var(--text); }
+  .snel-q.fill { font-size: 19px; font-weight: 700; line-height: 1.6; }
+  .snel-blank {
+    display: inline-block; min-width: 70px; border-bottom: 3px solid var(--accent);
+    margin: 0 4px; vertical-align: baseline; text-align: center; font-weight: 800; color: var(--accent);
+  }
+  .snel-blank.filled { color: #4ade80; border-bottom-color: #4ade80; }
+  .snel-blank.filled-wrong { color: #f87171; border-bottom-color: #f87171; text-decoration: line-through; text-decoration-thickness: 2px; }
+
+  .snel-input {
+    width: 100%; background: var(--bg-2); border: 2px solid var(--border-strong); border-radius: var(--radius-md);
+    color: var(--text); font-family: inherit; font-size: 17px; font-weight: 600; padding: 15px 16px;
+    transition: border-color var(--transition);
+  }
+  .snel-input:focus { border-color: var(--accent); outline: none; }
+  .snel-input::placeholder { color: var(--muted); font-weight: 500; }
+  .snel-input:disabled { opacity: 0.85; }
+  .snel-input.correct { border-color: #22c55e; background: rgba(34, 197, 94, 0.10); }
+  .snel-input.wrong { border-color: #ef4444; background: rgba(239, 68, 68, 0.10); }
+
+  /* Reveal / answer block */
+  .snel-reveal { display: none; flex-direction: column; gap: 8px; animation: snelRevealIn 0.3s var(--ease) both; }
+  .snel-reveal.show { display: flex; }
+  @keyframes snelRevealIn { from { opacity: 0; transform: translateY(-6px); } to { opacity: 1; transform: none; } }
+  .snel-reveal-label { font-size: 11.5px; font-weight: 800; letter-spacing: 0.05em; text-transform: uppercase; color: var(--muted); }
+  .snel-answer {
+    font-size: 18px; font-weight: 800; line-height: 1.4;
+    background: rgba(34, 197, 94, 0.10); border: 1px solid rgba(34, 197, 94, 0.35);
+    border-left: 4px solid #22c55e; border-radius: 12px; padding: 14px 16px; color: #d1fae5;
+  }
+  .snel-answer.model { background: rgba(167, 139, 250, 0.10); border-color: rgba(167, 139, 250, 0.35); border-left-color: var(--accent); color: #e9e3ff; font-size: 16px; font-weight: 600; }
+
+  .snel-feedback { font-size: 14px; font-weight: 800; display: none; align-items: center; gap: 7px; }
+  .snel-feedback.show { display: flex; }
+  .snel-feedback.correct { color: #4ade80; }
+  .snel-feedback.wrong { color: #f87171; }
+  .snel-feedback .icon { width: 17px; height: 17px; }
+
+  /* Action buttons inside a card */
+  .snel-actions { display: flex; flex-direction: column; gap: 10px; }
+  .snel-grade-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .snel-grade-btn {
+    font-family: inherit; font-size: 15px; font-weight: 800; cursor: pointer;
+    padding: 15px 12px; border-radius: var(--radius-md); border: 2px solid transparent; transition: all var(--transition);
+    display: flex; align-items: center; justify-content: center; gap: 7px;
+  }
+  .snel-grade-btn .icon { width: 18px; height: 18px; }
+  .snel-grade-btn.wrong { background: rgba(239, 68, 68, 0.12); border-color: rgba(239, 68, 68, 0.45); color: #fca5a5; }
+  .snel-grade-btn.wrong:hover { background: rgba(239, 68, 68, 0.2); transform: translateY(-1px); }
+  .snel-grade-btn.right { background: rgba(34, 197, 94, 0.12); border-color: rgba(34, 197, 94, 0.45); color: #86efac; }
+  .snel-grade-btn.right:hover { background: rgba(34, 197, 94, 0.2); transform: translateY(-1px); }
+
+  /* Sticky bottom nav of the session */
+  .snel-session-foot {
+    flex-shrink: 0; padding: 10px 16px calc(14px + var(--safe-bottom));
+    width: 100%; max-width: 720px; margin: 0 auto;
+    display: flex; align-items: center; gap: 10px;
+    border-top: 1px solid var(--border);
+  }
+  .snel-foot-btn {
+    flex: 1; font-family: inherit; font-size: 14px; font-weight: 700; cursor: pointer;
+    background: var(--card); border: 1px solid var(--border-strong); color: var(--text-soft);
+    border-radius: var(--radius-md); padding: 12px 10px; transition: all var(--transition);
+    display: inline-flex; align-items: center; justify-content: center; gap: 7px;
+  }
+  .snel-foot-btn:hover:not(:disabled) { border-color: var(--accent); color: var(--text); transform: translateY(-1px); }
+  .snel-foot-btn:disabled { opacity: 0.4; cursor: default; }
+  .snel-foot-btn .icon { width: 16px; height: 16px; }
+  .snel-foot-btn.primary { background: var(--accent-gradient); border-color: transparent; color: #fff; box-shadow: var(--shadow-glow); }
+  .snel-foot-btn.skip { flex: 0 0 auto; }
+
+  /* ---- Summary screen ---- */
+  .snel-summary-scroll { flex: 1; overflow-y: auto; padding: 10px 16px calc(28px + var(--safe-bottom)); }
+  .snel-summary-inner { max-width: 480px; margin: 0 auto; text-align: center; padding-top: 10px; }
+  .snel-summary-medal { width: 88px; height: 88px; margin: 0 auto 14px; display: grid; place-items: center; border-radius: 50%; background: var(--accent-gradient); box-shadow: var(--shadow-glow); animation: snelCardIn 0.5s var(--ease-spring) both; }
+  .snel-summary-medal .icon { width: 46px; height: 46px; color: #fff; }
+  .snel-summary-inner h2 { font-size: 28px; font-weight: 900; letter-spacing: -0.02em; margin-bottom: 6px; }
+  .snel-summary-inner > p { color: var(--text-soft); font-size: 14.5px; margin-bottom: 20px; line-height: 1.5; }
+  .snel-score-big { font-size: 54px; font-weight: 900; background: var(--accent-gradient); -webkit-background-clip: text; background-clip: text; color: transparent; line-height: 1; margin-bottom: 4px; }
+  .snel-score-sub { font-size: 13.5px; color: var(--muted); margin-bottom: 22px; }
+  .snel-score-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 22px; }
+  .snel-score-cell { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius-md); padding: 14px 8px; }
+  .snel-score-cell-val { font-size: 19px; font-weight: 900; color: var(--text); font-variant-numeric: tabular-nums; }
+  .snel-score-cell-val .bad { color: var(--muted); font-size: 15px; }
+  .snel-score-cell-label { font-size: 11.5px; color: var(--text-soft); margin-top: 4px; }
+  .snel-summary-actions { display: flex; flex-direction: column; gap: 10px; max-width: 340px; margin: 0 auto; }
+  .snel-review-banner {
+    display: flex; align-items: center; gap: 10px; text-align: left;
+    background: rgba(251, 146, 60, 0.12); border: 1px solid rgba(251, 146, 60, 0.35);
+    border-radius: var(--radius-md); padding: 14px 16px; margin-bottom: 16px; color: #fed7aa;
+  }
+  .snel-review-banner .icon { width: 22px; height: 22px; flex-shrink: 0; color: #fb923c; }
+  .snel-review-banner strong { color: #fff; display: block; font-size: 14.5px; }
+  .snel-review-banner span { font-size: 12.5px; opacity: 0.9; }
+
+  @media (max-width: 480px) {
+    .snel-q { font-size: 19px; }
+    .snel-q.fill { font-size: 17px; }
+    .snel-card { padding: 22px 18px; }
+    .snel-perks { gap: 7px; }
+    .snel-seg-label { font-size: 11.5px; }
+    .snel-hero h2 { font-size: 21px; }
+  }
+
+
+  /* ===== FX: celebration / confetti / sparkle (overgezet) ===== */
+  /* ===== XP toasts ===== */
+  .xp-toasts {
+    position: fixed; right: 18px; bottom: calc(18px + var(--safe-bottom));
+    display: flex; flex-direction: column; gap: 8px; align-items: flex-end;
+    z-index: 4000; pointer-events: none;
+  }
+  .xp-toast {
+    display: inline-flex; align-items: center; gap: 7px;
+    padding: 9px 15px; border-radius: 999px;
+    background: var(--accent-gradient); color: #fff;
+    font-weight: 800; font-size: 14px;
+    box-shadow: var(--shadow-glow);
+    opacity: 0; transform: translateY(14px) scale(.9);
+    transition: opacity .3s ease, transform .35s cubic-bezier(.34,1.56,.64,1);
+  }
+  .xp-toast .icon { color: #fff; }
+  .xp-toast.show { opacity: 1; transform: translateY(0) scale(1); }
+
+  /* ===== Celebration — compact banner that slides in from the top ===== */
+  .celebration {
+    position: fixed; top: calc(var(--safe-top) + 14px); left: 0; right: 0; z-index: 4200;
+    display: flex; justify-content: center; padding: 0 14px;
+    pointer-events: none;
+  }
+  .celebration-card {
+    display: flex; align-items: center; gap: 13px; text-align: left;
+    padding: 11px 22px 11px 13px;
+    border-radius: 999px;
+    background: rgba(28,28,51,.94);
+    border: 1px solid var(--border-strong);
+    box-shadow: var(--shadow-lg);
+    backdrop-filter: blur(14px);
+    max-width: min(440px, 92vw);
+    transform: translateY(-160%); opacity: 0;
+    transition: transform .55s cubic-bezier(.34,1.56,.64,1), opacity .3s ease;
+  }
+  .celebration.show .celebration-card { transform: translateY(0); opacity: 1; }
+  .celebration-icon {
+    width: 46px; height: 46px; flex-shrink: 0;
+    display: grid; place-items: center; border-radius: 50%;
+    background: var(--accent-gradient);
+    box-shadow: var(--shadow-glow);
+    animation: celebPop .6s cubic-bezier(.34,1.56,.64,1);
+  }
+  .celebration-icon .icon { width: 26px; height: 26px; color: #fff; }
+  .celebration-text { min-width: 0; }
+  .celebration-title { font-size: 16.5px; font-weight: 900; letter-spacing: -.01em; line-height: 1.15; }
+  .celebration-sub { font-size: 13px; color: var(--text-soft); margin-top: 2px; }
+  @keyframes celebPop {
+    0% { transform: scale(.4) rotate(-12deg); }
+    60% { transform: scale(1.18) rotate(7deg); }
+    100% { transform: scale(1) rotate(0); }
+  }
+
+  /* ===== Confetti ===== */
+  .confetti { position: fixed; inset: 0; z-index: 4100; pointer-events: none; overflow: hidden; }
+  .confetti-piece {
+    position: absolute; top: -16px; width: 9px; height: 14px; border-radius: 2px;
+    opacity: 0;
+    animation: confettiFall 2.4s cubic-bezier(.3,.6,.5,1) forwards;
+  }
+  @keyframes confettiFall {
+    0% { transform: translateY(-10vh) rotate(0deg); opacity: 1; }
+    100% { transform: translateY(108vh) rotate(720deg); opacity: 0; }
+  }
+
+  /* ===== Spotlight emphasis — the element itself springs forward for a beat ===== */
+  .fx-layer { position: fixed; inset: 0; z-index: 4150; pointer-events: none; overflow: hidden; }
+  /* Spring "pop": transform-only so it stays buttery-smooth on the GPU */
+  @keyframes fxPop {
+    0%   { transform: scale(1); }
+    28%  { transform: scale(1.26); }
+    52%  { transform: scale(0.93); }
+    74%  { transform: scale(1.07); }
+    100% { transform: scale(1); }
+  }
+  .fx-pop {
+    animation: fxPop .72s cubic-bezier(.34, 1.56, .64, 1);
+    position: relative; z-index: 60; will-change: transform;
+  }
+  /* Concentric glow rings expanding out from the element's centre */
+  .fx-ring {
+    position: fixed; border-radius: 50%; border: 2.5px solid var(--accent);
+    transform: translate(-50%, -50%) scale(.25); opacity: .85;
+    will-change: transform, opacity;
+    animation: fxRing .85s cubic-bezier(.2, .7, .3, 1) forwards;
+  }
+  @keyframes fxRing {
+    0%   { transform: translate(-50%, -50%) scale(.25); opacity: .85; }
+    100% { transform: translate(-50%, -50%) scale(1);   opacity: 0; }
+  }
+  /* Sparkles radiating outward (each gets a random --dx/--dy) */
+  .fx-spark {
+    position: fixed; width: 9px; height: 9px; border-radius: 50%;
+    transform: translate(-50%, -50%); opacity: 0;
+    box-shadow: 0 0 8px currentColor;
+    will-change: transform, opacity;
+    animation: fxSpark .8s cubic-bezier(.2, .6, .35, 1) forwards;
+  }
+  @keyframes fxSpark {
+    0%   { opacity: 1; transform: translate(-50%, -50%) translate(0, 0) scale(1); }
+    70%  { opacity: 1; }
+    100% { opacity: 0; transform: translate(-50%, -50%) translate(var(--dx, 0), var(--dy, 0)) scale(.2); }
+  }
+  @media (prefers-reduced-motion: reduce){ .celebration-icon{animation:none;} .confetti,.fx-layer{display:none;} .fx-pop{animation:none;} }
+
 </style>
 </head>
 <body>
@@ -5284,6 +5738,18 @@
       <path d="M11 20A7 7 0 0 1 9.8 6.1C15.5 5 17 4.48 19 2c1 2 2 4.18 2 8 0 5.5-4.78 10-10 10z"/>
       <path d="M2 21c0-3 1.85-5.36 5.08-6"/>
     </symbol>
+    <!-- icons overgezet met Snel Leren -->
+    <symbol id="i-bolt" viewBox="0 0 24 24">
+      <path d="M13 2 4.5 13.5H11l-1 8.5L19.5 10H13z"/>
+    </symbol>
+    <symbol id="i-check-circle" viewBox="0 0 24 24">
+      <circle cx="12" cy="12" r="9"/>
+      <path d="M8.5 12.5l2.5 2.5 4.5-5"/>
+    </symbol>
+    <symbol id="i-sparkles" viewBox="0 0 24 24">
+      <path d="M12 3l1.6 4.4L18 9l-4.4 1.6L12 15l-1.6-4.4L6 9l4.4-1.6z"/>
+      <path d="M18 14l.8 2.2L21 17l-2.2.8L18 20l-.8-2.2L15 17l2.2-.8z"/>
+    </symbol>
   </defs>
 </svg>
 
@@ -5494,6 +5960,18 @@
     </button>
 
     <!-- Classroom entry: live lesson with Teacher Max -->
+    <!-- Snel Leren entry: the big "study sprint" mode -->
+    <div class="subject-category" data-i18n="snel_section_label">Of sprint in één keer door je hele toets</div>
+    <button type="button" class="snel-entry-card" id="openSnelBtn">
+      <span class="snel-entry-card-icon"><svg class="icon"><use href="#i-bolt"/></svg></span>
+      <span class="snel-entry-card-body">
+        <span class="snel-entry-card-kicker"><svg class="icon" style="width:12px;height:12px;"><use href="#i-sparkles"/></svg><span data-i18n="snel_entry_kicker">Nieuw</span></span>
+        <span class="snel-entry-card-title" data-i18n="snel_entry_title">Snel Leren — sprint door je stof</span>
+        <span class="snel-entry-card-desc" data-i18n="snel_entry_desc">Foto's erin + jouw eigen aantekeningen. Max maakt meteen een complete overhoring: een lange vragenlijst, invuloefeningen én open vragen. Fouten krijg je aan het eind terug.</span>
+      </span>
+      <span class="snel-entry-card-arrow"><svg class="icon"><use href="#i-arrow-right"/></svg></span>
+    </button>
+
     <button type="button" class="learn-entry-card" id="openClassroomBtn" style="margin-top: 12px;">
       <span class="learn-entry-card-icon"><svg class="robot"><use href="#i-robot-teacher"/></svg></span>
       <span class="learn-entry-card-body">
@@ -6097,6 +6575,196 @@
   </div>
 </div>
 
+<!-- SNEL LEREN overlay (study sprint: recall list → fill-in-the-blank → short answers) -->
+<div class="snel-overlay" id="snelOverlay">
+
+  <!-- Screen 1: setup (photos + own notes) -->
+  <div class="snel-screen active" id="snelSetupScreen">
+    <div class="snel-topbar">
+      <button type="button" class="back-link" id="snelBackBtn">
+        <svg class="icon"><use href="#i-arrow-right"/></svg>
+        <span data-i18n="btn_back_home">Terug naar home</span>
+      </button>
+      <div class="snel-topbar-title" data-i18n="snel_topbar">Snel Leren</div>
+    </div>
+    <div class="snel-setup-scroll">
+      <div class="snel-setup-inner">
+        <div class="snel-hero">
+          <span class="snel-hero-badge"><svg class="icon"><use href="#i-bolt"/></svg><span data-i18n="snel_hero_badge">Studeer-sprint</span></span>
+          <h2 data-i18n="snel_hero_title">Je hele toets in één sessie</h2>
+          <p data-i18n="snel_hero_text">Gooi je samenvatting, woordjes of aantekeningen erin als foto en vul aan met wat je zelf nog wilt kennen. Max maakt er meteen een complete overhoring van — eerst een lange vragenlijst over álle stof, dan invuloefeningen en tot slot open vragen. Wat je fout doet, krijg je aan het eind nog een keer. Eén knop, en je bent klaar voor de toets.</p>
+          <div class="snel-perks">
+            <div class="snel-perk"><div class="snel-perk-num">3</div><div class="snel-perk-label" data-i18n="snel_perk1">slimme leerfases</div></div>
+            <div class="snel-perk"><div class="snel-perk-num">∞</div><div class="snel-perk-label" data-i18n="snel_perk2">vragen over je stof</div></div>
+            <div class="snel-perk"><div class="snel-perk-num">↻</div><div class="snel-perk-label" data-i18n="snel_perk3">fouten komen terug</div></div>
+          </div>
+        </div>
+
+        <div>
+          <div class="snel-section-label">
+            <span class="snel-section-num">1</span>
+            <span data-i18n="snel_step_photos">Foto's van je stof</span>
+            <span class="snel-section-hint" data-i18n="snel_step_photos_hint">meerdere mag</span>
+          </div>
+          <div class="upload-zone" id="snelUploadZone">
+            <div id="snelUploadPrompt">
+              <div class="upload-icon-wrap"><svg class="icon icon-lg"><use href="#i-camera"/></svg></div>
+              <p><strong data-i18n="snel_upload_main">Klik om foto's te kiezen</strong></p>
+              <p data-i18n="snel_upload_sub">Samenvatting, woordjes, aantekeningen — alles mag</p>
+              <div class="upload-actions">
+                <button class="secondary-btn" type="button" onclick="event.stopPropagation(); document.getElementById('snelCameraInput').click()">
+                  <svg class="icon"><use href="#i-camera"/></svg> <span data-i18n="btn_camera">Camera</span>
+                </button>
+                <button class="secondary-btn" type="button" onclick="event.stopPropagation(); document.getElementById('snelFileInput').click()">
+                  <svg class="icon"><use href="#i-image"/></svg> <span data-i18n="btn_gallery">Uit galerij</span>
+                </button>
+              </div>
+            </div>
+            <div id="snelThumbnails" class="learn-thumbnails hidden"></div>
+          </div>
+          <input type="file" id="snelFileInput" accept="image/*" multiple>
+          <input type="file" id="snelCameraInput" accept="image/*" capture="environment" multiple>
+        </div>
+
+        <div>
+          <div class="snel-section-label">
+            <span class="snel-section-num">2</span>
+            <span data-i18n="snel_step_link">Of plak een link naar je stof</span>
+            <span class="snel-section-hint" data-i18n="snel_optional">optioneel</span>
+          </div>
+          <input type="url" id="snelLinkInput" class="snel-link-input" inputmode="url" autocomplete="off" spellcheck="false"
+            data-i18n-placeholder="snel_link_placeholder"
+            placeholder="https://… (openbare webpagina of PDF)">
+          <div class="snel-link-note" data-i18n="snel_link_note">Max kan openbare webpagina's en PDF-links openen en lezen. Een Teams-, OneDrive- of SharePoint-bestand achter een login kan hij niet openen — maak daar een foto/screenshot van, exporteer naar PDF, of zet de deel-link op 'iedereen met de link'.</div>
+        </div>
+
+        <div>
+          <div class="snel-section-label">
+            <span class="snel-section-num">3</span>
+            <span data-i18n="snel_step_desc">Wat moet je nog meer kennen?</span>
+            <span class="snel-section-hint" data-i18n="snel_optional">optioneel</span>
+          </div>
+          <textarea id="snelDescription" class="snel-description" rows="3"
+            data-i18n-placeholder="snel_desc_placeholder"
+            placeholder="Vertel zelf wat extra: bijv. 'focus op hoofdstuk 3 en 4', 'de jaartallen zijn belangrijk', 'ook de begrippen die de docent noemde: ...'"></textarea>
+        </div>
+
+        <div class="snel-generate-wrap">
+          <button class="primary-btn" id="snelGenerateBtn" disabled>
+            <svg class="icon icon-sm"><use href="#i-bolt"/></svg>
+            <span data-i18n="snel_generate">Maak mijn overhoring</span>
+          </button>
+          <div class="snel-generate-note" data-i18n="snel_generate_note">Max leest je foto's en maakt in een paar tellen een persoonlijke leersessie. Je hebt hiervoor je eigen API-sleutel nodig (gratis aan te maken).</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Screen 2: loading -->
+  <div class="snel-screen" id="snelLoadingScreen">
+    <div class="snel-loading">
+      <div class="snel-spinner"><span class="snel-spinner-icon"><svg class="icon"><use href="#i-bolt"/></svg></span></div>
+      <h2 data-i18n="snel_loading_title">Max maakt je overhoring…</h2>
+      <p data-i18n="snel_loading_text">Hij leest al je foto's, haalt de belangrijke stof eruit en bouwt je vragenlijst, invuloefeningen en open vragen.</p>
+      <div class="snel-loading-status" id="snelLoadingStatus"></div>
+    </div>
+  </div>
+
+  <!-- Screen 2b: recap — a short, clear summary of all the material before the questions -->
+  <div class="snel-screen" id="snelRecapScreen">
+    <div class="snel-topbar">
+      <button type="button" class="back-link" id="snelRecapBackBtn">
+        <svg class="icon"><use href="#i-arrow-right"/></svg>
+        <span data-i18n="btn_back">Terug</span>
+      </button>
+      <div class="snel-topbar-title" data-i18n="snel_topbar">Snel Leren</div>
+    </div>
+    <div class="snel-recap-scroll">
+      <div class="snel-recap-inner">
+        <span class="snel-recap-badge"><svg class="icon"><use href="#i-book"/></svg><span data-i18n="snel_recap_badge">Eerst even opfrissen</span></span>
+        <h2 class="snel-recap-title" id="snelRecapTitle">Samenvatting</h2>
+        <p class="snel-recap-summary" id="snelRecapSummary"></p>
+        <div class="snel-recap-label" id="snelRecapKeyLabel" data-i18n="snel_recap_keypoints">De belangrijkste punten</div>
+        <ul class="snel-recap-list" id="snelRecapList"></ul>
+      </div>
+    </div>
+    <div class="snel-recap-foot">
+      <button type="button" class="primary-btn" id="snelRecapStartBtn">
+        <span data-i18n="snel_recap_start">Ik ben er klaar voor — start de overhoring</span>
+        <svg class="icon icon-sm"><use href="#i-arrow-right"/></svg>
+      </button>
+    </div>
+  </div>
+
+  <!-- Screen 3: session (3 phases + review) -->
+  <div class="snel-screen" id="snelSessionScreen">
+    <div class="snel-topbar">
+      <button type="button" class="back-link" id="snelSessionBackBtn">
+        <svg class="icon"><use href="#i-arrow-right"/></svg>
+        <span data-i18n="btn_back">Terug</span>
+      </button>
+      <div class="snel-xp-chip"><svg class="icon"><use href="#i-check-circle"/></svg><span id="snelLiveScore">0</span></div>
+    </div>
+    <div class="snel-session-head">
+      <div class="snel-phasenav" id="snelPhaseNav"></div>
+      <div class="snel-progress"><div class="snel-progress-fill" id="snelProgressFill"></div></div>
+      <div class="snel-progress-row">
+        <span class="snel-phase-name" id="snelPhaseName"></span>
+        <span class="snel-counter" id="snelCounter">0 / 0</span>
+      </div>
+    </div>
+    <div class="snel-stage" id="snelStage"></div>
+    <div class="snel-session-foot">
+      <button type="button" class="snel-foot-btn" id="snelPrevBtn">
+        <svg class="icon" style="transform: rotate(180deg);"><use href="#i-arrow-right"/></svg>
+        <span data-i18n="snel_prev">Vorige</span>
+      </button>
+      <button type="button" class="snel-foot-btn skip" id="snelSkipPhaseBtn" data-i18n="snel_skip_phase">Fase overslaan</button>
+      <button type="button" class="snel-foot-btn primary" id="snelNextBtn">
+        <span data-i18n="snel_next">Volgende</span>
+        <svg class="icon"><use href="#i-arrow-right"/></svg>
+      </button>
+    </div>
+  </div>
+
+  <!-- Screen 4: summary -->
+  <div class="snel-screen" id="snelSummaryScreen">
+    <div class="snel-topbar">
+      <div class="snel-topbar-title" data-i18n="snel_topbar">Snel Leren</div>
+      <button type="button" class="back-link" id="snelSummaryCloseBtn" style="margin-left:auto;">
+        <span data-i18n="snel_close">Sluiten</span>
+      </button>
+    </div>
+    <div class="snel-summary-scroll">
+      <div class="snel-summary-inner">
+        <div class="snel-summary-medal" id="snelSummaryMedal"><svg class="icon"><use href="#i-trophy"/></svg></div>
+        <h2 id="snelSummaryTitle" data-i18n="snel_done_title">Sessie klaar!</h2>
+        <p id="snelSummaryText" data-i18n="snel_done_text">Je hebt je hele stof doorgewerkt. Sterk gedaan!</p>
+        <div class="snel-score-big" id="snelScoreBig">0%</div>
+        <div class="snel-score-sub" id="snelScoreSub"></div>
+        <div class="snel-score-grid">
+          <div class="snel-score-cell"><div class="snel-score-cell-val" id="snelScoreRecall">0</div><div class="snel-score-cell-label" data-i18n="snel_phase_recall">Vragenlijst</div></div>
+          <div class="snel-score-cell"><div class="snel-score-cell-val" id="snelScoreFill">0</div><div class="snel-score-cell-label" data-i18n="snel_phase_fill">Invullen</div></div>
+          <div class="snel-score-cell"><div class="snel-score-cell-val" id="snelScoreShort">0</div><div class="snel-score-cell-label" data-i18n="snel_phase_short">Open vragen</div></div>
+        </div>
+        <div class="snel-review-banner" id="snelReviewBanner" style="display:none;">
+          <svg class="icon"><use href="#i-target"/></svg>
+          <div>
+            <strong id="snelReviewCount"></strong>
+            <span data-i18n="snel_review_hint">Doe ze nog één keer tot je ze allemaal goed hebt.</span>
+          </div>
+        </div>
+        <div class="snel-summary-actions">
+          <button type="button" class="primary-btn" id="snelReviewBtn" style="display:none;" data-i18n="snel_review_btn">Herhaal mijn fouten</button>
+          <button type="button" class="secondary-btn" id="snelSaveDeckBtn" data-i18n="snel_save_deck">Bewaar als flitskaarten</button>
+          <button type="button" class="secondary-btn" id="snelRestartBtn" data-i18n="snel_restart">Hele sessie opnieuw</button>
+          <button type="button" class="secondary-btn" id="snelNewMaterialBtn" data-i18n="snel_new_material">Nieuwe stof inladen</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
 <!-- Intro / sales pitch (full-screen, shown on first ever visit) -->
 <div class="intro-overlay" id="introOverlay">
   <div class="intro-top">
@@ -6431,6 +7099,79 @@
 <script>
 const TRANSLATIONS = {
   nl: {
+    snel_section_label: 'Of sprint in één keer door je hele toets',
+    snel_entry_kicker: 'Nieuw',
+    snel_entry_title: 'Snel Leren — sprint door je stof',
+    snel_entry_desc: "Foto's erin + jouw eigen aantekeningen. Max maakt meteen een complete overhoring: een lange vragenlijst, invuloefeningen én open vragen. Fouten krijg je aan het eind terug.",
+    snel_topbar: 'Snel Leren',
+    snel_recap_badge: 'Eerst even opfrissen',
+    snel_recap_keypoints: 'De belangrijkste punten',
+    snel_recap_start: 'Ik ben er klaar voor — start de overhoring',
+    snel_recap_fallback_title: 'Samenvatting',
+    snel_hero_badge: 'Studeer-sprint',
+    snel_hero_title: 'Je hele toets in één sessie',
+    snel_hero_text: 'Gooi je samenvatting, woordjes of aantekeningen erin als foto en vul aan met wat je zelf nog wilt kennen. Max maakt er meteen een complete overhoring van — eerst een lange vragenlijst over álle stof, dan invuloefeningen en tot slot open vragen. Wat je fout doet, krijg je aan het eind nog een keer. Eén knop, en je bent klaar voor de toets.',
+    snel_perk1: 'slimme leerfases',
+    snel_perk2: 'vragen over je stof',
+    snel_perk3: 'fouten komen terug',
+    snel_step_photos: "Foto's van je stof",
+    snel_step_photos_hint: 'meerdere mag',
+    snel_step_link: 'Of plak een link naar je stof',
+    snel_link_placeholder: 'https://… (openbare webpagina of PDF)',
+    snel_link_note: "Max kan openbare webpagina's en PDF-links openen en lezen. Een Teams-, OneDrive- of SharePoint-bestand achter een login kan hij niet openen — maak daar een foto/screenshot van, exporteer naar PDF, of zet de deel-link op 'iedereen met de link'.",
+    snel_upload_main: "Klik om foto's te kiezen",
+    snel_upload_sub: 'Samenvatting, woordjes, aantekeningen — alles mag',
+    snel_step_desc: 'Wat moet je nog meer kennen?',
+    snel_optional: 'optioneel',
+    snel_desc_placeholder: "Plak hier je aantekeningen of stof, of geef aanwijzingen: bijv. 'focus op hoofdstuk 3 en 4', 'de jaartallen zijn belangrijk'. Een link mag ook.",
+    snel_generate: 'Maak mijn overhoring',
+    snel_generate_note: "Max leest je foto's en maakt in een paar tellen een persoonlijke leersessie. Je hebt hiervoor je eigen API-sleutel nodig (gratis aan te maken).",
+    snel_loading_title: 'Max maakt je overhoring…',
+    snel_loading_text: "Hij leest al je foto's, links en aantekeningen, haalt de belangrijke stof eruit en bouwt je vragenlijst, invuloefeningen en open vragen.",
+    snel_status1: 'Je stof lezen…',
+    snel_status2: 'Belangrijke stof eruit halen…',
+    snel_status3: 'Vragen schrijven…',
+    snel_status4: 'Bijna klaar…',
+    snel_phase_recall: 'Vragenlijst',
+    snel_phase_fill: 'Invullen',
+    snel_phase_short: 'Open vragen',
+    snel_phase_review: 'Herhaling',
+    snel_show_answer: 'Toon antwoord',
+    snel_answer_label: 'Antwoord',
+    snel_knew: 'Wist ik',
+    snel_didnt_know: 'Wist ik niet',
+    snel_check: 'Nakijken',
+    snel_fill_placeholder: 'Vul het ontbrekende woord in…',
+    snel_correct: 'Goed!',
+    snel_wrong: 'Net niet',
+    snel_correct_answer: 'Juiste antwoord',
+    snel_continue: 'Volgende',
+    snel_check_short: 'Bekijk modelantwoord',
+    snel_model_answer: 'Modelantwoord',
+    snel_short_placeholder: 'Typ je antwoord in je eigen woorden…',
+    snel_self_right: 'Had ik goed',
+    snel_self_wrong: 'Toch fout',
+    snel_prev: 'Vorige',
+    snel_next: 'Volgende',
+    snel_skip_phase: 'Fase overslaan',
+    snel_phase_done: 'Fase afgerond!',
+    snel_phase_next: 'Door naar: {name}',
+    snel_done_title: 'Sessie klaar!',
+    snel_done_text: 'Sterk gewerkt — pak nu je fouten er nog één keer bij.',
+    snel_perfect_title: 'Alles goed! 🏆',
+    snel_perfect_sub: 'Je beheerst je stof helemaal. Klaar voor de toets!',
+    snel_score_sub: '{right} van {total} goed',
+    snel_review_count_one: 'Je hebt nog 1 fout open',
+    snel_review_count_many: 'Je hebt nog {n} fouten open',
+    snel_review_hint: 'Doe ze nog één keer tot je ze allemaal goed hebt.',
+    snel_review_btn: 'Herhaal mijn fouten',
+    snel_save_deck: 'Bewaar als flitskaarten',
+    snel_saved: 'Bewaard ✓',
+    snel_restart: 'Hele sessie opnieuw',
+    snel_new_material: 'Nieuwe stof inladen',
+    snel_close: 'Sluiten',
+    snel_deck_title: 'Snel Leren',
+    snel_gen_error: 'Het lukte niet om er een goede overhoring van te maken. Probeer duidelijkere foto’s of voeg wat uitleg toe.',
     app_name: 'Huiswerk helper',
     btn_reset: 'Nieuwe opdracht',
     btn_cancel: 'Annuleren',
@@ -6771,6 +7512,79 @@ const TRANSLATIONS = {
     time_day_ago: '{n}d geleden',
   },
   en: {
+    snel_section_label: 'Or sprint through your whole test at once',
+    snel_entry_kicker: 'New',
+    snel_entry_title: 'Quick Learn — sprint through your material',
+    snel_entry_desc: 'Drop in photos + your own notes. Max instantly builds a full self-test: a long question list, fill-in-the-blanks and open questions. Mistakes come back at the end.',
+    snel_topbar: 'Quick Learn',
+    snel_recap_badge: 'A quick refresher first',
+    snel_recap_keypoints: 'The key points',
+    snel_recap_start: 'I’m ready — start the self-test',
+    snel_recap_fallback_title: 'Summary',
+    snel_hero_badge: 'Study sprint',
+    snel_hero_title: 'Your whole test in one session',
+    snel_hero_text: 'Drop in your summary, vocab or notes as a photo and add anything else you still want to know. Max instantly turns it into a complete self-test — first a long question list covering everything, then fill-in-the-blanks and finally open questions. Anything you get wrong comes back at the end. One button, and you’re ready for the test.',
+    snel_perk1: 'smart learning phases',
+    snel_perk2: 'questions on your material',
+    snel_perk3: 'mistakes come back',
+    snel_step_photos: 'Photos of your material',
+    snel_step_photos_hint: 'multiple is fine',
+    snel_step_link: 'Or paste a link to your material',
+    snel_link_placeholder: 'https://… (public web page or PDF)',
+    snel_link_note: "Max can open and read public web pages and PDF links. A Teams, OneDrive or SharePoint file behind a login can't be opened — take a photo/screenshot of it, export to PDF, or set the share link to 'anyone with the link'.",
+    snel_upload_main: 'Click to choose photos',
+    snel_upload_sub: 'Summary, vocab, notes — anything goes',
+    snel_step_desc: 'What else do you need to know?',
+    snel_optional: 'optional',
+    snel_desc_placeholder: "Paste your notes or material here, or add guidance: e.g. 'focus on chapters 3 and 4', 'the dates matter'. A link works too.",
+    snel_generate: 'Build my self-test',
+    snel_generate_note: 'Max reads your photos and builds a personal study session in seconds. You’ll need your own API key for this (free to create).',
+    snel_loading_title: 'Max is building your self-test…',
+    snel_loading_text: 'He reads all your photos, links and notes, pulls out the important material and builds your question list, fill-in-the-blanks and open questions.',
+    snel_status1: 'Reading your material…',
+    snel_status2: 'Pulling out the key material…',
+    snel_status3: 'Writing questions…',
+    snel_status4: 'Almost done…',
+    snel_phase_recall: 'Question list',
+    snel_phase_fill: 'Fill in',
+    snel_phase_short: 'Open questions',
+    snel_phase_review: 'Review',
+    snel_show_answer: 'Show answer',
+    snel_answer_label: 'Answer',
+    snel_knew: 'I knew it',
+    snel_didnt_know: "Didn't know",
+    snel_check: 'Check',
+    snel_fill_placeholder: 'Type the missing word…',
+    snel_correct: 'Correct!',
+    snel_wrong: 'Not quite',
+    snel_correct_answer: 'Correct answer',
+    snel_continue: 'Next',
+    snel_check_short: 'Show model answer',
+    snel_model_answer: 'Model answer',
+    snel_short_placeholder: 'Type your answer in your own words…',
+    snel_self_right: 'I had it right',
+    snel_self_wrong: 'Got it wrong',
+    snel_prev: 'Back',
+    snel_next: 'Next',
+    snel_skip_phase: 'Skip phase',
+    snel_phase_done: 'Phase complete!',
+    snel_phase_next: 'On to: {name}',
+    snel_done_title: 'Session done!',
+    snel_done_text: 'Strong work — now take one more pass at your mistakes.',
+    snel_perfect_title: 'All correct! 🏆',
+    snel_perfect_sub: 'You’ve fully mastered your material. Ready for the test!',
+    snel_score_sub: '{right} of {total} correct',
+    snel_review_count_one: 'You still have 1 mistake left',
+    snel_review_count_many: 'You still have {n} mistakes left',
+    snel_review_hint: 'Do them again until you get them all right.',
+    snel_review_btn: 'Replay my mistakes',
+    snel_save_deck: 'Save as flashcards',
+    snel_saved: 'Saved ✓',
+    snel_restart: 'Restart whole session',
+    snel_new_material: 'Load new material',
+    snel_close: 'Close',
+    snel_deck_title: 'Quick Learn',
+    snel_gen_error: 'Couldn’t turn that into a good self-test. Try clearer photos or add some context.',
     app_name: 'Homework helper',
     btn_reset: 'New task',
     btn_cancel: 'Cancel',
@@ -7083,6 +7897,79 @@ const TRANSLATIONS = {
     time_day_ago: '{n}d ago',
   },
   de: {
+    snel_section_label: 'Oder sprinte in einem Rutsch durch deine ganze Prüfung',
+    snel_entry_kicker: 'Neu',
+    snel_entry_title: 'Schnell-Lernen — Sprint durch deinen Stoff',
+    snel_entry_desc: 'Fotos rein + deine eigenen Notizen. Max baut sofort eine komplette Abfrage: eine lange Fragenliste, Lückentexte und offene Fragen. Fehler kommen am Ende zurück.',
+    snel_topbar: 'Schnell-Lernen',
+    snel_recap_badge: 'Erst kurz auffrischen',
+    snel_recap_keypoints: 'Die wichtigsten Punkte',
+    snel_recap_start: 'Ich bin bereit — Abfrage starten',
+    snel_recap_fallback_title: 'Zusammenfassung',
+    snel_hero_badge: 'Lern-Sprint',
+    snel_hero_title: 'Deine ganze Prüfung in einer Sitzung',
+    snel_hero_text: 'Wirf deine Zusammenfassung, Vokabeln oder Notizen als Foto rein und ergänze, was du sonst noch können willst. Max macht sofort eine komplette Abfrage daraus — zuerst eine lange Fragenliste über den gesamten Stoff, dann Lückentexte und zum Schluss offene Fragen. Was du falsch hast, kommt am Ende noch einmal. Ein Knopf, und du bist bereit für die Prüfung.',
+    snel_perk1: 'clevere Lernphasen',
+    snel_perk2: 'Fragen zu deinem Stoff',
+    snel_perk3: 'Fehler kommen zurück',
+    snel_step_photos: 'Fotos von deinem Stoff',
+    snel_step_photos_hint: 'mehrere möglich',
+    snel_step_link: 'Oder füge einen Link zu deinem Stoff ein',
+    snel_link_placeholder: 'https://… (öffentliche Webseite oder PDF)',
+    snel_link_note: 'Max kann öffentliche Webseiten und PDF-Links öffnen und lesen. Eine Teams-, OneDrive- oder SharePoint-Datei hinter einem Login kann er nicht öffnen — mach davon ein Foto/Screenshot, exportiere als PDF oder stelle den Freigabelink auf „jeder mit dem Link".',
+    snel_upload_main: 'Klicke, um Fotos zu wählen',
+    snel_upload_sub: 'Zusammenfassung, Vokabeln, Notizen — alles geht',
+    snel_step_desc: 'Was musst du sonst noch können?',
+    snel_optional: 'optional',
+    snel_desc_placeholder: "Füge hier deine Notizen oder deinen Stoff ein, oder gib Hinweise: z. B. 'Fokus auf Kapitel 3 und 4', 'die Jahreszahlen sind wichtig'. Ein Link geht auch.",
+    snel_generate: 'Meine Abfrage erstellen',
+    snel_generate_note: 'Max liest deine Fotos und baut in Sekunden eine persönliche Lernsitzung. Dafür brauchst du deinen eigenen API-Schlüssel (kostenlos zu erstellen).',
+    snel_loading_title: 'Max erstellt deine Abfrage…',
+    snel_loading_text: 'Er liest all deine Fotos, Links und Notizen, holt den wichtigen Stoff heraus und baut deine Fragenliste, Lückentexte und offenen Fragen.',
+    snel_status1: 'Deinen Stoff lesen…',
+    snel_status2: 'Wichtigen Stoff herausholen…',
+    snel_status3: 'Fragen schreiben…',
+    snel_status4: 'Fast fertig…',
+    snel_phase_recall: 'Fragenliste',
+    snel_phase_fill: 'Lückentext',
+    snel_phase_short: 'Offene Fragen',
+    snel_phase_review: 'Wiederholung',
+    snel_show_answer: 'Antwort zeigen',
+    snel_answer_label: 'Antwort',
+    snel_knew: 'Wusste ich',
+    snel_didnt_know: 'Wusste ich nicht',
+    snel_check: 'Prüfen',
+    snel_fill_placeholder: 'Tippe das fehlende Wort…',
+    snel_correct: 'Richtig!',
+    snel_wrong: 'Knapp daneben',
+    snel_correct_answer: 'Richtige Antwort',
+    snel_continue: 'Weiter',
+    snel_check_short: 'Musterantwort zeigen',
+    snel_model_answer: 'Musterantwort',
+    snel_short_placeholder: 'Tippe deine Antwort in eigenen Worten…',
+    snel_self_right: 'Hatte ich richtig',
+    snel_self_wrong: 'Doch falsch',
+    snel_prev: 'Zurück',
+    snel_next: 'Weiter',
+    snel_skip_phase: 'Phase überspringen',
+    snel_phase_done: 'Phase geschafft!',
+    snel_phase_next: 'Weiter zu: {name}',
+    snel_done_title: 'Sitzung fertig!',
+    snel_done_text: 'Stark gemacht — geh jetzt deine Fehler noch einmal durch.',
+    snel_perfect_title: 'Alles richtig! 🏆',
+    snel_perfect_sub: 'Du beherrschst deinen Stoff vollständig. Bereit für die Prüfung!',
+    snel_score_sub: '{right} von {total} richtig',
+    snel_review_count_one: 'Du hast noch 1 Fehler offen',
+    snel_review_count_many: 'Du hast noch {n} Fehler offen',
+    snel_review_hint: 'Mach sie noch einmal, bis du alle richtig hast.',
+    snel_review_btn: 'Meine Fehler wiederholen',
+    snel_save_deck: 'Als Karteikarten speichern',
+    snel_saved: 'Gespeichert ✓',
+    snel_restart: 'Ganze Sitzung neu',
+    snel_new_material: 'Neuen Stoff laden',
+    snel_close: 'Schließen',
+    snel_deck_title: 'Schnell-Lernen',
+    snel_gen_error: 'Daraus ließ sich keine gute Abfrage machen. Versuch klarere Fotos oder füge Kontext hinzu.',
     app_name: 'Hausaufgaben-Helfer',
     btn_reset: 'Neue Aufgabe',
     btn_cancel: 'Abbrechen',
@@ -7393,6 +8280,79 @@ const TRANSLATIONS = {
     time_day_ago: 'vor {n}T',
   },
   fr: {
+    snel_section_label: 'Ou révise tout ton contrôle d’un coup',
+    snel_entry_kicker: 'Nouveau',
+    snel_entry_title: 'Révision Express — fonce dans ta matière',
+    snel_entry_desc: 'Tes photos + tes propres notes. Max crée aussitôt une interro complète : une longue liste de questions, des textes à trous et des questions ouvertes. Tes erreurs reviennent à la fin.',
+    snel_topbar: 'Révision Express',
+    snel_recap_badge: 'D’abord un petit rappel',
+    snel_recap_keypoints: 'Les points essentiels',
+    snel_recap_start: 'Je suis prêt — lancer l’interro',
+    snel_recap_fallback_title: 'Résumé',
+    snel_hero_badge: 'Sprint de révision',
+    snel_hero_title: 'Tout ton contrôle en une seule séance',
+    snel_hero_text: 'Glisse ta synthèse, ton vocabulaire ou tes notes en photo et ajoute ce que tu veux encore savoir. Max en fait aussitôt une interro complète — d’abord une longue liste de questions sur toute la matière, puis des textes à trous et enfin des questions ouvertes. Ce que tu rates revient à la fin. Un bouton, et te voilà prêt pour le contrôle.',
+    snel_perk1: 'phases d’apprentissage malignes',
+    snel_perk2: 'questions sur ta matière',
+    snel_perk3: 'les erreurs reviennent',
+    snel_step_photos: 'Photos de ta matière',
+    snel_step_photos_hint: 'plusieurs possible',
+    snel_step_link: 'Ou colle un lien vers ta matière',
+    snel_link_placeholder: 'https://… (page web publique ou PDF)',
+    snel_link_note: "Max peut ouvrir et lire des pages web publiques et des liens PDF. Un fichier Teams, OneDrive ou SharePoint derrière une connexion ne peut pas être ouvert — prends-en une photo/capture, exporte en PDF, ou règle le lien de partage sur « tout le monde avec le lien ».",
+    snel_upload_main: 'Clique pour choisir des photos',
+    snel_upload_sub: 'Synthèse, vocabulaire, notes — tout passe',
+    snel_step_desc: 'Que dois-tu savoir d’autre ?',
+    snel_optional: 'facultatif',
+    snel_desc_placeholder: "Colle ici tes notes ou ta matière, ou ajoute des consignes : ex. 'focus sur les chapitres 3 et 4', 'les dates importent'. Un lien marche aussi.",
+    snel_generate: 'Créer mon interro',
+    snel_generate_note: 'Max lit tes photos et crée une séance de révision personnelle en quelques secondes. Il te faut ta propre clé API (gratuite à créer).',
+    snel_loading_title: 'Max prépare ton interro…',
+    snel_loading_text: 'Il lit toutes tes photos, tes liens et tes notes, extrait l’essentiel et construit ta liste de questions, tes textes à trous et tes questions ouvertes.',
+    snel_status1: 'Lecture de ta matière…',
+    snel_status2: 'Extraction de l’essentiel…',
+    snel_status3: 'Rédaction des questions…',
+    snel_status4: 'Presque fini…',
+    snel_phase_recall: 'Liste de questions',
+    snel_phase_fill: 'À compléter',
+    snel_phase_short: 'Questions ouvertes',
+    snel_phase_review: 'Révision',
+    snel_show_answer: 'Voir la réponse',
+    snel_answer_label: 'Réponse',
+    snel_knew: 'Je savais',
+    snel_didnt_know: 'Je ne savais pas',
+    snel_check: 'Vérifier',
+    snel_fill_placeholder: 'Tape le mot manquant…',
+    snel_correct: 'Correct !',
+    snel_wrong: 'Presque',
+    snel_correct_answer: 'Bonne réponse',
+    snel_continue: 'Suivant',
+    snel_check_short: 'Voir la réponse modèle',
+    snel_model_answer: 'Réponse modèle',
+    snel_short_placeholder: 'Tape ta réponse avec tes propres mots…',
+    snel_self_right: "J'avais juste",
+    snel_self_wrong: 'En fait faux',
+    snel_prev: 'Précédent',
+    snel_next: 'Suivant',
+    snel_skip_phase: 'Passer la phase',
+    snel_phase_done: 'Phase terminée !',
+    snel_phase_next: 'Place à : {name}',
+    snel_done_title: 'Séance terminée !',
+    snel_done_text: 'Beau travail — reprends maintenant tes erreurs une dernière fois.',
+    snel_perfect_title: 'Tout juste ! 🏆',
+    snel_perfect_sub: 'Tu maîtrises totalement ta matière. Prêt pour le contrôle !',
+    snel_score_sub: '{right} sur {total} corrects',
+    snel_review_count_one: 'Il te reste 1 erreur',
+    snel_review_count_many: 'Il te reste {n} erreurs',
+    snel_review_hint: 'Refais-les jusqu’à ce que tout soit juste.',
+    snel_review_btn: 'Refaire mes erreurs',
+    snel_save_deck: 'Enregistrer en cartes',
+    snel_saved: 'Enregistré ✓',
+    snel_restart: 'Recommencer la séance',
+    snel_new_material: 'Charger une nouvelle matière',
+    snel_close: 'Fermer',
+    snel_deck_title: 'Révision Express',
+    snel_gen_error: 'Impossible d’en faire une bonne interro. Essaie des photos plus nettes ou ajoute du contexte.',
     app_name: 'Aide aux devoirs',
     btn_reset: 'Nouvel exercice',
     btn_cancel: 'Annuler',
@@ -7705,6 +8665,79 @@ const TRANSLATIONS = {
     time_day_ago: 'il y a {n}j',
   },
   es: {
+    snel_section_label: 'O repasa todo tu examen de una vez',
+    snel_entry_kicker: 'Nuevo',
+    snel_entry_title: 'Aprende Rápido — repasa toda tu materia',
+    snel_entry_desc: 'Tus fotos + tus propias notas. Max crea al instante un examen completo: una larga lista de preguntas, rellenar huecos y preguntas abiertas. Los fallos vuelven al final.',
+    snel_topbar: 'Aprende Rápido',
+    snel_recap_badge: 'Primero un repaso rápido',
+    snel_recap_keypoints: 'Los puntos clave',
+    snel_recap_start: 'Estoy listo — empezar el examen',
+    snel_recap_fallback_title: 'Resumen',
+    snel_hero_badge: 'Sprint de estudio',
+    snel_hero_title: 'Todo tu examen en una sesión',
+    snel_hero_text: 'Mete tu resumen, vocabulario o apuntes como foto y añade lo que aún quieras saber. Max lo convierte al instante en un examen completo — primero una larga lista de preguntas sobre toda la materia, luego rellenar huecos y por último preguntas abiertas. Lo que falles vuelve al final. Un botón, y estás listo para el examen.',
+    snel_perk1: 'fases de estudio inteligentes',
+    snel_perk2: 'preguntas sobre tu materia',
+    snel_perk3: 'los fallos vuelven',
+    snel_step_photos: 'Fotos de tu materia',
+    snel_step_photos_hint: 'varias valen',
+    snel_step_link: 'O pega un enlace a tu materia',
+    snel_link_placeholder: 'https://… (página web pública o PDF)',
+    snel_link_note: 'Max puede abrir y leer páginas web públicas y enlaces a PDF. Un archivo de Teams, OneDrive o SharePoint detrás de un inicio de sesión no se puede abrir — hazle una foto/captura, expórtalo a PDF, o pon el enlace para compartir en «cualquiera con el enlace».',
+    snel_upload_main: 'Pulsa para elegir fotos',
+    snel_upload_sub: 'Resumen, vocabulario, apuntes — todo vale',
+    snel_step_desc: '¿Qué más necesitas saber?',
+    snel_optional: 'opcional',
+    snel_desc_placeholder: "Pega aquí tus apuntes o materia, o añade indicaciones: p. ej. 'céntrate en los temas 3 y 4', 'las fechas importan'. Un enlace también vale.",
+    snel_generate: 'Crear mi examen',
+    snel_generate_note: 'Max lee tus fotos y crea una sesión de estudio personal en segundos. Necesitas tu propia clave API (gratis de crear).',
+    snel_loading_title: 'Max está creando tu examen…',
+    snel_loading_text: 'Lee todas tus fotos, enlaces y apuntes, saca lo importante y construye tu lista de preguntas, los huecos y las preguntas abiertas.',
+    snel_status1: 'Leyendo tu materia…',
+    snel_status2: 'Sacando lo importante…',
+    snel_status3: 'Escribiendo preguntas…',
+    snel_status4: 'Casi listo…',
+    snel_phase_recall: 'Lista de preguntas',
+    snel_phase_fill: 'Rellenar',
+    snel_phase_short: 'Preguntas abiertas',
+    snel_phase_review: 'Repaso',
+    snel_show_answer: 'Ver respuesta',
+    snel_answer_label: 'Respuesta',
+    snel_knew: 'Lo sabía',
+    snel_didnt_know: 'No lo sabía',
+    snel_check: 'Comprobar',
+    snel_fill_placeholder: 'Escribe la palabra que falta…',
+    snel_correct: '¡Correcto!',
+    snel_wrong: 'Casi',
+    snel_correct_answer: 'Respuesta correcta',
+    snel_continue: 'Siguiente',
+    snel_check_short: 'Ver respuesta modelo',
+    snel_model_answer: 'Respuesta modelo',
+    snel_short_placeholder: 'Escribe tu respuesta con tus palabras…',
+    snel_self_right: 'Lo tenía bien',
+    snel_self_wrong: 'En realidad mal',
+    snel_prev: 'Anterior',
+    snel_next: 'Siguiente',
+    snel_skip_phase: 'Saltar fase',
+    snel_phase_done: '¡Fase completada!',
+    snel_phase_next: 'A por: {name}',
+    snel_done_title: '¡Sesión terminada!',
+    snel_done_text: 'Buen trabajo — ahora repasa tus fallos una vez más.',
+    snel_perfect_title: '¡Todo correcto! 🏆',
+    snel_perfect_sub: 'Dominas tu materia por completo. ¡Listo para el examen!',
+    snel_score_sub: '{right} de {total} correctas',
+    snel_review_count_one: 'Te queda 1 fallo',
+    snel_review_count_many: 'Te quedan {n} fallos',
+    snel_review_hint: 'Hazlos otra vez hasta que los tengas todos bien.',
+    snel_review_btn: 'Repetir mis fallos',
+    snel_save_deck: 'Guardar como tarjetas',
+    snel_saved: 'Guardado ✓',
+    snel_restart: 'Reiniciar la sesión',
+    snel_new_material: 'Cargar nueva materia',
+    snel_close: 'Cerrar',
+    snel_deck_title: 'Aprende Rápido',
+    snel_gen_error: 'No se pudo crear un buen examen. Prueba con fotos más claras o añade contexto.',
     app_name: 'Ayudante de deberes',
     btn_reset: 'Nueva tarea',
     btn_cancel: 'Cancelar',
@@ -9330,6 +10363,56 @@ ALWAYS:
 - Respect direction strictly. If "alleen NL → EN", NEVER ask EN → NL.
 
 START NOW: read the photos, count, confirm, then offer the method choice.`;
+
+// ============ SNEL LEREN — one-shot study-set generator ============
+// ============ SNEL LEREN — one-shot study-set generator ============
+// Max reads the photos + the student's own notes and returns a COMPLETE study
+// set as strict JSON: a long recall list, fill-in-the-blank items and short
+// open questions. Parsed client-side into a 3-phase study sprint.
+const SNEL_PROMPT = (name, languageName, description, profileContext) => `You are Max, the study assistant of the "Huiswerk helper" app. You generate a COMPLETE self-test set for ${name} from whatever study material they give you.
+
+CRITICAL LANGUAGE RULE: Every question, answer, sentence and the title MUST be written in ${languageName}. The ONLY exception is foreign-language vocabulary the student is explicitly studying (then keep the target-language word as-is).
+
+WHAT THE STUDENT TYPED (their notes, pasted text and/or extra instructions): "${description || '(nothing typed)'}".
+- If this text contains real study content, treat it as study material too. If it contains instructions (e.g. "focus on chapter 3", "the dates matter"), follow them. Any links inside it will also be listed in the message for you to fetch.
+
+${profileContext}
+
+SOURCES OF THE MATERIAL — you may get ANY combination of these in one go, and you MUST read and use ALL of them:
+1. PHOTOS — read every photo carefully: handwriting, printed text, slides, textbook pages, tables and diagrams. Extract all the content, not just headings.
+2. LINKS (URLs) — you have a web_fetch tool. For EVERY link the student gives, call it to OPEN and READ the page or document IN FULL: work through the whole thing (all sections, every page of a PDF, linked sub-pages if needed), and pull out every important, learnable fact, definition, date, formula and example. Links can be web pages, articles, online slides, Google Docs or PDFs. If a link fails to load or needs a login (e.g. a private Teams / SharePoint / OneDrive file), do NOT invent its contents — use only what you could genuinely read.
+3. TYPED TEXT — the student's notes above may themselves be the material to learn.
+Understand the material deeply: figure out what the topic actually is and what a student would be tested on, then keep the IMPORTANT, learnable information and skip noise (navigation, ads, page numbers, decoration).
+
+YOUR JOB:
+COMBINE every source you were given into ONE coherent study set covering EVERYTHING that has to be learned — no important fact left out. First write a SHORT, CLEAR study summary of the whole topic (so the student can refresh it in under a minute). Then build THREE sets of questions. Calibrate difficulty and wording to the student's level above. If, after honestly trying, you could read NO usable material from any source, return the empty shape described below.
+
+Return your answer as ONE single JSON object and NOTHING else (no greeting, no explanation, no markdown fences). The JSON has exactly this shape:
+
+{
+  "title": "a short title (2-5 words) describing the topic",
+  "summary": "1-3 short sentences giving the big picture of the whole topic",
+  "keypoints": [ "a concise, must-know fact or rule", "another key point", ... ],
+  "recall": [ { "q": "question", "a": "the correct answer" }, ... ],
+  "fill": [ { "sentence": "a sentence with exactly one ___ gap", "answer": "the word(s) that fill the gap" }, ... ],
+  "short": [ { "q": "open question needing a short written answer", "a": "a concise model answer (1-2 sentences)" }, ... ]
+}
+
+RULES FOR EACH SECTION:
+0. "summary" + "keypoints" — THE RECAP, shown BEFORE the questions. "summary" is 1-3 sentences that frame the whole topic. "keypoints" is a SHORT but COMPLETE bullet list (typically 5-12 bullets) of the essential things to know — the core facts, definitions, formulas, dates or rules. Each bullet is ONE short line, clear and self-contained. Together they should let the student quickly revise ALL the material before being tested. This is a recap of the KNOWLEDGE, not questions.
+1. "recall" — THE BIG LIST. Make it LONG and EXHAUSTIVE: cover every term, fact, definition, date, name, rule or vocabulary pair in the material. Aim for AS MANY items as the material genuinely contains (typically 15-40+; more if the material is rich). Each "q" is a clear question, each "a" is the exact correct answer (keep answers short and checkable). For vocabulary lists, q = the word, a = its translation/meaning.
+2. "fill" — FILL IN THE BLANK. 8-18 items. Each "sentence" is a meaningful sentence from/about the material with EXACTLY ONE gap written as three underscores: ___ . The "answer" is the missing word or short phrase. Pick gaps on the KEY word (the thing worth knowing), never a trivial article. Keep the answer to 1-3 words where possible.
+3. "short" — SHORT OPEN QUESTIONS. 6-14 items. Questions that need a 1-2 sentence written answer (explain, describe, why, how, compare). "a" is a concise correct model answer the student can compare against.
+
+QUALITY RULES:
+- Cover the WHOLE material, not just the first photo. Spread questions across all topics found.
+- No duplicate questions across the three sections (each section tests differently).
+- Answers must be unambiguous and actually correct based on the material.
+- If math/science formulas appear, you MAY use LaTeX wrapped in single dollar signs inside any field (e.g. "$\\frac{1}{2}$", "$H_2O$").
+- Plain text only inside JSON strings — escape any double quotes. Output valid JSON that JSON.parse can read.
+- If the photos are unreadable or contain no learnable material, return {"title":"","summary":"","keypoints":[],"recall":[],"fill":[],"short":[]}.
+
+Output the JSON now.`;
 
 // ============ CLASSROOM MODE prompt ============
 // Max becomes "Meester Max", a teacher giving a step-by-step live lesson on a blackboard.
@@ -14593,6 +15676,857 @@ document.addEventListener('keydown', e => {
     else if (e.key === '2' || e.key.toLowerCase() === 'g') gradeFlashcard('right');
   }
 });
+
+// ============ FX helpers (celebration · sparkle · confetti) — overgezet ============
+const prefersReducedMotion = () =>
+  window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+let celebrationTimer = null;
+function showCelebration(icon, title, sub, withConfetti) {
+  let el = $('celebration');
+  if (!el) {
+    el = document.createElement('div');
+    el.id = 'celebration';
+    el.className = 'celebration';
+    document.body.appendChild(el);
+  }
+  el.innerHTML =
+    `<div class="celebration-card">
+       <div class="celebration-icon"><svg class="icon"><use href="#${icon}"/></svg></div>
+       <div class="celebration-text">
+         <div class="celebration-title">${title}</div>
+         ${sub ? `<div class="celebration-sub">${sub}</div>` : ''}
+       </div>
+     </div>`;
+  // restart the slide-in cleanly even if a banner is already showing
+  el.classList.remove('show'); void el.offsetWidth;
+  el.classList.add('show');
+  if (withConfetti) confettiBurst();
+  if (celebrationTimer) clearTimeout(celebrationTimer);
+  celebrationTimer = setTimeout(() => el.classList.remove('show'), 2600);
+}
+
+// ---- Spotlight: briefly bring one element forward (Duolingo-style pop) ----
+function ensureFxLayer() {
+  let l = $('fxLayer');
+  if (!l) { l = document.createElement('div'); l.id = 'fxLayer'; l.className = 'fx-layer'; document.body.appendChild(l); }
+  return l;
+}
+function emphasize(el, opts = {}) {
+  if (!el || prefersReducedMotion()) return;
+  const { rings = true, sparks = true, colors = ['#a78bfa', '#f472b6', '#facc15'], spread = 60 } = opts;
+  // 1) Pop the real element (restart animation if it's mid-flight)
+  el.classList.remove('fx-pop'); void el.offsetWidth;
+  el.classList.add('fx-pop');
+  el.addEventListener('animationend', function done() { el.classList.remove('fx-pop'); el.removeEventListener('animationend', done); }, { once: true });
+  // 2) Localised ring + sparkle burst, centred on the element
+  const r = el.getBoundingClientRect();
+  if (!r.width && !r.height) return;
+  const cx = r.left + r.width / 2, cy = r.top + r.height / 2;
+  const base = Math.max(r.width, r.height);
+  const layer = ensureFxLayer();
+  if (rings) {
+    for (let i = 0; i < 2; i++) {
+      const ring = document.createElement('span');
+      ring.className = 'fx-ring';
+      const size = base * (1.5 + i * 0.7);
+      ring.style.left = cx + 'px'; ring.style.top = cy + 'px';
+      ring.style.width = size + 'px'; ring.style.height = size + 'px';
+      ring.style.borderColor = colors[i % colors.length];
+      ring.style.animationDelay = (i * 0.09) + 's';
+      layer.appendChild(ring);
+      setTimeout(() => ring.remove(), 1050);
+    }
+  }
+  if (sparks) {
+    const n = 12;
+    for (let i = 0; i < n; i++) {
+      const a = (Math.PI * 2 * i) / n + Math.random() * 0.35;
+      const dist = spread + Math.random() * spread * 0.6;
+      const sp = document.createElement('span');
+      sp.className = 'fx-spark';
+      const c = colors[i % colors.length];
+      sp.style.left = cx + 'px'; sp.style.top = cy + 'px';
+      sp.style.background = c; sp.style.color = c;
+      sp.style.setProperty('--dx', (Math.cos(a) * dist).toFixed(1) + 'px');
+      sp.style.setProperty('--dy', (Math.sin(a) * dist).toFixed(1) + 'px');
+      sp.style.animationDelay = (Math.random() * 0.08).toFixed(2) + 's';
+      layer.appendChild(sp);
+      setTimeout(() => sp.remove(), 950);
+    }
+  }
+}
+// Convenience: pop several elements by id with the same options.
+function emphasizeIds(ids, opts) { ids.forEach(id => emphasize($(id), opts)); }
+function confettiBurst() {
+  if (prefersReducedMotion()) return;
+  let layer = $('confetti');
+  if (!layer) {
+    layer = document.createElement('div');
+    layer.id = 'confetti';
+    layer.className = 'confetti';
+    document.body.appendChild(layer);
+  }
+  const colors = ['#a78bfa', '#f472b6', '#facc15', '#4ade80', '#38bdf8'];
+  const frag = document.createDocumentFragment();
+  for (let i = 0; i < 40; i++) {
+    const piece = document.createElement('span');
+    piece.className = 'confetti-piece';
+    piece.style.left = Math.random() * 100 + 'vw';
+    piece.style.background = colors[i % colors.length];
+    piece.style.animationDelay = (Math.random() * 0.25) + 's';
+    piece.style.transform = `rotate(${Math.random() * 360}deg)`;
+    frag.appendChild(piece);
+  }
+  layer.innerHTML = '';
+  layer.appendChild(frag);
+  setTimeout(() => { if (layer) layer.innerHTML = ''; }, 2600);
+}
+
+// ============ Snel Leren — study sprint (recall → fill-in → short answer) ============
+// One AI call turns photos + notes into a 3-phase self-test. Phases are freely
+// skippable via the segmented nav; everything answered wrong is collected and
+// replayed in a review round at the end. Grading: recall + short are self-graded
+// on reveal (free text is unreliable to auto-check), fill-in is auto-checked.
+const snelOverlay = $('snelOverlay');
+const snelScreens = {
+  setup:   $('snelSetupScreen'),
+  loading: $('snelLoadingScreen'),
+  recap:   $('snelRecapScreen'),
+  session: $('snelSessionScreen'),
+  summary: $('snelSummaryScreen'),
+};
+const snelUploadZone   = $('snelUploadZone');
+const snelThumbnails   = $('snelThumbnails');
+const snelUploadPrompt = $('snelUploadPrompt');
+const snelFileInput    = $('snelFileInput');
+const snelCameraInput  = $('snelCameraInput');
+const snelDescription  = $('snelDescription');
+const snelLinkInput    = $('snelLinkInput');
+const snelGenerateBtn  = $('snelGenerateBtn');
+const snelLoadingStatus= $('snelLoadingStatus');
+const snelPhaseNav     = $('snelPhaseNav');
+const snelProgressFill = $('snelProgressFill');
+const snelPhaseName    = $('snelPhaseName');
+const snelCounter      = $('snelCounter');
+const snelStage        = $('snelStage');
+const snelPrevBtn      = $('snelPrevBtn');
+const snelNextBtn      = $('snelNextBtn');
+const snelSkipPhaseBtn = $('snelSkipPhaseBtn');
+const snelLiveScore    = $('snelLiveScore');
+const snelScoreBig     = $('snelScoreBig');
+const snelScoreSub     = $('snelScoreSub');
+const snelScoreRecall  = $('snelScoreRecall');
+const snelScoreFill    = $('snelScoreFill');
+const snelScoreShort   = $('snelScoreShort');
+const snelSummaryText  = $('snelSummaryText');
+const snelSummaryTitle = $('snelSummaryTitle');
+const snelReviewBanner = $('snelReviewBanner');
+const snelReviewCount  = $('snelReviewCount');
+const snelReviewBtn    = $('snelReviewBtn');
+const snelSaveDeckBtn  = $('snelSaveDeckBtn');
+
+const SNEL_PHASES = ['recall', 'fill', 'short'];
+const snelState = {
+  images: [],
+  description: '',
+  links: [],               // every URL Max should fetch & read (link field + any in notes)
+  title: '',
+  summary: '',             // 1-3 sentence overview of the whole topic
+  keypoints: [],           // concise must-know bullets, shown as a recap first
+  phaseKey: 'recall',      // 'recall' | 'fill' | 'short' (review uses reviewActive)
+  index: 0,
+  reviewActive: false,
+  items: { recall: [], fill: [], short: [] },
+  review: [],              // refs to the wrong items currently being replayed
+  xpAwarded: false,
+};
+let snelStatusTimer = null;
+
+function snelShow(screen) {
+  Object.values(snelScreens).forEach(s => s.classList.remove('active'));
+  if (snelScreens[screen]) snelScreens[screen].classList.add('active');
+}
+function openSnel() {
+  // Make sure we have what we need before showing the overlay, so the
+  // onboarding/API-key modals open cleanly on the home view.
+  if (!state.name || !state.profile) { openWelcomeModal(); return; }
+  if (!state.apiKey) { openApiKeyModal(); return; }
+  resetSnelSetup();
+  snelShow('setup');
+  snelOverlay.classList.add('active');
+  document.body.style.overflow = 'hidden';
+}
+function closeSnel() {
+  stopSnelStatus();
+  snelOverlay.classList.remove('active');
+  document.body.style.overflow = '';
+}
+
+// ---- Setup: photos + own notes ----
+function resetSnelSetup() {
+  snelState.images = [];
+  snelState.description = '';
+  snelState.links = [];
+  if (snelDescription) snelDescription.value = '';
+  if (snelLinkInput) snelLinkInput.value = '';
+  if (snelFileInput) snelFileInput.value = '';
+  if (snelCameraInput) snelCameraInput.value = '';
+  renderSnelThumbs();
+  updateSnelGenerateBtn();
+}
+// A light check so we only treat real http(s) links as material to fetch.
+function snelValidLink(s) {
+  s = (s || '').trim();
+  if (!/^https?:\/\/\S+\.\S+/i.test(s)) return false;
+  try { new URL(s); return true; } catch { return false; }
+}
+// Pull every http(s) URL out of free text (e.g. the notes field).
+function snelExtractUrls(text) {
+  if (!text) return [];
+  const matches = text.match(/https?:\/\/[^\s<>"'`)\]}]+/gi) || [];
+  return matches.map(u => u.replace(/[.,;:!?]+$/, '')).filter(snelValidLink);
+}
+// Collect all links the student gave: the dedicated field + any pasted in notes.
+function snelCollectLinks() {
+  const seen = new Set();
+  const out = [];
+  const add = u => { u = (u || '').trim(); if (snelValidLink(u) && !seen.has(u)) { seen.add(u); out.push(u); } };
+  if (snelLinkInput) add(snelLinkInput.value);
+  snelExtractUrls(snelDescription ? snelDescription.value : '').forEach(add);
+  return out;
+}
+// Non-URL text the student typed (used as study material when it's substantial).
+function snelNotesText() {
+  const raw = snelDescription ? snelDescription.value : '';
+  return raw.replace(/https?:\/\/\S+/gi, ' ').replace(/\s+/g, ' ').trim();
+}
+function handleSnelFiles(files) {
+  const promises = Array.from(files).map(file => new Promise(resolve => {
+    const r = new FileReader();
+    r.onload = ev => resolve({ base64: ev.target.result.split(',')[1], mediaType: file.type, dataUrl: ev.target.result });
+    r.readAsDataURL(file);
+  }));
+  Promise.all(promises).then(results => {
+    snelState.images.push(...results);
+    renderSnelThumbs();
+    updateSnelGenerateBtn();
+  });
+}
+function renderSnelThumbs() {
+  if (!snelThumbnails) return;
+  snelThumbnails.innerHTML = '';
+  if (snelState.images.length === 0) {
+    snelThumbnails.classList.add('hidden');
+    if (snelUploadPrompt) snelUploadPrompt.classList.remove('hidden');
+    return;
+  }
+  snelThumbnails.classList.remove('hidden');
+  if (snelUploadPrompt) snelUploadPrompt.classList.add('hidden');
+  snelState.images.forEach((img, idx) => {
+    const thumb = document.createElement('div');
+    thumb.className = 'learn-thumb';
+    thumb.innerHTML = `<img src="${img.dataUrl}" alt="">
+      <button type="button" class="learn-thumb-remove" aria-label="Verwijder" data-idx="${idx}">×</button>`;
+    snelThumbnails.appendChild(thumb);
+  });
+  const add = document.createElement('button');
+  add.type = 'button';
+  add.className = 'learn-thumb-add';
+  add.textContent = '+';
+  add.title = t('learn_add_more') || 'Meer toevoegen';
+  add.addEventListener('click', e => { e.stopPropagation(); snelFileInput.click(); });
+  snelThumbnails.appendChild(add);
+  snelThumbnails.querySelectorAll('.learn-thumb-remove').forEach(btn => {
+    btn.addEventListener('click', e => {
+      e.stopPropagation();
+      snelState.images.splice(parseInt(btn.dataset.idx, 10), 1);
+      renderSnelThumbs();
+      updateSnelGenerateBtn();
+    });
+  });
+}
+function updateSnelGenerateBtn() {
+  // Ready as soon as there's ANY usable input: a photo, a link, or enough typed text.
+  const ready = snelState.images.length > 0 || snelCollectLinks().length > 0 || snelNotesText().length >= 40;
+  if (snelGenerateBtn) snelGenerateBtn.disabled = !ready;
+}
+
+// ---- Generation (one AI call → structured JSON) ----
+async function startSnelGeneration() {
+  if (!state.apiKey) { openApiKeyModal(); return; }
+  if (!state.name) { openWelcomeModal(); return; }
+  snelState.description = snelDescription ? snelDescription.value.trim() : '';
+  snelState.links = snelCollectLinks();
+  if (snelState.images.length === 0 && snelState.links.length === 0 && snelNotesText().length < 40) return;
+  snelShow('loading');
+  cycleSnelStatus();
+  try {
+    const data = await generateSnelSet();
+    stopSnelStatus();
+    if (!buildSnelItems(data)) {
+      showError(t('snel_gen_error') || 'Het lukte niet om er een goede overhoring van te maken. Probeer duidelijkere foto’s.');
+      snelShow('setup');
+      return;
+    }
+    showSnelRecap();
+  } catch (err) {
+    stopSnelStatus();
+    console.error(err);
+    showError((t('error_prefix') || 'Er ging iets mis: ') + err.message + (t('error_check_key') || ''));
+    snelShow('setup');
+  }
+}
+async function generateSnelSet() {
+  const languageName = TRANSLATIONS[state.language].lang_name_en;
+  const sys = SNEL_PROMPT(state.name || 'the student', languageName, snelState.description, profileContextText());
+  const content = snelState.images.map(img => ({
+    type: 'image', source: { type: 'base64', media_type: img.mediaType, data: img.base64 },
+  }));
+  const links = snelState.links || [];
+  const parts = [];
+  if (snelState.images.length) parts.push('Above are photo(s) of my study material.');
+  if (links.length) {
+    parts.push(
+      (links.length === 1
+        ? 'My study material is at this link. Use the web_fetch tool to OPEN and READ it COMPLETELY (all sections, every page) before doing anything else, then base the study set on everything it contains:'
+        : 'My study material is spread across these links. Use the web_fetch tool to OPEN and READ EACH ONE COMPLETELY (all sections, every page) before doing anything else, then base the study set on everything they contain:'
+      ) + '\n' + links.map(l => '- ' + l).join('\n')
+    );
+  }
+  parts.push('Combine ALL the sources I gave you (photos, links and my typed notes) into ONE study set, and generate the complete JSON now, covering everything that has to be learned.');
+  content.push({ type: 'text', text: parts.join('\n\n') });
+
+  const headers = {
+    'content-type': 'application/json',
+    'x-api-key': state.apiKey,
+    'anthropic-version': '2023-06-01',
+    'anthropic-dangerous-direct-browser-access': 'true',
+  };
+  const body = {
+    model: 'claude-sonnet-4-6',
+    max_tokens: 8000,
+    system: sys,
+    messages: [{ role: 'user', content }],
+  };
+  // When links are given, enable Claude's server-side web-fetch tool so it can
+  // open and read the pages/PDFs itself (works for publicly reachable URLs).
+  if (links.length) {
+    headers['anthropic-beta'] = 'web-fetch-2025-09-10';
+    body.tools = [{ type: 'web_fetch_20250910', name: 'web_fetch', max_uses: Math.max(6, links.length * 3) }];
+  }
+
+  const response = await fetch('https://api.anthropic.com/v1/messages', {
+    method: 'POST',
+    headers,
+    body: JSON.stringify(body),
+  });
+  if (!response.ok) {
+    const errText = await response.text();
+    throw new Error(`API ${response.status}: ${errText}`);
+  }
+  const data = await response.json();
+  const raw = data.content.map(c => c.text).filter(Boolean).join('').trim();
+  return parseSnelJson(raw);
+}
+function parseSnelJson(raw) {
+  let s = (raw || '').trim();
+  // Strip markdown code fences if the model added them
+  s = s.replace(/^```(?:json)?\s*/i, '').replace(/\s*```$/i, '').trim();
+  // Isolate the outermost JSON object
+  const start = s.indexOf('{');
+  const end = s.lastIndexOf('}');
+  if (start >= 0 && end > start) s = s.slice(start, end + 1);
+  return JSON.parse(s);
+}
+function escapeRegExp(s) { return s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'); }
+function normalizeSnelFill(o) {
+  const answer = (o.answer || '').toString().trim();
+  let sentence = (o.sentence || '').toString().trim();
+  if (!answer || !sentence) return null;
+  // Normalise the many ways a model might write a gap into a single ___
+  sentence = sentence
+    .replace(/_{2,}/g, '___')
+    .replace(/\.{3,}/g, '___')
+    .replace(/\[\s*\.{2,}\s*\]/g, '___')
+    .replace(/\(\s*\.{2,}\s*\)/g, '___');
+  if (!sentence.includes('___')) {
+    const re = new RegExp('\\b' + escapeRegExp(answer) + '\\b', 'i');
+    if (re.test(sentence)) sentence = sentence.replace(re, '___');
+    else {
+      const re2 = new RegExp(escapeRegExp(answer), 'i');
+      sentence = re2.test(sentence) ? sentence.replace(re2, '___') : (sentence + ' ___');
+    }
+  }
+  // Keep only the FIRST gap interactive; soften any extras
+  const idx = sentence.indexOf('___');
+  sentence = sentence.slice(0, idx + 3) + sentence.slice(idx + 3).replace(/___/g, '…');
+  return { type: 'fill', sentence, answer, status: 'todo', lastInput: '' };
+}
+function buildSnelItems(data) {
+  if (!data || typeof data !== 'object') return false;
+  snelState.title = (data.title || '').toString().trim();
+  const arr = x => Array.isArray(x) ? x : [];
+  snelState.summary = (data.summary || '').toString().trim();
+  snelState.keypoints = arr(data.keypoints).map(x => (x || '').toString().trim()).filter(Boolean);
+  snelState.items.recall = arr(data.recall)
+    .map(o => ({ type: 'recall', q: (o.q || '').toString().trim(), a: (o.a || '').toString().trim(), status: 'todo', lastInput: '' }))
+    .filter(o => o.q && o.a);
+  snelState.items.fill = arr(data.fill).map(normalizeSnelFill).filter(Boolean);
+  snelState.items.short = arr(data.short)
+    .map(o => ({ type: 'short', q: (o.q || '').toString().trim(), a: (o.a || '').toString().trim(), status: 'todo', lastInput: '' }))
+    .filter(o => o.q && o.a);
+  const total = snelState.items.recall.length + snelState.items.fill.length + snelState.items.short.length;
+  return total >= 3;
+}
+
+// ---- Loading status ticker ----
+function cycleSnelStatus() {
+  const msgs = [t('snel_status1'), t('snel_status2'), t('snel_status3'), t('snel_status4')].filter(Boolean);
+  if (!msgs.length) { if (snelLoadingStatus) snelLoadingStatus.textContent = ''; return; }
+  let i = 0;
+  if (snelLoadingStatus) snelLoadingStatus.textContent = msgs[0];
+  snelStatusTimer = setInterval(() => {
+    i = (i + 1) % msgs.length;
+    if (snelLoadingStatus) snelLoadingStatus.textContent = msgs[i];
+  }, 1900);
+}
+function stopSnelStatus() { if (snelStatusTimer) { clearInterval(snelStatusTimer); snelStatusTimer = null; } }
+
+// ---- Session control ----
+function firstNonEmptyPhase() { return SNEL_PHASES.find(k => snelState.items[k].length > 0) || 'recall'; }
+function snelPhaseLabel(k) {
+  return ({
+    recall: t('snel_phase_recall') || 'Vragenlijst',
+    fill:   t('snel_phase_fill')   || 'Invullen',
+    short:  t('snel_phase_short')  || 'Open vragen',
+    review: t('snel_phase_review') || 'Herhaling',
+  })[k] || k;
+}
+function snelCurrentList() { return snelState.reviewActive ? snelState.review : snelState.items[snelState.phaseKey]; }
+function snelCurrentItem() { return snelCurrentList()[snelState.index] || null; }
+function phaseDoneCount(k) { return snelState.items[k].filter(it => it.status !== 'todo').length; }
+function phaseAllDone(k) { const l = snelState.items[k]; return l.length > 0 && l.every(it => it.status !== 'todo'); }
+function phaseStats(k) {
+  const l = snelState.items[k];
+  return { total: l.length, right: l.filter(it => it.status === 'right').length };
+}
+function countSnelCorrect() {
+  return SNEL_PHASES.reduce((n, k) => n + snelState.items[k].filter(it => it.status === 'right').length, 0);
+}
+
+// Show a short, clear recap of all the material before the questions start.
+function showSnelRecap() {
+  if (!snelState.summary && (!snelState.keypoints || snelState.keypoints.length === 0)) {
+    startSnelSession();
+    return;
+  }
+  const titleEl = $('snelRecapTitle');
+  if (titleEl) titleEl.textContent = snelState.title || (t('snel_recap_fallback_title') || 'Samenvatting');
+  const sumEl = $('snelRecapSummary');
+  if (sumEl) { sumEl.textContent = snelState.summary || ''; renderMathIn(sumEl); }
+  const list = $('snelRecapList');
+  const label = $('snelRecapKeyLabel');
+  if (list) {
+    list.innerHTML = '';
+    snelState.keypoints.forEach((kp, i) => {
+      const li = document.createElement('li');
+      li.style.animationDelay = Math.min(i * 45, 420) + 'ms';
+      li.textContent = kp;
+      list.appendChild(li);
+    });
+    renderMathIn(list);
+  }
+  if (label) label.style.display = (snelState.keypoints && snelState.keypoints.length) ? '' : 'none';
+  snelShow('recap');
+  const scroll = document.querySelector('.snel-recap-scroll');
+  if (scroll) scroll.scrollTop = 0;
+}
+
+function startSnelSession() {
+  SNEL_PHASES.forEach(k => snelState.items[k].forEach(it => { it.status = 'todo'; it.lastInput = ''; }));
+  snelState.review = [];
+  snelState.reviewActive = false;
+  snelState.xpAwarded = false;
+  snelState.phaseKey = firstNonEmptyPhase();
+  snelState.index = 0;
+  if (snelSaveDeckBtn) { snelSaveDeckBtn.disabled = false; snelSaveDeckBtn.textContent = t('snel_save_deck') || 'Bewaar als flitskaarten'; }
+  updateSnelLiveScore();
+  snelShow('session');
+  renderSnelPhaseNav();
+  renderSnelItem();
+}
+function snelRestartSession() { startSnelSession(); }
+
+function rebuildSnelReview() {
+  const wrong = [];
+  SNEL_PHASES.forEach(k => snelState.items[k].forEach(it => { if (it.status === 'wrong') wrong.push(it); }));
+  snelState.review = wrong;
+}
+function snelEnterReview() {
+  rebuildSnelReview();
+  if (snelState.review.length === 0) return;
+  snelState.reviewActive = true;
+  snelState.index = 0;
+  updateSnelLiveScore();
+  snelShow('session');
+  renderSnelPhaseNav();
+  renderSnelItem();
+}
+
+function renderSnelPhaseNav() {
+  if (!snelPhaseNav) return;
+  snelPhaseNav.innerHTML = '';
+  const segs = SNEL_PHASES.filter(k => snelState.items[k].length > 0);
+  segs.forEach(k => {
+    const total = snelState.items[k].length;
+    const done = phaseDoneCount(k);
+    const allDone = phaseAllDone(k);
+    const active = !snelState.reviewActive && k === snelState.phaseKey;
+    const seg = document.createElement('button');
+    seg.type = 'button';
+    seg.className = 'snel-seg' + (active ? ' active' : '') + (allDone ? ' done' : '');
+    seg.innerHTML = `<span class="snel-seg-label">${escapeHtml(snelPhaseLabel(k))}</span>
+      <span class="snel-seg-meta">${allDone ? '<svg class="icon snel-seg-check"><use href="#i-check-circle"/></svg>' : ''}${done}/${total}</span>`;
+    seg.addEventListener('click', () => snelJumpToPhase(k));
+    snelPhaseNav.appendChild(seg);
+  });
+  if (snelState.review.length > 0 || snelState.reviewActive) {
+    const count = snelState.reviewActive ? snelState.review.length : snelState.review.length;
+    const seg = document.createElement('button');
+    seg.type = 'button';
+    seg.className = 'snel-seg review-seg' + (snelState.reviewActive ? ' active' : '');
+    seg.innerHTML = `<span class="snel-seg-label">${escapeHtml(snelPhaseLabel('review'))}</span>
+      <span class="snel-seg-meta">${count}</span>`;
+    seg.addEventListener('click', () => { if (snelState.review.length || snelState.reviewActive) snelEnterReview(); });
+    snelPhaseNav.appendChild(seg);
+  }
+}
+function snelJumpToPhase(k) {
+  if (!snelState.items[k] || snelState.items[k].length === 0) return;
+  snelState.reviewActive = false;
+  snelState.phaseKey = k;
+  const firstTodo = snelState.items[k].findIndex(it => it.status === 'todo');
+  snelState.index = firstTodo >= 0 ? firstTodo : 0;
+  renderSnelPhaseNav();
+  renderSnelItem();
+}
+// Phases run in a fixed order; finishing or skipping the last one ends the session.
+function snelNextPhaseInOrder() {
+  const order = SNEL_PHASES.filter(k => snelState.items[k].length > 0);
+  return order[order.indexOf(snelState.phaseKey) + 1] || null;
+}
+function snelSkipPhase() {
+  if (snelState.reviewActive) { snelGoSummary(); return; }
+  const next = snelNextPhaseInOrder();
+  if (next) snelJumpToPhase(next); else snelGoSummary();
+}
+
+// ---- Rendering a single item ----
+function updateSnelHeader() {
+  const list = snelCurrentList();
+  const total = list.length;
+  snelCounter.textContent = `${Math.min(snelState.index + 1, total)} / ${total}`;
+  snelPhaseName.textContent = snelState.reviewActive ? snelPhaseLabel('review') : snelPhaseLabel(snelState.phaseKey);
+  snelProgressFill.style.width = (total ? (snelState.index / total) * 100 : 0) + '%';
+}
+function updateSnelLiveScore() { if (snelLiveScore) snelLiveScore.textContent = countSnelCorrect(); }
+function updateSnelNavButtons() { snelPrevBtn.disabled = snelState.index === 0; }
+
+function snelCardTagHTML(icon) {
+  const review = snelState.reviewActive;
+  const label = review ? snelPhaseLabel('review') : snelPhaseLabel(snelState.phaseKey);
+  return `<span class="snel-card-tag${review ? ' review' : ''}"><svg class="icon"><use href="#${review ? 'i-target' : icon}"/></svg>${escapeHtml(label)}</span>`;
+}
+function gradeRowHTML(wrongLabel, rightLabel) {
+  return `<div class="snel-grade-row">
+    <button type="button" class="snel-grade-btn wrong" data-snel-grade="wrong">✕ ${escapeHtml(wrongLabel)}</button>
+    <button type="button" class="snel-grade-btn right" data-snel-grade="right">✓ ${escapeHtml(rightLabel)}</button>
+  </div>`;
+}
+function wireGradeRow(item) {
+  snelStage.querySelectorAll('[data-snel-grade]').forEach(btn => {
+    btn.addEventListener('click', () => snelGrade(item, btn.dataset.snelGrade === 'right'));
+  });
+}
+
+function renderSnelItem() {
+  updateSnelHeader();
+  updateSnelNavButtons();
+  const item = snelCurrentItem();
+  if (!item) { snelPhaseComplete(); return; }
+  let html;
+  if (item.type === 'recall') html = snelRecallHTML(item);
+  else if (item.type === 'fill') html = snelFillHTML(item);
+  else html = snelShortHTML(item);
+  snelStage.innerHTML = html;
+  snelStage.scrollTop = 0;
+  if (item.type === 'recall') wireSnelRecall(item);
+  else if (item.type === 'fill') wireSnelFill(item);
+  else wireSnelShort(item);
+  renderMathIn(snelStage);
+}
+
+// Phase 1 — recall list (self-graded on reveal)
+function snelRecallHTML(item) {
+  return `<div class="snel-card">
+    ${snelCardTagHTML('i-book')}
+    <div class="snel-q">${escapeHtml(item.q)}</div>
+    <div class="snel-reveal" id="snelReveal">
+      <span class="snel-reveal-label">${escapeHtml(t('snel_answer_label') || 'Antwoord')}</span>
+      <div class="snel-answer">${escapeHtml(item.a)}</div>
+    </div>
+    <div class="snel-actions" id="snelActions">
+      <button type="button" class="primary-btn" id="snelShowAnswerBtn">
+        <svg class="icon icon-sm"><use href="#i-sparkles"/></svg>
+        <span>${escapeHtml(t('snel_show_answer') || 'Toon antwoord')}</span>
+      </button>
+    </div>
+  </div>`;
+}
+function wireSnelRecall(item) {
+  $('snelShowAnswerBtn').addEventListener('click', () => {
+    $('snelReveal').classList.add('show');
+    $('snelActions').innerHTML = gradeRowHTML(t('snel_didnt_know') || 'Wist ik niet', t('snel_knew') || 'Wist ik');
+    wireGradeRow(item);
+  });
+}
+
+// Phase 2 — fill in the blank (auto-checked)
+function snelFillSentenceHTML(item, mode) {
+  const parts = item.sentence.split('___');
+  let blank;
+  if (mode === 'right') blank = `<span class="snel-blank filled">${escapeHtml(item.answer)}</span>`;
+  else if (mode === 'wrong') blank = `<span class="snel-blank filled-wrong">${escapeHtml(item.lastInput || '?')}</span>`;
+  else blank = `<span class="snel-blank">&nbsp;&nbsp;&nbsp;</span>`;
+  return parts.map(p => escapeHtml(p)).join(blank);
+}
+function snelFillHTML(item) {
+  return `<div class="snel-card">
+    ${snelCardTagHTML('i-letter')}
+    <div class="snel-q fill" id="snelFillSentence">${snelFillSentenceHTML(item, 'blank')}</div>
+    <input type="text" class="snel-input" id="snelInput" autocomplete="off" autocapitalize="off" spellcheck="false"
+      placeholder="${escapeHtml(t('snel_fill_placeholder') || 'Vul het ontbrekende woord in…')}">
+    <div class="snel-feedback" id="snelFeedback"></div>
+    <div class="snel-reveal" id="snelReveal">
+      <span class="snel-reveal-label">${escapeHtml(t('snel_correct_answer') || 'Juiste antwoord')}</span>
+      <div class="snel-answer">${escapeHtml(item.answer)}</div>
+    </div>
+    <div class="snel-actions" id="snelActions">
+      <button type="button" class="primary-btn" id="snelCheckBtn">
+        <svg class="icon icon-sm"><use href="#i-check-circle"/></svg>
+        <span>${escapeHtml(t('snel_check') || 'Nakijken')}</span>
+      </button>
+    </div>
+  </div>`;
+}
+function wireSnelFill(item) {
+  const input = $('snelInput');
+  const submit = () => snelCheckFill(item);
+  $('snelCheckBtn').addEventListener('click', submit);
+  input.addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); submit(); } });
+  setTimeout(() => input.focus(), 60);
+}
+function snelNormalize(s) {
+  return (s || '').toString().toLowerCase()
+    .normalize('NFD').replace(/[̀-ͯ]/g, '')
+    .replace(/[.,;:!?'"´`()\[\]{}]/g, ' ')
+    .replace(/\s+/g, ' ').trim();
+}
+function snelAnswerMatches(input, answer) {
+  const n = snelNormalize(input);
+  if (!n) return false;
+  if (snelNormalize(answer) === n) return true;
+  const alts = answer.split(/\s*[\/;]\s*/).map(snelNormalize).filter(Boolean);
+  return alts.includes(n);
+}
+function snelCheckFill(item) {
+  const input = $('snelInput');
+  const val = input.value.trim();
+  if (!val) { input.focus(); return; }
+  const wasTodo = item.status === 'todo';
+  item.lastInput = val;
+  const correct = snelAnswerMatches(val, item.answer);
+  item.status = correct ? 'right' : 'wrong';
+  input.disabled = true;
+  input.classList.add(correct ? 'correct' : 'wrong');
+  $('snelFillSentence').innerHTML = snelFillSentenceHTML(item, correct ? 'right' : 'wrong');
+  const fb = $('snelFeedback');
+  fb.className = 'snel-feedback show ' + (correct ? 'correct' : 'wrong');
+  fb.innerHTML = correct
+    ? `✓ ${escapeHtml(t('snel_correct') || 'Goed!')}`
+    : `✕ ${escapeHtml(t('snel_wrong') || 'Net niet')}`;
+  if (!correct) $('snelReveal').classList.add('show');
+  $('snelActions').innerHTML = snelContinueBtnHTML();
+  $('snelContinueBtn').addEventListener('click', snelAdvance);
+  if (correct && wasTodo && !snelState.reviewActive && typeof emphasize === 'function') emphasize(fb, { colors: ['#4ade80', '#a78bfa', '#facc15'], spread: 48 });
+  updateSnelLiveScore();
+  renderSnelPhaseNav();
+}
+
+// Phase 3 — short open answer (write, reveal model answer, self-grade)
+function snelShortHTML(item) {
+  return `<div class="snel-card">
+    ${snelCardTagHTML('i-message-square')}
+    <div class="snel-q">${escapeHtml(item.q)}</div>
+    <textarea class="snel-input" id="snelInput" rows="3" placeholder="${escapeHtml(t('snel_short_placeholder') || 'Typ je antwoord in je eigen woorden…')}"></textarea>
+    <div class="snel-reveal" id="snelReveal">
+      <span class="snel-reveal-label">${escapeHtml(t('snel_model_answer') || 'Modelantwoord')}</span>
+      <div class="snel-answer model">${escapeHtml(item.a)}</div>
+    </div>
+    <div class="snel-actions" id="snelActions">
+      <button type="button" class="primary-btn" id="snelCheckBtn">
+        <svg class="icon icon-sm"><use href="#i-check-circle"/></svg>
+        <span>${escapeHtml(t('snel_check_short') || 'Bekijk modelantwoord')}</span>
+      </button>
+    </div>
+  </div>`;
+}
+function wireSnelShort(item) {
+  const ta = $('snelInput');
+  $('snelCheckBtn').addEventListener('click', () => {
+    item.lastInput = ta.value.trim();
+    ta.disabled = true;
+    $('snelReveal').classList.add('show');
+    $('snelActions').innerHTML = gradeRowHTML(t('snel_self_wrong') || 'Toch fout', t('snel_self_right') || 'Had ik goed');
+    wireGradeRow(item);
+  });
+  setTimeout(() => ta.focus(), 60);
+}
+function snelContinueBtnHTML() {
+  return `<button type="button" class="primary-btn" id="snelContinueBtn">
+    <span>${escapeHtml(t('snel_continue') || 'Volgende')}</span>
+    <svg class="icon icon-sm"><use href="#i-arrow-right"/></svg>
+  </button>`;
+}
+
+// Self-grade handler (recall + short). Auto-advances after a brief beat.
+function snelGrade(item, isRight) {
+  const wasTodo = item.status === 'todo';
+  item.status = isRight ? 'right' : 'wrong';
+  updateSnelLiveScore();
+  renderSnelPhaseNav();
+  if (isRight && wasTodo && !snelState.reviewActive && typeof emphasize === 'function') {
+    const tag = snelStage.querySelector('.snel-card-tag');
+    if (tag) emphasize(tag, { colors: ['#4ade80', '#a78bfa', '#facc15'], spread: 46 });
+  }
+  setTimeout(snelAdvance, isRight ? 240 : 360);
+}
+
+function snelAdvance() {
+  const list = snelCurrentList();
+  if (snelState.index < list.length - 1) {
+    snelState.index++;
+    renderSnelItem();
+  } else {
+    snelPhaseComplete();
+  }
+}
+function snelPrev() {
+  if (snelState.index > 0) { snelState.index--; renderSnelItem(); }
+}
+function snelPhaseComplete() {
+  if (snelState.reviewActive) { snelGoSummary(); return; }
+  const next = snelNextPhaseInOrder();
+  if (next) {
+    if (typeof showCelebration === 'function') {
+      showCelebration('i-check-circle', t('snel_phase_done') || 'Fase afgerond!',
+        (t('snel_phase_next') || 'Door naar: {name}').replace('{name}', snelPhaseLabel(next)), false);
+    }
+    snelJumpToPhase(next);
+  } else {
+    snelGoSummary();
+  }
+}
+
+// ---- Summary ----
+function snelGoSummary() {
+  rebuildSnelReview();
+  snelState.reviewActive = false;
+  const r = phaseStats('recall'), f = phaseStats('fill'), s = phaseStats('short');
+  const cell = (el, st) => { if (el) el.innerHTML = `${st.right}<span class="bad">/${st.total}</span>`; };
+  cell(snelScoreRecall, r); cell(snelScoreFill, f); cell(snelScoreShort, s);
+  const totalRight = r.right + f.right + s.right;
+  const totalItems = r.total + f.total + s.total;
+  const pct = totalItems ? Math.round((totalRight / totalItems) * 100) : 0;
+  snelScoreBig.textContent = pct + '%';
+  snelScoreSub.textContent = (t('snel_score_sub') || '{right} van {total} goed')
+    .replace('{right}', totalRight).replace('{total}', totalItems);
+
+  const remaining = snelState.review.length;
+  const perfect = remaining === 0;
+  if (snelReviewBanner) snelReviewBanner.style.display = perfect ? 'none' : 'flex';
+  if (snelReviewBtn) snelReviewBtn.style.display = perfect ? 'none' : 'block';
+  if (snelReviewCount) snelReviewCount.textContent = (remaining === 1
+    ? (t('snel_review_count_one') || 'Je hebt nog 1 fout open')
+    : (t('snel_review_count_many') || 'Je hebt nog {n} fouten open')).replace('{n}', remaining);
+  snelSummaryTitle.textContent = perfect ? (t('snel_perfect_title') || 'Alles goed! 🏆') : (t('snel_done_title') || 'Sessie klaar!');
+  snelSummaryText.textContent = perfect
+    ? (t('snel_perfect_sub') || 'Je beheerst je stof helemaal. Klaar voor de toets!')
+    : (t('snel_done_text') || 'Sterk gewerkt — pak nu je fouten er nog één keer bij.');
+  const medal = $('snelSummaryMedal');
+  if (medal) medal.querySelector('use').setAttribute('href', perfect ? '#i-trophy' : '#i-target');
+
+  if (!snelState.xpAwarded) {
+    const xp = totalRight * 2 + 20;
+    if (typeof awardXp === 'function') {
+      state.progress.totals.questions = (state.progress.totals.questions || 0) + totalRight;
+      awardXp(xp, 'snel');
+    }
+    snelState.xpAwarded = true;
+  }
+
+  snelShow('summary');
+  renderSnelPhaseNav();
+  setTimeout(() => {
+    if (typeof emphasize === 'function') emphasize(snelScoreBig, perfect
+      ? { colors: ['#4ade80', '#facc15', '#a78bfa'], spread: 72 }
+      : { colors: ['#a78bfa', '#f472b6', '#facc15'], spread: 58 });
+    if (perfect && typeof showCelebration === 'function') {
+      showCelebration('i-trophy', t('snel_perfect_title') || 'Alles goed! 🏆', t('fx_done_sub') || 'Goed bezig — door naar de volgende.', true);
+    }
+  }, 200);
+}
+
+function snelSaveDeck() {
+  const cards = [];
+  snelState.items.recall.forEach(it => cards.push({ front: it.q, back: it.a }));
+  snelState.items.short.forEach(it => cards.push({ front: it.q, back: it.a }));
+  if (!cards.length) return;
+  if (typeof addToLibrary === 'function') {
+    addToLibrary(cards, { type: 'terms', description: snelState.title || (t('snel_deck_title') || 'Snel Leren') });
+  }
+  if (snelSaveDeckBtn) { snelSaveDeckBtn.textContent = t('snel_saved') || 'Bewaard ✓'; snelSaveDeckBtn.disabled = true; }
+}
+
+// ---- Wiring ----
+if (snelUploadZone) snelUploadZone.addEventListener('click', e => {
+  if (e.target.closest('.learn-thumb') || e.target.closest('.secondary-btn') || e.target.closest('.learn-thumb-add')) return;
+  if (snelState.images.length === 0) snelFileInput.click();
+});
+[snelFileInput, snelCameraInput].forEach(input => {
+  if (!input) return;
+  input.addEventListener('change', e => {
+    if (e.target.files && e.target.files.length) handleSnelFiles(e.target.files);
+    e.target.value = '';
+  });
+});
+if (snelDescription) snelDescription.addEventListener('input', () => { snelState.description = snelDescription.value.trim(); updateSnelGenerateBtn(); });
+if (snelLinkInput) snelLinkInput.addEventListener('input', updateSnelGenerateBtn);
+if (snelGenerateBtn) snelGenerateBtn.addEventListener('click', startSnelGeneration);
+if (snelPrevBtn) snelPrevBtn.addEventListener('click', snelPrev);
+if (snelNextBtn) snelNextBtn.addEventListener('click', snelAdvance);
+if (snelSkipPhaseBtn) snelSkipPhaseBtn.addEventListener('click', snelSkipPhase);
+if (snelReviewBtn) snelReviewBtn.addEventListener('click', snelEnterReview);
+if (snelSaveDeckBtn) snelSaveDeckBtn.addEventListener('click', snelSaveDeck);
+{ const b = $('snelRecapStartBtn'); if (b) b.addEventListener('click', startSnelSession); }
+{ const b = $('snelRecapBackBtn'); if (b) b.addEventListener('click', () => snelShow('setup')); }
+{ const b = $('snelRestartBtn'); if (b) b.addEventListener('click', snelRestartSession); }
+{ const b = $('snelNewMaterialBtn'); if (b) b.addEventListener('click', () => { resetSnelSetup(); snelShow('setup'); }); }
+{ const b = $('snelBackBtn'); if (b) b.addEventListener('click', closeSnel); }
+{ const b = $('snelSessionBackBtn'); if (b) b.addEventListener('click', closeSnel); }
+{ const b = $('snelSummaryCloseBtn'); if (b) b.addEventListener('click', closeSnel); }
+{ const b = $('openSnelBtn'); if (b) b.addEventListener('click', openSnel); }
+
 
 // ============ Help modal (guide + Ask-Max chat) ============
 const helpModal = $('helpModal');
