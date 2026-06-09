@@ -34,6 +34,13 @@ const DEFAULT_MONTHLY_LIMIT = parseInt(process.env.DEFAULT_MONTHLY_LIMIT || '150
 const ALLOWED_ORIGINS = (process.env.ALLOWED_ORIGIN || '')
   .split(',').map(s => s.trim()).filter(Boolean);
 
+// ---- Beveiliging / Cloudflare / alarm ----
+const ALERT_WEBHOOK_URL = process.env.ALERT_WEBHOOK_URL || '';     // Discord/Slack/ntfy webhook voor alarmmeldingen
+const CLOUDFLARE_SECRET = process.env.CLOUDFLARE_SECRET || '';     // origin-lock: alleen verkeer via Cloudflare toelaten
+const SHARE_IP_LIMIT = parseInt(process.env.SHARE_IP_LIMIT || '4', 10);  // > zoveel apparaten per code per dag = verdacht
+const BRUTE_LIMIT = parseInt(process.env.BRUTE_LIMIT || '12', 10);       // > zoveel foute codes per IP per 10 min = verdacht
+const SHARE_HARD_BLOCK = process.env.SHARE_HARD_BLOCK === '1';            // standaard uit: alleen waarschuwen, niet blokkeren
+
 if (!ANTHROPIC_API_KEY) console.warn('⚠  ANTHROPIC_API_KEY ontbreekt in .env — de proxy kan niets doen.');
 if (!ADMIN_TOKEN) console.warn('⚠  ADMIN_TOKEN ontbreekt — beheer-endpoints zijn uitgeschakeld tot je er een instelt.');
 
@@ -53,8 +60,56 @@ function newCode() {
   return 'HH-' + raw.slice(0, 4) + '-' + raw.slice(4, 8) + '-' + raw.slice(8, 12);
 }
 
+// ---- Echte client-IP (achter Cloudflare/reverse proxy), logboek en alarm ----
+const LOG_FILE = join(__dirname, 'events.log');
+function clientIp(req) {
+  return (req.headers['cf-connecting-ip']
+    || (req.headers['x-forwarded-for'] || '').split(',')[0].trim()
+    || (req.socket && req.socket.remoteAddress) || '?').toString();
+}
+function logEvent(type, data) {
+  const line = JSON.stringify(Object.assign({ t: new Date().toISOString(), type }, data || {}));
+  console.log('[event] ' + line);
+  try { writeFileSync(LOG_FILE, line + '\n', { flag: 'a' }); } catch { }
+}
+const lastAlert = new Map();
+async function sendAlert(title, detail, key) {
+  logEvent('ALERT', { title, detail });
+  const k = key || title;
+  if (Date.now() - (lastAlert.get(k) || 0) < 10 * 60000) return; // zelfde alarm max 1x / 10 min
+  lastAlert.set(k, Date.now());
+  if (!ALERT_WEBHOOK_URL) return;
+  const msg = '🔔 Huiswerk-Helper: ' + title + (detail ? '\n' + detail : '');
+  try {
+    await fetch(ALERT_WEBHOOK_URL, {
+      method: 'POST', headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ content: msg, text: msg }), // Discord (content) + Slack (text)
+    });
+  } catch (e) { console.error('Alarm versturen mislukt:', e.message); }
+}
+// Foute code-pogingen per IP -> brute-force opsporen
+const failByIp = new Map();
+function recordFailedCode(ip, ep) {
+  const now = Date.now();
+  const arr = (failByIp.get(ip) || []).filter(t => now - t < 10 * 60000);
+  arr.push(now); failByIp.set(ip, arr);
+  logEvent('auth_fail', { ip, ep });
+  if (arr.length === BRUTE_LIMIT) sendAlert('Mogelijke brute-force op codes', arr.length + ' foute codes van IP ' + ip + ' in 10 min.', 'brute-' + ip);
+}
+// Verschillende apparaten (IP's) per code -> gedeelde code opsporen
+const ipsByCode = new Map();
+function recordCodeIp(code, ip) {
+  const now = Date.now();
+  let m = ipsByCode.get(code); if (!m) { m = new Map(); ipsByCode.set(code, m); }
+  m.set(ip, now);
+  for (const [k, t] of m) if (now - t > 24 * 3600000) m.delete(k);
+  if (m.size > SHARE_IP_LIMIT) sendAlert('Code mogelijk gedeeld', 'Code ' + code + ' is in 24 u door ' + m.size + ' verschillende apparaten gebruikt.', 'share-' + code);
+  return m.size;
+}
+
 const app = express();
 app.disable('x-powered-by');
+app.set('trust proxy', true);
 app.use(express.json({ limit: '16mb' }));
 
 // ---- CORS: alleen jouw eigen website mag de server aanroepen ----
@@ -71,6 +126,19 @@ app.use((req, res, next) => {
   res.setHeader('X-Content-Type-Options', 'nosniff');
   res.setHeader('Referrer-Policy', 'no-referrer');
   if (req.method === 'OPTIONS') return res.sendStatus(204);
+  next();
+});
+
+// ---- Origin-lock: laat (indien ingesteld) alleen verkeer via Cloudflare toe ----
+// Cloudflare voegt via een "Transform Rule" een geheime header toe; wie rechtstreeks
+// het thuis-IP probeert te raken (om Cloudflare te omzeilen) wordt geweigerd.
+app.use((req, res, next) => {
+  if (!CLOUDFLARE_SECRET) return next();
+  if (req.method === 'OPTIONS' || req.path === '/health') return next();
+  if ((req.headers['x-origin-secret'] || '') !== CLOUDFLARE_SECRET) {
+    logEvent('origin_blocked', { ip: clientIp(req), path: req.path });
+    return res.status(403).json({ error: 'Direct access blocked.' });
+  }
   next();
 });
 
@@ -98,7 +166,7 @@ function getValidCode(req) {
 // ---- Toegang + verbruik voor de app (om plan/limiet te tonen) ----
 app.get('/api/me', (req, res) => {
   const v = getValidCode(req);
-  if (!v) return res.status(401).json({ ok: false, error: 'invalid_code' });
+  if (!v) { recordFailedCode(clientIp(req), 'me'); return res.status(401).json({ ok: false, error: 'invalid_code' }); }
   const u = v.rec.usage && v.rec.usage.month === monthKey() ? v.rec.usage : { requests: 0 };
   res.json({ ok: true, plan: v.rec.plan || 'standard', limit: v.rec.monthlyLimit ?? DEFAULT_MONTHLY_LIMIT, used: u.requests || 0 });
 });
@@ -107,9 +175,16 @@ app.get('/health', (_req, res) => res.json({ ok: true }));
 
 // ---- DE PROXY: stuurt het verzoek door naar Anthropic met de geheime sleutel ----
 app.post('/api/messages', async (req, res) => {
+  const ip = clientIp(req);
   const v = getValidCode(req);
-  if (!v) return res.status(401).json({ error: { message: 'Ongeldige of verlopen toegangscode.' } });
+  if (!v) { recordFailedCode(ip, 'messages'); return res.status(401).json({ error: { message: 'Ongeldige of verlopen toegangscode.' } }); }
   const { code, rec } = v;
+
+  // Gedeelde-code-detectie (waarschuwt; blokkeert alleen als SHARE_HARD_BLOCK aan staat)
+  const devices = recordCodeIp(code, ip);
+  if (SHARE_HARD_BLOCK && devices > SHARE_IP_LIMIT) {
+    return res.status(429).json({ error: { message: 'Deze code wordt op te veel apparaten tegelijk gebruikt.' } });
+  }
 
   if (rateLimited(code)) return res.status(429).json({ error: { message: 'Te veel verzoeken. Wacht heel even.' } });
 
@@ -118,6 +193,7 @@ app.post('/api/messages', async (req, res) => {
   if (!rec.usage || rec.usage.month !== mk) rec.usage = { month: mk, requests: 0, inputTokens: 0, outputTokens: 0 };
   const limit = rec.monthlyLimit ?? DEFAULT_MONTHLY_LIMIT;
   if (limit > 0 && rec.usage.requests >= limit) {
+    sendAlert('Maandlimiet bereikt', 'Code ' + code + ' heeft de maandlimiet (' + limit + ') bereikt.', 'limit-' + code);
     return res.status(402).json({ error: { message: 'Je maandlimiet is bereikt. Probeer het volgende maand weer of upgrade je abonnement.' } });
   }
 
@@ -172,7 +248,10 @@ app.post('/api/messages', async (req, res) => {
 function requireAdmin(req, res, next) {
   if (!ADMIN_TOKEN) return res.status(403).json({ error: 'Beheer uitgeschakeld (geen ADMIN_TOKEN ingesteld).' });
   const auth = req.headers.authorization || '';
-  if (auth !== 'Bearer ' + ADMIN_TOKEN) return res.status(401).json({ error: 'Onjuist admin-token.' });
+  if (auth !== 'Bearer ' + ADMIN_TOKEN) {
+    sendAlert('Onjuiste admin-login geprobeerd', 'Iemand probeerde het beheer te openen vanaf IP ' + clientIp(req) + '.', 'admin-' + clientIp(req));
+    return res.status(401).json({ error: 'Onjuist admin-token.' });
+  }
   next();
 }
 
@@ -188,6 +267,7 @@ app.post('/admin/codes', requireAdmin, (req, res) => {
     usage: { month: monthKey(), requests: 0, inputTokens: 0, outputTokens: 0 },
   };
   saveCodes();
+  logEvent('code_created', { code, note: codes[code].note, ip: clientIp(req) });
   res.json({ ok: true, code, record: codes[code] });
 });
 
@@ -228,4 +308,6 @@ app.listen(PORT, () => {
   console.log('✅ Huiswerk-Helper proxy draait op poort ' + PORT);
   console.log('   Toegestane origins: ' + (ALLOWED_ORIGINS.join(', ') || '(alle — stel ALLOWED_ORIGIN in!)'));
   console.log('   Codes in beheer: ' + Object.keys(codes).length);
+  console.log('   Cloudflare origin-lock: ' + (CLOUDFLARE_SECRET ? 'AAN' : 'uit'));
+  console.log('   Alarm-webhook: ' + (ALERT_WEBHOOK_URL ? 'ingesteld' : 'niet ingesteld'));
 });
