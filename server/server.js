@@ -30,9 +30,40 @@ const __dirname = dirname(fileURLToPath(import.meta.url));
 const ANTHROPIC_API_KEY = process.env.ANTHROPIC_API_KEY || '';
 const PORT = parseInt(process.env.PORT || '8787', 10);
 const ADMIN_TOKEN = process.env.ADMIN_TOKEN || '';
-const DEFAULT_MONTHLY_LIMIT = parseInt(process.env.DEFAULT_MONTHLY_LIMIT || '1500', 10);
 const ALLOWED_ORIGINS = (process.env.ALLOWED_ORIGIN || '')
   .split(',').map(s => s.trim()).filter(Boolean);
+
+// ---- Abonnementen: maandelijks token-tegoed per plan ----
+// Een "token" = een echte AI-token (invoer + uitvoer) die een verzoek verbruikt.
+// Omdat we het ECHTE verbruik aftrekken, kan niemand meer gebruiken dan zijn tegoed —
+// jouw API-rekening kan dus nooit hoger worden dan wat het plan toestaat. Op = op.
+// Pas de aantallen/labels gerust aan; ze staan ook in PLANS_INFO voor de website.
+const PLANS = {
+  gratis: { tokens: 50000,   label: 'Gratis' },
+  basis:  { tokens: 500000,  label: 'Basis' },
+  plus:   { tokens: 1500000, label: 'Plus' },
+  pro:    { tokens: 3000000, label: 'Pro' },
+};
+const DEFAULT_PLAN = process.env.DEFAULT_PLAN || 'basis';
+function planTokens(plan) { return (PLANS[plan] && PLANS[plan].tokens) || PLANS[DEFAULT_PLAN].tokens; }
+// Maandtegoed van een code: expliciete override, anders het plan-tegoed.
+function allowanceOf(rec) { return (typeof rec.monthlyTokens === 'number') ? rec.monthlyTokens : planTokens(rec.plan); }
+// Zorgt dat de maand-emmer bestaat (reset bij nieuwe maand) en geeft de stand terug.
+function tokenState(rec) {
+  const mk = monthKey();
+  if (!rec.usage || rec.usage.month !== mk) rec.usage = { month: mk, requests: 0, tokens: 0, inputTokens: 0, outputTokens: 0 };
+  const allowance = allowanceOf(rec);
+  const used = rec.usage.tokens || 0;
+  return { allowance, used, remaining: Math.max(0, allowance - used) };
+}
+function deductTokens(rec, inTok, outTok) {
+  tokenState(rec); // zorgt voor de juiste maand-emmer
+  rec.usage.inputTokens += (inTok || 0);
+  rec.usage.outputTokens += (outTok || 0);
+  rec.usage.tokens += (inTok || 0) + (outTok || 0);
+  rec.usage.requests = (rec.usage.requests || 0) + 1;
+  saveCodes();
+}
 
 // ---- Beveiliging / Cloudflare / alarm ----
 const ALERT_WEBHOOK_URL = process.env.ALERT_WEBHOOK_URL || '';     // Discord/Slack/ntfy webhook voor alarmmeldingen
@@ -163,13 +194,17 @@ function getValidCode(req) {
   return { code, rec };
 }
 
-// ---- Toegang + verbruik voor de app (om plan/limiet te tonen) ----
+// ---- Toegang + token-tegoed voor de app (om saldo/abonnement te tonen) ----
 app.get('/api/me', (req, res) => {
   const v = getValidCode(req);
   if (!v) { recordFailedCode(clientIp(req), 'me'); return res.status(401).json({ ok: false, error: 'invalid_code' }); }
-  const u = v.rec.usage && v.rec.usage.month === monthKey() ? v.rec.usage : { requests: 0 };
-  res.json({ ok: true, plan: v.rec.plan || 'standard', limit: v.rec.monthlyLimit ?? DEFAULT_MONTHLY_LIMIT, used: u.requests || 0 });
+  const ts = tokenState(v.rec); saveCodes();
+  const plan = v.rec.plan || DEFAULT_PLAN;
+  res.json({ ok: true, plan, plan_label: (PLANS[plan] && PLANS[plan].label) || plan, allowance: ts.allowance, used: ts.used, remaining: ts.remaining });
 });
+
+// ---- Publieke abonnementenlijst (token-tegoed per plan) ----
+app.get('/api/plans', (_req, res) => res.json({ ok: true, plans: PLANS, default: DEFAULT_PLAN }));
 
 app.get('/health', (_req, res) => res.json({ ok: true }));
 
@@ -188,13 +223,11 @@ app.post('/api/messages', async (req, res) => {
 
   if (rateLimited(code)) return res.status(429).json({ error: { message: 'Te veel verzoeken. Wacht heel even.' } });
 
-  // Maandlimiet (verbruiksbescherming)
-  const mk = monthKey();
-  if (!rec.usage || rec.usage.month !== mk) rec.usage = { month: mk, requests: 0, inputTokens: 0, outputTokens: 0 };
-  const limit = rec.monthlyLimit ?? DEFAULT_MONTHLY_LIMIT;
-  if (limit > 0 && rec.usage.requests >= limit) {
-    sendAlert('Maandlimiet bereikt', 'Code ' + code + ' heeft de maandlimiet (' + limit + ') bereikt.', 'limit-' + code);
-    return res.status(402).json({ error: { message: 'Je maandlimiet is bereikt. Probeer het volgende maand weer of upgrade je abonnement.' } });
+  // Token-tegoed (verbruiksbescherming) — op = op
+  const ts = tokenState(rec);
+  if (ts.remaining <= 0) {
+    sendAlert('Token-tegoed op', 'Code ' + code + ' (plan ' + (rec.plan || DEFAULT_PLAN) + ') heeft het maandtegoed verbruikt.', 'tokens-' + code);
+    return res.status(402).json({ code: 'no_tokens', remaining: 0, error: { message: 'Je tokens zijn op. Wacht tot volgende maand of kies een groter abonnement.' } });
   }
 
   const body = req.body || {};
@@ -211,8 +244,6 @@ app.post('/api/messages', async (req, res) => {
     headers['anthropic-beta'] = 'web-fetch-2025-09-10';
   }
 
-  rec.usage.requests += 1; saveCodes();
-
   let upstream;
   try {
     upstream = await fetch('https://api.anthropic.com/v1/messages', {
@@ -227,16 +258,29 @@ app.post('/api/messages', async (req, res) => {
     res.setHeader('Content-Type', 'text/event-stream; charset=utf-8');
     res.setHeader('Cache-Control', 'no-cache, no-transform');
     res.setHeader('Connection', 'keep-alive');
-    Readable.fromWeb(upstream.body).pipe(res);
+    // Doorgeven én ondertussen het echte tokenverbruik uit de SSE-stroom plukken.
+    const node = Readable.fromWeb(upstream.body);
+    let tail = '', inTok = 0, outTok = 0, done = false;
+    const finish = () => { if (done) return; done = true; deductTokens(rec, inTok, outTok); };
+    node.on('data', chunk => {
+      res.write(chunk);
+      tail = (tail + chunk.toString('utf8')).slice(-8000);
+      const im = tail.match(/"input_tokens":\s*(\d+)/); if (im) inTok = parseInt(im[1], 10);
+      const oms = tail.match(/"output_tokens":\s*(\d+)/g); if (oms) outTok = parseInt(oms[oms.length - 1].match(/(\d+)/)[1], 10);
+    });
+    node.on('end', () => { finish(); res.end(); });
+    node.on('error', () => { finish(); try { res.end(); } catch { } });
     return;
   }
 
-  // Niet-streaming (of fout): doorgeven en (bij succes) tokens bijhouden.
+  // Niet-streaming (of fout): doorgeven en (bij succes) tokens aftrekken.
   const text = await upstream.text();
   res.status(upstream.status);
   res.setHeader('Content-Type', 'application/json; charset=utf-8');
   if (upstream.ok) {
-    try { const j = JSON.parse(text); if (j.usage) { rec.usage.inputTokens += j.usage.input_tokens || 0; rec.usage.outputTokens += j.usage.output_tokens || 0; saveCodes(); } } catch { }
+    let inTok = 0, outTok = 0;
+    try { const j = JSON.parse(text); if (j.usage) { inTok = j.usage.input_tokens || 0; outTok = j.usage.output_tokens || 0; } } catch { }
+    deductTokens(rec, inTok, outTok);
   }
   res.send(text);
 });
@@ -255,19 +299,21 @@ function requireAdmin(req, res, next) {
   next();
 }
 
-// Nieuwe code aanmaken:  POST /admin/codes  { "plan": "standard", "monthlyLimit": 1500, "note": "voor Jan" }
+// Nieuwe code aanmaken:  POST /admin/codes  { "plan": "basis", "note": "voor Jan" }
+//   plan ∈ gratis|basis|plus|pro  (of geef "monthlyTokens" voor een eigen tegoed)
 app.post('/admin/codes', requireAdmin, (req, res) => {
   const code = newCode();
+  const plan = (req.body && req.body.plan && PLANS[req.body.plan]) ? req.body.plan : DEFAULT_PLAN;
   codes[code] = {
     active: true,
-    plan: (req.body && req.body.plan) || 'standard',
-    monthlyLimit: (req.body && typeof req.body.monthlyLimit === 'number') ? req.body.monthlyLimit : DEFAULT_MONTHLY_LIMIT,
+    plan,
+    monthlyTokens: (req.body && typeof req.body.monthlyTokens === 'number') ? req.body.monthlyTokens : planTokens(plan),
     note: (req.body && req.body.note) || '',
     createdAt: new Date().toISOString(),
-    usage: { month: monthKey(), requests: 0, inputTokens: 0, outputTokens: 0 },
+    usage: { month: monthKey(), requests: 0, tokens: 0, inputTokens: 0, outputTokens: 0 },
   };
   saveCodes();
-  logEvent('code_created', { code, note: codes[code].note, ip: clientIp(req) });
+  logEvent('code_created', { code, plan, note: codes[code].note, ip: clientIp(req) });
   res.json({ ok: true, code, record: codes[code] });
 });
 
@@ -276,12 +322,13 @@ app.get('/admin/codes', requireAdmin, (_req, res) => {
   res.json({ ok: true, count: Object.keys(codes).length, codes });
 });
 
-// Een code aan/uit zetten:  POST /admin/codes/:code  { "active": false }
+// Een code wijzigen:  POST /admin/codes/:code  { "active": false }  of  { "plan": "plus" }  of  { "monthlyTokens": 800000 }
 app.post('/admin/codes/:code', requireAdmin, (req, res) => {
   const rec = codes[req.params.code];
   if (!rec) return res.status(404).json({ error: 'Code bestaat niet.' });
   if (req.body && typeof req.body.active === 'boolean') rec.active = req.body.active;
-  if (req.body && typeof req.body.monthlyLimit === 'number') rec.monthlyLimit = req.body.monthlyLimit;
+  if (req.body && req.body.plan && PLANS[req.body.plan]) { rec.plan = req.body.plan; rec.monthlyTokens = planTokens(req.body.plan); }
+  if (req.body && typeof req.body.monthlyTokens === 'number') rec.monthlyTokens = req.body.monthlyTokens;
   saveCodes();
   res.json({ ok: true, record: rec });
 });
@@ -310,4 +357,5 @@ app.listen(PORT, () => {
   console.log('   Codes in beheer: ' + Object.keys(codes).length);
   console.log('   Cloudflare origin-lock: ' + (CLOUDFLARE_SECRET ? 'AAN' : 'uit'));
   console.log('   Alarm-webhook: ' + (ALERT_WEBHOOK_URL ? 'ingesteld' : 'niet ingesteld'));
+  console.log('   Plannen: ' + Object.entries(PLANS).map(([k, v]) => k + '=' + v.tokens).join(', ') + ' (standaard: ' + DEFAULT_PLAN + ')');
 });

@@ -84,6 +84,25 @@ Je krijgt een code terug, bv. `HH-7F3A-9K2D-XQ1P`. Die geef je aan de klant; hij
 
 - Alle codes bekijken: `GET /admin/codes` (met dezelfde Authorization-header)
 - Een code uitzetten (bv. bij opzeggen): `POST /admin/codes/HH-XXXX-XXXX-XXXX` met body `{"active":false}`
+- Iemand upgraden/downgraden: `POST /admin/codes/HH-XXXX-XXXX-XXXX` met body `{"plan":"plus"}`
+
+### Abonnementen & tokens
+Elke code hoort bij een **abonnement** dat een maandelijks **token-tegoed** geeft. Een token = een echte AI-token (invoer + uitvoer) die een verzoek verbruikt. We trekken het **échte** verbruik af, dus niemand kan meer gebruiken dan zijn tegoed — **je API-rekening kan nooit hoger worden dan het plan toelaat**. Op = op (tot volgende maand of een upgrade).
+
+Standaardplannen (pas de aantallen aan in `server.js` → `PLANS`):
+
+| Plan | Tokens/maand | Richtprijs* | Max. API-kosten (worst case) |
+|------|-------------:|-------------|------------------------------|
+| Gratis | 50.000 | gratis (proef) | ~€0,25 |
+| Basis | 500.000 | €4,99 / mnd | ~€2,30 |
+| Plus | 1.500.000 | €9,99 / mnd | ~€7 |
+| Pro | 3.000.000 | €19,99 / mnd | ~€14 |
+
+\* De prijzen toon je op de site (`index.html` → `PLAN_PRICES`). "Worst case" = als álles uitvoer-tokens zouden zijn; in de praktijk ligt het verbruik veel lager, dus je marge is ruimer. Wil je voorzichtiger zijn? Verlaag de tokens per plan.
+
+Een code voor een bepaald plan maak je zo aan: `POST /admin/codes` met body `{"plan":"basis"}`. Een eigen tegoed kan ook: `{"monthlyTokens": 800000}`.
+
+De app toont de gebruiker zijn saldo (chip rechtsboven) en een abonnementen-scherm; bij "tokens op" verschijnt automatisch het upgrade-scherm.
 
 ## Stap 7 — Later: automatisch betalen koppelen
 In `server.js` staan twee kant-en-klare plekken (`/webhook/stripe` en `/webhook/lemonsqueezy`). Zodra je een betaaldienst kiest, vul je daar in:

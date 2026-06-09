@@ -5396,6 +5396,41 @@
   }
   @media (prefers-reduced-motion: reduce){ .celebration-icon{animation:none;} .confetti,.fx-layer{display:none;} .fx-pop{animation:none;} }
 
+  /* ===== Tokens & abonnementen ===== */
+  .token-chip {
+    display: inline-flex; align-items: center; gap: 6px;
+    background: var(--card); border: 1px solid var(--border-strong); color: var(--text);
+    border-radius: 999px; padding: 8px 13px; font-family: inherit; font-weight: 800; font-size: 13.5px;
+    cursor: pointer; transition: background .15s, border-color .15s, transform .12s;
+  }
+  .token-chip:hover { background: var(--card-hover); }
+  .token-chip:active { transform: scale(.95); }
+  .token-chip .icon { width: 16px; height: 16px; color: var(--accent); }
+  .token-chip.low { border-color: #f59e0b; color: #fcd34d; }
+  .token-chip.low .icon { color: #f59e0b; }
+  .token-chip.empty { border-color: #ef4444; color: #fca5a5; }
+  .token-chip.empty .icon { color: #ef4444; }
+
+  .tokens-modal { max-width: 560px; }
+  .tokens-alert { background: rgba(239,68,68,.12); border: 1px solid rgba(239,68,68,.4); color: #fca5a5; border-radius: var(--radius-sm); padding: 10px 12px; font-size: 13.5px; font-weight: 600; }
+  .tokens-balance { background: var(--card-soft); border: 1px solid var(--border); border-radius: var(--radius-md); padding: 14px 16px; margin: 14px 0; }
+  .tokens-balance-top { display: flex; justify-content: space-between; align-items: baseline; font-weight: 800; }
+  .tokens-balance-top #tokensPlanLabel { color: var(--accent); }
+  .tokens-balance-top #tokensRemainingText { font-size: 14px; color: var(--text-soft); }
+  .tokens-bar { height: 8px; border-radius: 999px; background: rgba(255,255,255,.08); overflow: hidden; margin: 10px 0 6px; }
+  .tokens-bar-fill { display: block; height: 100%; width: 0%; background: var(--accent-gradient); border-radius: 999px; transition: width .4s ease; }
+  .tokens-sub { font-size: 12px; color: var(--muted); }
+  .plans-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; }
+  .plan-card { position: relative; background: var(--card); border: 1px solid var(--border); border-radius: var(--radius-md); padding: 14px; text-align: center; }
+  .plan-card.current { border-color: var(--accent); box-shadow: var(--shadow-glow); }
+  .plan-name { font-weight: 900; font-size: 15px; }
+  .plan-price { color: var(--accent); font-weight: 800; font-size: 14px; margin: 2px 0 6px; }
+  .plan-tokens { font-size: 12.5px; color: var(--muted); margin-bottom: 10px; }
+  .plan-btn { width: 100%; padding: 9px 10px; font-size: 13.5px; }
+  .plan-badge { display: inline-block; background: var(--accent-gradient); color: #fff; font-weight: 800; font-size: 12px; padding: 6px 12px; border-radius: 999px; }
+  .tokens-foot { font-size: 12px; color: var(--muted); text-align: center; margin-top: 14px; }
+  @media (max-width: 480px) { .plans-grid { grid-template-columns: 1fr; } }
+
   /* ===== Phone hardening: comfortable on every phone size (incl. Snel Leren & Audio-les) ===== */
   /* Never let long words (chemical names, URLs) push a layout sideways */
   .pod-now-text, .pod-tline, .snel-entry-card-desc, .snel-entry-card-title { overflow-wrap: anywhere; }
@@ -5868,6 +5903,10 @@
     <span class="user-greeting" id="userGreeting"></span>
   </h1>
   <div class="header-actions">
+    <button class="token-chip" id="tokenChip" type="button" hidden aria-label="Tokens">
+      <svg class="icon"><use href="#i-bolt"/></svg>
+      <span id="tokenChipValue">—</span>
+    </button>
     <button class="icon-btn" id="helpBtn">
       <svg class="icon"><use href="#i-help"/></svg>
       <span class="btn-label" data-i18n="btn_help">Help</span>
@@ -7221,6 +7260,27 @@
 </div>
 
 <!-- API Key Modal -->
+<!-- Tokens / abonnementen -->
+<div class="modal-overlay" id="tokensModal">
+  <div class="modal tokens-modal">
+    <h2 data-i18n="tok_title">Jouw tokens</h2>
+    <p id="tokensAlert" class="tokens-alert" style="display:none;" data-i18n="tok_empty">Je tokens zijn op. Kies hieronder een groter abonnement, of wacht tot volgende maand.</p>
+    <div class="tokens-balance">
+      <div class="tokens-balance-top">
+        <span id="tokensPlanLabel">—</span>
+        <span id="tokensRemainingText">—</span>
+      </div>
+      <div class="tokens-bar"><span class="tokens-bar-fill" id="tokensBarFill"></span></div>
+      <div class="tokens-sub" data-i18n="tok_reset">Je tegoed vult elke maand weer automatisch aan.</div>
+    </div>
+    <div class="plans-grid" id="plansGrid"></div>
+    <p class="tokens-foot" data-i18n="tok_foot">Tokens worden gebruikt voor alles wat Max voor je doet — vragen stellen, lessen, overhoringen en audio-lessen.</p>
+    <div class="modal-actions">
+      <button class="secondary-btn" id="tokensModalClose" data-i18n="btn_close">Sluiten</button>
+    </div>
+  </div>
+</div>
+
 <div class="modal-overlay" id="apiKeyModal">
   <div class="modal">
     <h2 data-i18n="api_title">Eenmalig: voer je API key in</h2>
@@ -7532,6 +7592,15 @@ const TRANSLATIONS = {
     api_key_hint: 'Blijft in je eigen browser. Wordt nergens anders opgeslagen.',
     cred_title: 'Voer je toegangscode in',
     cred_label: 'Toegangscode',
+    tok_title: 'Jouw tokens',
+    tok_empty: 'Je tokens zijn op. Kies hieronder een groter abonnement, of wacht tot volgende maand.',
+    tok_reset: 'Je tegoed vult elke maand weer automatisch aan.',
+    tok_foot: 'Tokens worden gebruikt voor alles wat Max voor je doet — vragen stellen, lessen, overhoringen en audio-lessen.',
+    tok_per_month: 'tokens / maand',
+    tok_current: 'Huidig',
+    tok_choose: 'Kies dit',
+    tok_checkout_soon: 'Betalen kan binnenkort. Neem contact op met de maker voor een upgrade.',
+    err_invalid_code: 'Vul je toegangscode in.',
     cred_hint: 'Je kreeg deze code na je aankoop. Hij blijft in je eigen browser.',
     cred_ph: 'HH-XXXX-XXXX-XXXX',
     cred_explain_html: 'Deze app werkt met een persoonlijke <strong>toegangscode</strong> die je na betaling krijgt.<br><br>Vul je code hieronder in. Heb je er nog geen? Vraag de maker om toegang.<br><br>Je code blijft in je eigen browser en geeft veilig toegang tot de AI — je hebt geen eigen API-sleutel nodig.',
@@ -7990,6 +8059,15 @@ const TRANSLATIONS = {
     api_key_hint: 'Stays in your browser. Not stored anywhere else.',
     cred_title: 'Enter your access code',
     cred_label: 'Access code',
+    tok_title: 'Your tokens',
+    tok_empty: "You're out of tokens. Pick a bigger plan below, or wait until next month.",
+    tok_reset: 'Your balance refills automatically every month.',
+    tok_foot: 'Tokens are used for everything Max does for you — asking questions, lessons, self-tests and audio lessons.',
+    tok_per_month: 'tokens / month',
+    tok_current: 'Current',
+    tok_choose: 'Choose',
+    tok_checkout_soon: 'Payments are coming soon. Contact the maker to upgrade.',
+    err_invalid_code: 'Enter your access code.',
     cred_hint: 'You received this code after your purchase. It stays in your browser.',
     cred_ph: 'HH-XXXX-XXXX-XXXX',
     cred_explain_html: "This app uses a personal <strong>access code</strong> you get after paying.<br><br>Enter your code below. Don't have one yet? Ask the maker for access.<br><br>Your code stays in your own browser and securely unlocks the AI — no API key needed.",
@@ -8418,6 +8496,15 @@ const TRANSLATIONS = {
     api_key_hint: 'Bleibt in deinem Browser. Wird nirgendwo sonst gespeichert.',
     cred_title: 'Gib deinen Zugangscode ein',
     cred_label: 'Zugangscode',
+    tok_title: 'Deine Tokens',
+    tok_empty: 'Deine Tokens sind aufgebraucht. Wähle unten ein größeres Abo oder warte bis nächsten Monat.',
+    tok_reset: 'Dein Guthaben füllt sich jeden Monat automatisch wieder auf.',
+    tok_foot: 'Tokens werden für alles verwendet, was Max für dich tut — Fragen, Lektionen, Abfragen und Audio-Lektionen.',
+    tok_per_month: 'Tokens / Monat',
+    tok_current: 'Aktuell',
+    tok_choose: 'Wählen',
+    tok_checkout_soon: 'Bezahlen ist bald möglich. Wende dich an den Ersteller für ein Upgrade.',
+    err_invalid_code: 'Gib deinen Zugangscode ein.',
     cred_hint: 'Diesen Code hast du nach dem Kauf erhalten. Er bleibt in deinem Browser.',
     cred_ph: 'HH-XXXX-XXXX-XXXX',
     cred_explain_html: 'Diese App nutzt einen persönlichen <strong>Zugangscode</strong>, den du nach der Zahlung bekommst.<br><br>Gib deinen Code unten ein. Noch keinen? Frag den Ersteller um Zugang.<br><br>Dein Code bleibt in deinem Browser und schaltet die KI sicher frei — kein eigener API-Schlüssel nötig.',
@@ -8846,6 +8933,15 @@ const TRANSLATIONS = {
     api_key_hint: 'Reste dans ton navigateur. N’est stockée nulle part ailleurs.',
     cred_title: 'Saisis ton code d’accès',
     cred_label: 'Code d’accès',
+    tok_title: 'Tes tokens',
+    tok_empty: 'Tu n’as plus de tokens. Choisis un abonnement plus grand ci-dessous, ou attends le mois prochain.',
+    tok_reset: 'Ton solde se recharge automatiquement chaque mois.',
+    tok_foot: 'Les tokens servent à tout ce que Max fait pour toi — questions, leçons, interros et leçons audio.',
+    tok_per_month: 'tokens / mois',
+    tok_current: 'Actuel',
+    tok_choose: 'Choisir',
+    tok_checkout_soon: 'Le paiement arrive bientôt. Contacte le créateur pour un abonnement supérieur.',
+    err_invalid_code: 'Saisis ton code d’accès.',
     cred_hint: 'Tu as reçu ce code après ton achat. Il reste dans ton navigateur.',
     cred_ph: 'HH-XXXX-XXXX-XXXX',
     cred_explain_html: 'Cette appli utilise un <strong>code d’accès</strong> personnel reçu après le paiement.<br><br>Saisis ton code ci-dessous. Pas encore ? Demande l’accès au créateur.<br><br>Ton code reste dans ton navigateur et débloque l’IA en toute sécurité — pas besoin de clé API.',
@@ -9275,6 +9371,15 @@ const TRANSLATIONS = {
     api_key_hint: 'Se queda en tu navegador. No se guarda en ningún otro sitio.',
     cred_title: 'Introduce tu código de acceso',
     cred_label: 'Código de acceso',
+    tok_title: 'Tus tokens',
+    tok_empty: 'Te has quedado sin tokens. Elige un plan más grande abajo, o espera al próximo mes.',
+    tok_reset: 'Tu saldo se recarga automáticamente cada mes.',
+    tok_foot: 'Los tokens se usan para todo lo que Max hace por ti — preguntas, lecciones, exámenes y lecciones de audio.',
+    tok_per_month: 'tokens / mes',
+    tok_current: 'Actual',
+    tok_choose: 'Elegir',
+    tok_checkout_soon: 'El pago llegará pronto. Contacta con el creador para mejorar tu plan.',
+    err_invalid_code: 'Introduce tu código de acceso.',
     cred_hint: 'Recibiste este código tras la compra. Se queda en tu navegador.',
     cred_ph: 'HH-XXXX-XXXX-XXXX',
     cred_explain_html: 'Esta app usa un <strong>código de acceso</strong> personal que recibes tras pagar.<br><br>Introduce tu código abajo. ¿Aún no tienes? Pide acceso al creador.<br><br>Tu código se queda en tu navegador y desbloquea la IA de forma segura — sin clave API.',
@@ -11534,10 +11639,15 @@ function closeApiKeyModal() { apiKeyModal.classList.remove('active'); }
 $('cancelKeyBtn').addEventListener('click', closeApiKeyModal);
 $('saveKeyBtn').addEventListener('click', () => {
   const key = apiKeyInput.value.trim();
-  if (!key.startsWith('sk-ant-')) { alert(t('err_invalid_key')); return; }
+  if (backendOn()) {
+    if (!key) { alert(t('err_invalid_code') || 'Vul je toegangscode in.'); return; }
+  } else {
+    if (!key.startsWith('sk-ant-')) { alert(t('err_invalid_key')); return; }
+  }
   state.apiKey = key;
   localStorage.setItem('claude_api_key', key);
   closeApiKeyModal();
+  if (backendOn()) refreshTokens();
 });
 
 function openSettingsModal() {
@@ -11666,13 +11776,14 @@ $('settingsSaveBtn').addEventListener('click', () => {
   const name = settingsNameInput.value.trim();
   const key = settingsKeyInput.value.trim();
   if (!name) { alert(t('err_name_required')); return; }
-  if (key && !key.startsWith('sk-ant-')) { alert(t('err_invalid_key')); return; }
+  if (key && !backendOn() && !key.startsWith('sk-ant-')) { alert(t('err_invalid_key')); return; }
   state.name = name;
   localStorage.setItem('user_name', name);
   localStorage.setItem('user_language', state.language);
   if (key) {
     state.apiKey = key;
     localStorage.setItem('claude_api_key', key);
+    if (backendOn()) refreshTokens();
   }
   // Save the free-text "about you" profile
   state.about = {
@@ -17443,6 +17554,94 @@ if (podSpeedBtn) podSpeedBtn.addEventListener('click', cyclePodSpeed);
 if (podVoiceSelect) podVoiceSelect.addEventListener('change', onPodVoiceChange);
 { const b = $('podRestartBtn'); if (b) b.addEventListener('click', podRestart); }
 { const b = $('podNewMaterialBtn'); if (b) b.addEventListener('click', () => { podStopSpeech(); resetPodSetup(); podShow('setup'); }); }
+
+// ============ Tokens & abonnementen (alleen in beveiligde modus) ============
+const PLAN_PRICES = { gratis: 'Gratis', basis: '€4,99 / mnd', plus: '€9,99 / mnd', pro: '€19,99 / mnd' };
+let tokenInfo = null;
+let tokenRefreshTimer = null;
+function fmtTokens(n) {
+  n = Math.max(0, Math.round(n || 0));
+  if (n >= 1000000) return (n / 1000000).toFixed(n % 1000000 === 0 ? 0 : 1).replace('.', ',') + ' mln';
+  if (n >= 1000) return Math.round(n / 1000) + 'k';
+  return String(n);
+}
+function updateTokenChip() {
+  const chip = $('tokenChip'); if (!chip) return;
+  if (!backendOn() || !tokenInfo) { chip.hidden = true; return; }
+  chip.hidden = false;
+  const val = $('tokenChipValue'); if (val) val.textContent = fmtTokens(tokenInfo.remaining);
+  const ratio = tokenInfo.allowance > 0 ? tokenInfo.remaining / tokenInfo.allowance : 1;
+  chip.classList.toggle('low', tokenInfo.remaining > 0 && ratio < 0.12);
+  chip.classList.toggle('empty', tokenInfo.remaining <= 0);
+}
+async function refreshTokens() {
+  if (!backendOn() || !state.apiKey) return;
+  try {
+    const r = await fetch(BACKEND_URL.replace(/\/+$/, '') + '/api/me', { headers: { 'authorization': 'Bearer ' + state.apiKey } });
+    if (!r.ok) return;
+    tokenInfo = await r.json();
+    updateTokenChip();
+  } catch (_) { }
+}
+function scheduleTokenRefresh() { clearTimeout(tokenRefreshTimer); tokenRefreshTimer = setTimeout(refreshTokens, 1400); }
+async function renderPlans() {
+  const grid = $('plansGrid'); if (!grid) return;
+  let plans = null;
+  try { const r = await fetch(BACKEND_URL.replace(/\/+$/, '') + '/api/plans'); if (r.ok) plans = (await r.json()).plans; } catch (_) { }
+  if (!plans) { grid.innerHTML = ''; return; }
+  const cur = tokenInfo && tokenInfo.plan;
+  grid.innerHTML = '';
+  Object.entries(plans).forEach(([key, p]) => {
+    const card = document.createElement('div');
+    card.className = 'plan-card' + (key === cur ? ' current' : '');
+    card.innerHTML =
+      '<div class="plan-name">' + escapeHtml(p.label || key) + '</div>' +
+      '<div class="plan-price">' + escapeHtml(PLAN_PRICES[key] || '') + '</div>' +
+      '<div class="plan-tokens">' + fmtTokens(p.tokens) + ' ' + (t('tok_per_month') || 'tokens / maand') + '</div>' +
+      (key === cur
+        ? '<div class="plan-badge">' + (t('tok_current') || 'Huidig') + '</div>'
+        : '<button type="button" class="primary-btn plan-btn" data-plan="' + key + '">' + (t('tok_choose') || 'Kies dit') + '</button>');
+    grid.appendChild(card);
+  });
+  grid.querySelectorAll('.plan-btn').forEach(b => b.addEventListener('click', () => onChoosePlan(b.dataset.plan)));
+}
+async function openTokensModal(empty) {
+  const modal = $('tokensModal'); if (!modal) return;
+  await refreshTokens();
+  const al = $('tokensAlert'); if (al) al.style.display = empty ? '' : 'none';
+  if (tokenInfo) {
+    const pl = $('tokensPlanLabel'); if (pl) pl.textContent = tokenInfo.plan_label || tokenInfo.plan || '';
+    const rt = $('tokensRemainingText'); if (rt) rt.textContent = fmtTokens(tokenInfo.remaining) + ' / ' + fmtTokens(tokenInfo.allowance);
+    const bf = $('tokensBarFill'); if (bf) bf.style.width = (tokenInfo.allowance > 0 ? Math.max(0, Math.min(100, 100 * tokenInfo.remaining / tokenInfo.allowance)) : 0) + '%';
+  }
+  await renderPlans();
+  modal.classList.add('active');
+}
+function closeTokensModal() { const m = $('tokensModal'); if (m) m.classList.remove('active'); }
+function onChoosePlan(_plan) {
+  // De daadwerkelijke aankoop loopt straks via de betaaldienst (Lemon Squeezy).
+  alert(t('tok_checkout_soon') || 'Betalen kan binnenkort. Neem contact op met de maker voor een upgrade.');
+}
+function handleNoTokens() { openTokensModal(true); }
+// Ververs het saldo na elke AI-aanroep én vang "tokens op" (402) af, via een lichte fetch-wrap.
+if (backendOn()) {
+  const _origFetch = window.fetch.bind(window);
+  window.fetch = function (url, opts) {
+    const p = _origFetch(url, opts);
+    try {
+      const u = typeof url === 'string' ? url : (url && url.url) || '';
+      if (u.indexOf('/api/messages') !== -1) {
+        p.then(r => { if (r && r.status === 402) handleNoTokens(); }).catch(() => { });
+        p.then(() => scheduleTokenRefresh(), () => scheduleTokenRefresh());
+      }
+    } catch (_) { }
+    return p;
+  };
+}
+{ const c = $('tokenChip'); if (c) c.addEventListener('click', () => openTokensModal(false)); }
+{ const b = $('tokensModalClose'); if (b) b.addEventListener('click', closeTokensModal); }
+{ const m = $('tokensModal'); if (m) m.addEventListener('click', e => { if (e.target === m) closeTokensModal(); }); }
+if (backendOn()) setTimeout(refreshTokens, 700);
 
 // ============ Help modal (guide + Ask-Max chat) ============
 const helpModal = $('helpModal');
