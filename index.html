@@ -5396,6 +5396,52 @@
   }
   @media (prefers-reduced-motion: reduce){ .celebration-icon{animation:none;} .confetti,.fx-layer{display:none;} .fx-pop{animation:none;} }
 
+
+  /* ===== Audio-les / Podcast player ===== */
+  .pod-player { flex: 1; display: flex; flex-direction: column; min-height: 0; padding: 8px 18px 18px; }
+  .pod-now {
+    margin: 6px auto 12px; max-width: 680px; width: 100%;
+    background: var(--card); border: 1px solid var(--border); border-radius: var(--radius-lg);
+    padding: 20px 22px; box-shadow: var(--shadow-md); position: relative; overflow: hidden;
+  }
+  .pod-now::before { content: ''; position: absolute; inset: 0; background: var(--accent-gradient); opacity: .06; pointer-events: none; }
+  .pod-now-label { position: relative; font-size: 12px; font-weight: 800; letter-spacing: .06em; text-transform: uppercase; color: var(--accent); display: flex; align-items: center; gap: 8px; }
+  .pod-now-text { position: relative; margin-top: 10px; font-size: 21px; line-height: 1.42; font-weight: 600; color: var(--text); text-wrap: balance; }
+  .pod-eq { display: inline-flex; gap: 3px; align-items: flex-end; height: 14px; }
+  .pod-eq span { width: 3px; height: 6px; background: var(--accent); border-radius: 2px; animation: podEq .9s ease-in-out infinite; }
+  .pod-eq span:nth-child(2) { animation-delay: .15s; }
+  .pod-eq span:nth-child(3) { animation-delay: .3s; }
+  .pod-eq span:nth-child(4) { animation-delay: .45s; }
+  @keyframes podEq { 0%, 100% { height: 5px; } 50% { height: 14px; } }
+  .pod-now.pod-paused .pod-eq span { animation-play-state: paused; height: 6px; }
+
+  .pod-progress { max-width: 680px; width: 100%; margin: 0 auto; height: 6px; border-radius: 99px; background: var(--card-soft); overflow: hidden; }
+  .pod-progress-fill { height: 100%; width: 0%; background: var(--accent-gradient); border-radius: 99px; transition: width .25s ease; }
+
+  .pod-controls { max-width: 680px; width: 100%; margin: 14px auto 2px; display: flex; align-items: center; justify-content: center; gap: 12px; }
+  .pod-cbtn { display: grid; place-items: center; border: 1px solid var(--border-strong); background: var(--card); color: var(--text); border-radius: 50%; cursor: pointer; transition: transform .12s ease, background .2s ease; }
+  .pod-cbtn:hover { background: var(--card-hover); }
+  .pod-cbtn:active { transform: scale(.92); }
+  .pod-cbtn.small { width: 48px; height: 48px; }
+  .pod-cbtn.small .icon { width: 20px; height: 20px; }
+  .pod-cbtn.play { width: 66px; height: 66px; background: var(--accent-gradient); border: none; box-shadow: var(--shadow-glow); }
+  .pod-cbtn.play .icon { width: 26px; height: 26px; color: #fff; }
+  .pod-speed { min-width: 54px; height: 42px; padding: 0 14px; border-radius: 99px; border: 1px solid var(--border-strong); background: var(--card); color: var(--text-soft); font-weight: 800; font-size: 13px; cursor: pointer; }
+  .pod-speed:hover { background: var(--card-hover); }
+
+  .pod-transcript { flex: 1; min-height: 0; overflow-y: auto; max-width: 680px; width: 100%; margin: 12px auto 0; padding: 4px 2px 24px; overscroll-behavior: contain; }
+  .pod-tline { padding: 7px 12px; border-radius: 12px; color: var(--muted); font-size: 15px; line-height: 1.5; cursor: pointer; transition: color .2s, background .2s; }
+  .pod-tline:hover { background: var(--card-soft); }
+  .pod-tline.spoken { color: var(--text-soft); }
+  .pod-tline.current { color: var(--text); background: var(--card); box-shadow: inset 3px 0 0 var(--accent); font-weight: 600; }
+  .pod-theading { margin: 16px 0 4px; font-weight: 900; color: var(--text-soft); font-size: 12.5px; letter-spacing: .05em; text-transform: uppercase; opacity: .85; }
+
+  .pod-note { color: var(--muted); font-size: 13px; text-align: center; max-width: 560px; margin: 8px auto 0; }
+  @media (max-width: 720px) {
+    .pod-now-text { font-size: 18px; }
+    .pod-cbtn.play { width: 60px; height: 60px; }
+  }
+
 </style>
 </head>
 <body>
@@ -5750,6 +5796,19 @@
       <path d="M12 3l1.6 4.4L18 9l-4.4 1.6L12 15l-1.6-4.4L6 9l4.4-1.6z"/>
       <path d="M18 14l.8 2.2L21 17l-2.2.8L18 20l-.8-2.2L15 17l2.2-.8z"/>
     </symbol>
+    <!-- icons for Audio-les / Podcast -->
+    <symbol id="i-headphones" viewBox="0 0 24 24">
+      <path d="M4 13v-1a8 8 0 0 1 16 0v1"/>
+      <rect x="3" y="13" width="4.5" height="7" rx="2"/>
+      <rect x="16.5" y="13" width="4.5" height="7" rx="2"/>
+    </symbol>
+    <symbol id="i-play" viewBox="0 0 24 24">
+      <path d="M8 5.5v13l11-6.5z"/>
+    </symbol>
+    <symbol id="i-pause" viewBox="0 0 24 24">
+      <rect x="7" y="5" width="3.5" height="14" rx="1.2"/>
+      <rect x="13.5" y="5" width="3.5" height="14" rx="1.2"/>
+    </symbol>
   </defs>
 </svg>
 
@@ -5968,6 +6027,18 @@
         <span class="snel-entry-card-kicker"><svg class="icon" style="width:12px;height:12px;"><use href="#i-sparkles"/></svg><span data-i18n="snel_entry_kicker">Nieuw</span></span>
         <span class="snel-entry-card-title" data-i18n="snel_entry_title">Snel Leren — sprint door je stof</span>
         <span class="snel-entry-card-desc" data-i18n="snel_entry_desc">Foto's erin + jouw eigen aantekeningen. Max maakt meteen een complete overhoring: een lange vragenlijst, invuloefeningen én open vragen. Fouten krijg je aan het eind terug.</span>
+      </span>
+      <span class="snel-entry-card-arrow"><svg class="icon"><use href="#i-arrow-right"/></svg></span>
+    </button>
+
+    <!-- Audio-les / Podcast entry -->
+    <div class="subject-category" data-i18n="pod_section_label">Of laat Max je stof voorlezen als podcast</div>
+    <button type="button" class="snel-entry-card" id="openPodcastBtn">
+      <span class="snel-entry-card-icon"><svg class="icon"><use href="#i-headphones"/></svg></span>
+      <span class="snel-entry-card-body">
+        <span class="snel-entry-card-kicker"><svg class="icon" style="width:12px;height:12px;"><use href="#i-sparkles"/></svg><span data-i18n="pod_entry_kicker">Nieuw</span></span>
+        <span class="snel-entry-card-title" data-i18n="pod_entry_title">Audio-les — luister naar je stof</span>
+        <span class="snel-entry-card-desc" data-i18n="pod_entry_desc">Max maakt van je stof een heldere gesproken les. Luister onderweg, met je ogen dicht of tijdens het sporten.</span>
       </span>
       <span class="snel-entry-card-arrow"><svg class="icon"><use href="#i-arrow-right"/></svg></span>
     </button>
@@ -6765,6 +6836,143 @@
   </div>
 </div>
 
+<!-- AUDIO-LES / PODCAST overlay (topic/photos/links -> spoken lesson, played with TTS) -->
+<div class="snel-overlay" id="podOverlay">
+
+  <!-- Screen 1: setup -->
+  <div class="snel-screen active" id="podSetupScreen">
+    <div class="snel-topbar">
+      <button type="button" class="back-link" id="podBackBtn">
+        <svg class="icon"><use href="#i-arrow-right"/></svg>
+        <span data-i18n="btn_back_home">Terug naar home</span>
+      </button>
+      <div class="snel-topbar-title" data-i18n="pod_topbar">Audio-les</div>
+    </div>
+    <div class="snel-setup-scroll">
+      <div class="snel-setup-inner">
+        <div class="snel-hero">
+          <span class="snel-hero-badge"><svg class="icon"><use href="#i-headphones"/></svg><span data-i18n="pod_hero_badge">Luister-les</span></span>
+          <h2 data-i18n="pod_hero_title">Je stof als gesproken les</h2>
+          <p data-i18n="pod_hero_text">Geef een onderwerp, foto's of een link. Max schrijft er een duidelijke, rustige uitleg van en spreekt die hardop uit — alsof je een korte podcast over precies jouw stof beluistert.</p>
+          <div class="snel-perks">
+            <div class="snel-perk"><div class="snel-perk-num">🎧</div><div class="snel-perk-label" data-i18n="pod_perk1">luister overal</div></div>
+            <div class="snel-perk"><div class="snel-perk-num">🌍</div><div class="snel-perk-label" data-i18n="pod_perk2">in jouw taal</div></div>
+            <div class="snel-perk"><div class="snel-perk-num">⏱</div><div class="snel-perk-label" data-i18n="pod_perk3">in je eigen tempo</div></div>
+          </div>
+        </div>
+
+        <div>
+          <div class="snel-section-label">
+            <span class="snel-section-num">1</span>
+            <span data-i18n="pod_step_topic">Waar gaat je les over?</span>
+          </div>
+          <input type="text" id="podTopic" class="snel-link-input" autocomplete="off"
+            data-i18n-placeholder="pod_topic_placeholder"
+            placeholder="bijv. fotosynthese, de Franse Revolutie, breuken…">
+        </div>
+
+        <div>
+          <div class="snel-section-label">
+            <span class="snel-section-num">2</span>
+            <span data-i18n="pod_step_photos">Foto's van je stof</span>
+            <span class="snel-section-hint" data-i18n="pod_optional">optioneel</span>
+          </div>
+          <div class="upload-zone" id="podUploadZone">
+            <div id="podUploadPrompt">
+              <div class="upload-icon-wrap"><svg class="icon icon-lg"><use href="#i-camera"/></svg></div>
+              <p><strong data-i18n="pod_upload_main">Klik om foto's te kiezen</strong></p>
+              <p data-i18n="pod_upload_sub">Samenvatting, aantekeningen — alles mag</p>
+              <div class="upload-actions">
+                <button class="secondary-btn" type="button" onclick="event.stopPropagation(); document.getElementById('podCameraInput').click()">
+                  <svg class="icon"><use href="#i-camera"/></svg> <span data-i18n="btn_camera">Camera</span>
+                </button>
+                <button class="secondary-btn" type="button" onclick="event.stopPropagation(); document.getElementById('podFileInput').click()">
+                  <svg class="icon"><use href="#i-image"/></svg> <span data-i18n="btn_gallery">Uit galerij</span>
+                </button>
+              </div>
+            </div>
+            <div id="podThumbnails" class="learn-thumbnails hidden"></div>
+          </div>
+          <input type="file" id="podFileInput" accept="image/*" multiple style="display:none">
+          <input type="file" id="podCameraInput" accept="image/*" capture="environment" multiple style="display:none">
+        </div>
+
+        <div>
+          <div class="snel-section-label">
+            <span class="snel-section-num">3</span>
+            <span data-i18n="pod_step_link">Of plak een link naar je stof</span>
+            <span class="snel-section-hint" data-i18n="pod_optional">optioneel</span>
+          </div>
+          <input type="url" id="podLinkInput" class="snel-link-input" inputmode="url" autocomplete="off" spellcheck="false"
+            data-i18n-placeholder="pod_link_placeholder"
+            placeholder="https://… (openbare webpagina of PDF)">
+          <div class="snel-link-note" data-i18n="snel_link_note">Max kan openbare webpagina's en PDF-links openen en lezen.</div>
+        </div>
+
+        <div>
+          <div class="snel-section-label">
+            <span class="snel-section-num">4</span>
+            <span data-i18n="pod_step_notes">Aantekeningen of extra wensen</span>
+            <span class="snel-section-hint" data-i18n="pod_optional">optioneel</span>
+          </div>
+          <textarea id="podNotes" class="snel-description" rows="3"
+            data-i18n-placeholder="pod_notes_placeholder"
+            placeholder="bijv. 'leg het simpel uit', 'focus op hoofdstuk 3', of plak hier je aantekeningen."></textarea>
+        </div>
+
+        <div class="snel-generate-wrap">
+          <button class="primary-btn" id="podGenerateBtn" disabled>
+            <svg class="icon icon-sm"><use href="#i-headphones"/></svg>
+            <span data-i18n="pod_generate">Maak mijn audio-les</span>
+          </button>
+          <div class="snel-generate-note" data-i18n="pod_generate_note">Max leest je stof en schrijft in een paar tellen een gesproken les. Je hebt hiervoor je eigen API-sleutel nodig (gratis aan te maken).</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Screen 2: loading -->
+  <div class="snel-screen" id="podLoadingScreen">
+    <div class="snel-loading">
+      <div class="snel-spinner"><span class="snel-spinner-icon"><svg class="icon"><use href="#i-headphones"/></svg></span></div>
+      <h2 data-i18n="pod_loading_title">Max schrijft je audio-les…</h2>
+      <p data-i18n="pod_loading_text">Hij leest je onderwerp, foto's en links, haalt de kern eruit en maakt er een heldere gesproken uitleg van.</p>
+      <div class="snel-loading-status" id="podLoadingStatus"></div>
+    </div>
+  </div>
+
+  <!-- Screen 3: player -->
+  <div class="snel-screen" id="podPlayerScreen">
+    <div class="snel-topbar">
+      <button type="button" class="back-link" id="podPlayerBackBtn">
+        <svg class="icon"><use href="#i-arrow-right"/></svg>
+        <span data-i18n="btn_back_home">Terug naar home</span>
+      </button>
+      <div class="snel-topbar-title" id="podPlayerTitle" data-i18n="pod_topbar">Audio-les</div>
+    </div>
+    <div class="pod-player">
+      <div class="pod-now pod-paused" id="podNow">
+        <div class="pod-now-label"><span class="pod-eq" id="podEq"><span></span><span></span><span></span><span></span></span><span data-i18n="pod_now_playing">Nu te horen</span></div>
+        <div class="pod-now-text" id="podNowText">…</div>
+      </div>
+      <div class="pod-progress"><div class="pod-progress-fill" id="podProgressFill"></div></div>
+      <div class="pod-controls">
+        <button type="button" class="pod-cbtn small" id="podPrevBtn" aria-label="Vorige"><svg class="icon" style="transform:rotate(180deg)"><use href="#i-arrow-right"/></svg></button>
+        <button type="button" class="pod-cbtn play" id="podPlayBtn" aria-label="Afspelen"><svg class="icon"><use href="#i-play"/></svg></button>
+        <button type="button" class="pod-cbtn small" id="podNextBtn" aria-label="Volgende"><svg class="icon"><use href="#i-arrow-right"/></svg></button>
+        <button type="button" class="pod-speed" id="podSpeedBtn">1×</button>
+      </div>
+      <p class="pod-note" id="podVoiceNote" style="display:none;" data-i18n="pod_no_voice">Je browser kan nog geen stem afspelen — lees mee met de tekst hieronder.</p>
+      <div class="pod-transcript" id="podTranscript"></div>
+      <div class="snel-summary-actions" style="max-width:680px;margin:4px auto 0;">
+        <button type="button" class="secondary-btn" id="podRestartBtn" data-i18n="pod_restart">Opnieuw vanaf begin</button>
+        <button type="button" class="secondary-btn" id="podNewMaterialBtn" data-i18n="pod_new_material">Nieuwe stof inladen</button>
+      </div>
+    </div>
+  </div>
+
+</div>
+
 <!-- Intro / sales pitch (full-screen, shown on first ever visit) -->
 <div class="intro-overlay" id="introOverlay">
   <div class="intro-top">
@@ -7099,6 +7307,41 @@
 <script>
 const TRANSLATIONS = {
   nl: {
+    pod_section_label: 'Of laat Max je stof voorlezen als podcast',
+    pod_entry_kicker: 'Nieuw',
+    pod_entry_title: 'Audio-les — luister naar je stof',
+    pod_entry_desc: "Max maakt van je stof een heldere gesproken les. Luister onderweg, met je ogen dicht of tijdens het sporten.",
+    pod_topbar: 'Audio-les',
+    pod_hero_badge: 'Luister-les',
+    pod_hero_title: 'Je stof als gesproken les',
+    pod_hero_text: "Geef een onderwerp, foto's of een link. Max schrijft er een duidelijke, rustige uitleg van en spreekt die hardop uit — alsof je een korte podcast over precies jouw stof beluistert.",
+    pod_perk1: 'luister overal',
+    pod_perk2: 'in jouw taal',
+    pod_perk3: 'in je eigen tempo',
+    pod_step_topic: 'Waar gaat je les over?',
+    pod_topic_placeholder: 'bijv. fotosynthese, de Franse Revolutie, breuken…',
+    pod_step_photos: "Foto's van je stof",
+    pod_upload_main: "Klik om foto's te kiezen",
+    pod_upload_sub: 'Samenvatting, aantekeningen — alles mag',
+    pod_step_link: 'Of plak een link naar je stof',
+    pod_link_placeholder: 'https://… (openbare webpagina of PDF)',
+    pod_step_notes: 'Aantekeningen of extra wensen',
+    pod_optional: 'optioneel',
+    pod_notes_placeholder: "bijv. 'leg het simpel uit', 'focus op hoofdstuk 3', of plak hier je aantekeningen.",
+    pod_generate: 'Maak mijn audio-les',
+    pod_generate_note: "Max leest je stof en schrijft in een paar tellen een gesproken les. Je hebt hiervoor je eigen API-sleutel nodig (gratis aan te maken).",
+    pod_loading_title: 'Max schrijft je audio-les…',
+    pod_loading_text: "Hij leest je onderwerp, foto's en links, haalt de kern eruit en maakt er een heldere gesproken uitleg van.",
+    pod_status1: 'Je stof lezen…',
+    pod_status2: 'De uitleg opbouwen…',
+    pod_status3: 'De les inspreken…',
+    pod_now_playing: 'Nu te horen',
+    pod_restart: 'Opnieuw vanaf begin',
+    pod_new_material: 'Nieuwe stof inladen',
+    pod_done_title: 'Les afgeluisterd!',
+    pod_done_text: 'Goed bezig — je hebt de hele les gehoord.',
+    pod_no_voice: 'Je browser kan nog geen stem afspelen — lees mee met de tekst hieronder.',
+    pod_gen_error: 'Het lukte niet om er een audio-les van te maken. Probeer een duidelijker onderwerp of een scherpere foto.',
     snel_section_label: 'Of sprint in één keer door je hele toets',
     snel_entry_kicker: 'Nieuw',
     snel_entry_title: 'Snel Leren — sprint door je stof',
@@ -7512,6 +7755,41 @@ const TRANSLATIONS = {
     time_day_ago: '{n}d geleden',
   },
   en: {
+    pod_section_label: 'Or let Max read your material aloud as a podcast',
+    pod_entry_kicker: 'New',
+    pod_entry_title: 'Audio lesson — listen to your material',
+    pod_entry_desc: 'Max turns your material into a clear spoken lesson. Listen on the go, with your eyes closed, or while you work out.',
+    pod_topbar: 'Audio lesson',
+    pod_hero_badge: 'Listen & learn',
+    pod_hero_title: 'Your material as a spoken lesson',
+    pod_hero_text: 'Give a topic, photos or a link. Max writes a clear, calm explanation and reads it out loud — like a short podcast about exactly your material.',
+    pod_perk1: 'listen anywhere',
+    pod_perk2: 'in your language',
+    pod_perk3: 'at your own pace',
+    pod_step_topic: 'What is your lesson about?',
+    pod_topic_placeholder: 'e.g. photosynthesis, the French Revolution, fractions…',
+    pod_step_photos: 'Photos of your material',
+    pod_upload_main: 'Click to choose photos',
+    pod_upload_sub: 'Summary, notes — anything goes',
+    pod_step_link: 'Or paste a link to your material',
+    pod_link_placeholder: 'https://… (public web page or PDF)',
+    pod_step_notes: 'Notes or extra wishes',
+    pod_optional: 'optional',
+    pod_notes_placeholder: "e.g. 'explain it simply', 'focus on chapter 3', or paste your notes here.",
+    pod_generate: 'Build my audio lesson',
+    pod_generate_note: 'Max reads your material and writes a spoken lesson in seconds. You need your own API key for this (free to create).',
+    pod_loading_title: 'Max is writing your audio lesson…',
+    pod_loading_text: 'He reads your topic, photos and links, pulls out the core and turns it into a clear spoken explanation.',
+    pod_status1: 'Reading your material…',
+    pod_status2: 'Building the explanation…',
+    pod_status3: 'Recording the lesson…',
+    pod_now_playing: 'Now playing',
+    pod_restart: 'Restart from the beginning',
+    pod_new_material: 'Load new material',
+    pod_done_title: 'Lesson finished!',
+    pod_done_text: 'Nice work — you listened to the whole lesson.',
+    pod_no_voice: "Your browser can't play a voice yet — read along with the text below.",
+    pod_gen_error: 'Could not turn that into an audio lesson. Try a clearer topic or a sharper photo.',
     snel_section_label: 'Or sprint through your whole test at once',
     snel_entry_kicker: 'New',
     snel_entry_title: 'Quick Learn — sprint through your material',
@@ -7897,6 +8175,41 @@ const TRANSLATIONS = {
     time_day_ago: '{n}d ago',
   },
   de: {
+    pod_section_label: 'Oder lass Max deinen Stoff als Podcast vorlesen',
+    pod_entry_kicker: 'Neu',
+    pod_entry_title: 'Audio-Lektion — hör dir deinen Stoff an',
+    pod_entry_desc: 'Max macht aus deinem Stoff eine klare gesprochene Lektion. Hör unterwegs zu, mit geschlossenen Augen oder beim Sport.',
+    pod_topbar: 'Audio-Lektion',
+    pod_hero_badge: 'Hören & lernen',
+    pod_hero_title: 'Dein Stoff als gesprochene Lektion',
+    pod_hero_text: 'Gib ein Thema, Fotos oder einen Link an. Max schreibt eine klare, ruhige Erklärung und liest sie laut vor — wie ein kurzer Podcast über genau deinen Stoff.',
+    pod_perk1: 'überall hören',
+    pod_perk2: 'in deiner Sprache',
+    pod_perk3: 'in deinem Tempo',
+    pod_step_topic: 'Worum geht es in deiner Lektion?',
+    pod_topic_placeholder: 'z. B. Fotosynthese, die Französische Revolution, Brüche…',
+    pod_step_photos: 'Fotos von deinem Stoff',
+    pod_upload_main: 'Klicke, um Fotos zu wählen',
+    pod_upload_sub: 'Zusammenfassung, Notizen — alles geht',
+    pod_step_link: 'Oder füge einen Link zu deinem Stoff ein',
+    pod_link_placeholder: 'https://… (öffentliche Webseite oder PDF)',
+    pod_step_notes: 'Notizen oder Extrawünsche',
+    pod_optional: 'optional',
+    pod_notes_placeholder: "z. B. 'erklär es einfach', 'Fokus auf Kapitel 3', oder füge hier deine Notizen ein.",
+    pod_generate: 'Meine Audio-Lektion erstellen',
+    pod_generate_note: 'Max liest deinen Stoff und schreibt in Sekunden eine gesprochene Lektion. Dafür brauchst du deinen eigenen API-Schlüssel (kostenlos zu erstellen).',
+    pod_loading_title: 'Max schreibt deine Audio-Lektion…',
+    pod_loading_text: 'Er liest dein Thema, deine Fotos und Links, holt den Kern heraus und macht daraus eine klare gesprochene Erklärung.',
+    pod_status1: 'Deinen Stoff lesen…',
+    pod_status2: 'Die Erklärung aufbauen…',
+    pod_status3: 'Die Lektion einsprechen…',
+    pod_now_playing: 'Jetzt zu hören',
+    pod_restart: 'Von vorn beginnen',
+    pod_new_material: 'Neuen Stoff laden',
+    pod_done_title: 'Lektion gehört!',
+    pod_done_text: 'Stark gemacht — du hast die ganze Lektion gehört.',
+    pod_no_voice: 'Dein Browser kann noch keine Stimme abspielen — lies unten mit.',
+    pod_gen_error: 'Daraus ließ sich keine Audio-Lektion machen. Versuch ein klareres Thema oder ein schärferes Foto.',
     snel_section_label: 'Oder sprinte in einem Rutsch durch deine ganze Prüfung',
     snel_entry_kicker: 'Neu',
     snel_entry_title: 'Schnell-Lernen — Sprint durch deinen Stoff',
@@ -8280,6 +8593,41 @@ const TRANSLATIONS = {
     time_day_ago: 'vor {n}T',
   },
   fr: {
+    pod_section_label: 'Ou laisse Max te lire ta matière comme un podcast',
+    pod_entry_kicker: 'Nouveau',
+    pod_entry_title: 'Leçon audio — écoute ta matière',
+    pod_entry_desc: 'Max transforme ta matière en une leçon parlée claire. Écoute en chemin, les yeux fermés ou pendant le sport.',
+    pod_topbar: 'Leçon audio',
+    pod_hero_badge: 'Écoute & apprends',
+    pod_hero_title: 'Ta matière en leçon parlée',
+    pod_hero_text: 'Donne un sujet, des photos ou un lien. Max écrit une explication claire et posée, puis la lit à voix haute — comme un court podcast sur exactement ta matière.',
+    pod_perk1: 'écoute partout',
+    pod_perk2: 'dans ta langue',
+    pod_perk3: 'à ton rythme',
+    pod_step_topic: 'De quoi parle ta leçon ?',
+    pod_topic_placeholder: 'ex. la photosynthèse, la Révolution française, les fractions…',
+    pod_step_photos: 'Photos de ta matière',
+    pod_upload_main: 'Clique pour choisir des photos',
+    pod_upload_sub: 'Synthèse, notes — tout passe',
+    pod_step_link: 'Ou colle un lien vers ta matière',
+    pod_link_placeholder: 'https://… (page web publique ou PDF)',
+    pod_step_notes: 'Notes ou souhaits en plus',
+    pod_optional: 'facultatif',
+    pod_notes_placeholder: "ex. 'explique simplement', 'focus sur le chapitre 3', ou colle tes notes ici.",
+    pod_generate: 'Créer ma leçon audio',
+    pod_generate_note: 'Max lit ta matière et écrit une leçon parlée en quelques secondes. Il te faut ta propre clé API (gratuite à créer).',
+    pod_loading_title: 'Max écrit ta leçon audio…',
+    pod_loading_text: 'Il lit ton sujet, tes photos et tes liens, en extrait l’essentiel et en fait une explication parlée claire.',
+    pod_status1: 'Lecture de ta matière…',
+    pod_status2: 'Construction de l’explication…',
+    pod_status3: 'Enregistrement de la leçon…',
+    pod_now_playing: 'En écoute',
+    pod_restart: 'Reprendre du début',
+    pod_new_material: 'Charger une nouvelle matière',
+    pod_done_title: 'Leçon écoutée !',
+    pod_done_text: 'Beau travail — tu as écouté toute la leçon.',
+    pod_no_voice: 'Ton navigateur ne peut pas encore lire de voix — suis le texte ci-dessous.',
+    pod_gen_error: 'Impossible d’en faire une leçon audio. Essaie un sujet plus clair ou une photo plus nette.',
     snel_section_label: 'Ou révise tout ton contrôle d’un coup',
     snel_entry_kicker: 'Nouveau',
     snel_entry_title: 'Révision Express — fonce dans ta matière',
@@ -8665,6 +9013,41 @@ const TRANSLATIONS = {
     time_day_ago: 'il y a {n}j',
   },
   es: {
+    pod_section_label: 'O deja que Max te lea tu materia como un pódcast',
+    pod_entry_kicker: 'Nuevo',
+    pod_entry_title: 'Lección de audio — escucha tu materia',
+    pod_entry_desc: 'Max convierte tu materia en una lección hablada clara. Escucha de camino, con los ojos cerrados o mientras haces deporte.',
+    pod_topbar: 'Lección de audio',
+    pod_hero_badge: 'Escucha y aprende',
+    pod_hero_title: 'Tu materia como lección hablada',
+    pod_hero_text: 'Da un tema, fotos o un enlace. Max escribe una explicación clara y tranquila y la lee en voz alta — como un pódcast corto sobre justo tu materia.',
+    pod_perk1: 'escucha donde sea',
+    pod_perk2: 'en tu idioma',
+    pod_perk3: 'a tu ritmo',
+    pod_step_topic: '¿De qué trata tu lección?',
+    pod_topic_placeholder: 'p. ej. la fotosíntesis, la Revolución Francesa, las fracciones…',
+    pod_step_photos: 'Fotos de tu materia',
+    pod_upload_main: 'Pulsa para elegir fotos',
+    pod_upload_sub: 'Resumen, apuntes — todo vale',
+    pod_step_link: 'O pega un enlace a tu materia',
+    pod_link_placeholder: 'https://… (página web pública o PDF)',
+    pod_step_notes: 'Apuntes o deseos extra',
+    pod_optional: 'opcional',
+    pod_notes_placeholder: "p. ej. 'explícalo sencillo', 'céntrate en el tema 3', o pega aquí tus apuntes.",
+    pod_generate: 'Crear mi lección de audio',
+    pod_generate_note: 'Max lee tu materia y escribe una lección hablada en segundos. Necesitas tu propia clave API (gratis de crear).',
+    pod_loading_title: 'Max está escribiendo tu lección de audio…',
+    pod_loading_text: 'Lee tu tema, fotos y enlaces, saca lo esencial y lo convierte en una explicación hablada clara.',
+    pod_status1: 'Leyendo tu materia…',
+    pod_status2: 'Construyendo la explicación…',
+    pod_status3: 'Grabando la lección…',
+    pod_now_playing: 'Sonando ahora',
+    pod_restart: 'Empezar desde el principio',
+    pod_new_material: 'Cargar nueva materia',
+    pod_done_title: '¡Lección escuchada!',
+    pod_done_text: 'Buen trabajo — has escuchado toda la lección.',
+    pod_no_voice: 'Tu navegador aún no puede reproducir voz — sigue el texto de abajo.',
+    pod_gen_error: 'No se pudo crear una lección de audio. Prueba un tema más claro o una foto más nítida.',
     snel_section_label: 'O repasa todo tu examen de una vez',
     snel_entry_kicker: 'Nuevo',
     snel_entry_title: 'Aprende Rápido — repasa toda tu materia',
@@ -10363,6 +10746,51 @@ ALWAYS:
 - Respect direction strictly. If "alleen NL → EN", NEVER ask EN → NL.
 
 START NOW: read the photos, count, confirm, then offer the method choice.`;
+
+// ============ AUDIO-LES / PODCAST prompt ============
+// Max turns the material into a SPOKEN lesson: intro + sections{heading,lines} + outro.
+const PODCAST_PROMPT = (name, languageName, topic, notes, profileContext) => `You are Max, a warm, enthusiastic robot study-buddy in the "Huiswerk helper" app. You turn study material into a SPOKEN AUDIO LESSON for ${name} — like a short, friendly podcast episode that teaches the topic out loud.
+
+CRITICAL LANGUAGE RULE: Write EVERYTHING (title, intro, every heading and line, outro) in ${languageName}. The only exception is foreign-language vocabulary the student is explicitly studying.
+
+${profileContext}
+
+THE TOPIC THE STUDENT GAVE: "${topic || '(see photos / links / notes)'}".
+THE STUDENT'S EXTRA NOTES/INSTRUCTIONS: "${notes || '(none)'}".
+
+SOURCES — you may get any combination, and you MUST use ALL of them:
+1. PHOTOS — read everything in them carefully (handwriting, printed text, slides, diagrams).
+2. LINKS — you have a web_fetch tool. Open and READ each link fully before writing.
+3. The topic and notes above.
+If you got no usable material from photos/links, teach the TOPIC from your own solid knowledge, calibrated to the student's level above.
+
+YOUR JOB: write a spoken lesson that genuinely TEACHES the topic from the ground up — clear, structured and motivating. It must sound like a real person explaining it warmly, not like a textbook being read aloud.
+
+SPEAKING STYLE (this text is read aloud by a text-to-speech voice):
+- Plain spoken sentences only. NO markdown, NO bullet symbols, NO emojis, NO headings markup, NO code, NO LaTeX.
+- Write ALL math and symbols as SPOKEN WORDS: say "x squared" not "x^2"; "H two O" not "H2O"; "one half" not "1/2"; "ten percent" not "10%"; "minus three" not "-3".
+- Short, natural sentences a voice can say in one breath. Vary the rhythm. Speak directly to ${name} using "you".
+- Start friendly and give the big picture, then build up step by step with concrete examples and small analogies. Finish by recapping the key takeaways with a short, encouraging send-off.
+
+Return ONE single JSON object and NOTHING else (no greeting, no explanation, no markdown fences). Exact shape:
+
+{
+  "title": "a short title (2-5 words) describing the topic",
+  "intro": "one or two warm spoken sentences that hook the listener and say what they'll learn",
+  "sections": [
+    { "heading": "a 2-4 word section title (shown on screen, NOT spoken)", "lines": [ "a spoken sentence", "the next spoken sentence" ] }
+  ],
+  "outro": "one or two spoken sentences recapping the key points and ending encouragingly"
+}
+
+RULES:
+- 4 to 7 sections. Each section has 3 to 7 "lines". Each "line" is exactly ONE spoken sentence.
+- Cover the whole topic logically: from the basics to the important details a student gets tested on.
+- Be accurate. If you used photos or links, base the lesson on their real content.
+- Every value is plain text; escape any double quotes so JSON.parse can read it.
+- If you truly cannot teach anything from what you were given, return {"title":"","intro":"","sections":[],"outro":""}.
+
+Output the JSON now.`;
 
 // ============ SNEL LEREN — one-shot study-set generator ============
 // ============ SNEL LEREN — one-shot study-set generator ============
@@ -16527,6 +16955,327 @@ if (snelSaveDeckBtn) snelSaveDeckBtn.addEventListener('click', snelSaveDeck);
 { const b = $('snelSummaryCloseBtn'); if (b) b.addEventListener('click', closeSnel); }
 { const b = $('openSnelBtn'); if (b) b.addEventListener('click', openSnel); }
 
+
+// ============ AUDIO-LES / PODCAST — Max reads your material aloud ============
+// One AI call turns a topic + photos/links/notes into a spoken lesson (JSON:
+// intro, sections{heading,lines}, outro). Played with the browser's built-in
+// speech synthesis — no audio files, works fully offline once generated.
+const podOverlay = $('podOverlay');
+const podScreens = {
+  setup:   $('podSetupScreen'),
+  loading: $('podLoadingScreen'),
+  player:  $('podPlayerScreen'),
+};
+const podTopic        = $('podTopic');
+const podUploadZone   = $('podUploadZone');
+const podUploadPrompt = $('podUploadPrompt');
+const podThumbnails   = $('podThumbnails');
+const podFileInput    = $('podFileInput');
+const podCameraInput  = $('podCameraInput');
+const podLinkInput    = $('podLinkInput');
+const podNotes        = $('podNotes');
+const podGenerateBtn  = $('podGenerateBtn');
+const podLoadingStatus= $('podLoadingStatus');
+const podPlayerTitle  = $('podPlayerTitle');
+const podNow          = $('podNow');
+const podNowText      = $('podNowText');
+const podTranscript   = $('podTranscript');
+const podProgressFill = $('podProgressFill');
+const podPlayBtn      = $('podPlayBtn');
+const podPrevBtn      = $('podPrevBtn');
+const podNextBtn      = $('podNextBtn');
+const podSpeedBtn     = $('podSpeedBtn');
+const podVoiceNote    = $('podVoiceNote');
+
+const POD_SPEEDS = [1, 1.25, 1.5, 0.85];
+const podState = { images: [], topic: '', notes: '', links: [], script: null, title: '', items: [], idx: 0, playing: false, rate: 1, finished: false };
+let podStatusTimer = null;
+let podKeepAlive = null;
+const podTTS = (typeof window !== 'undefined' && 'speechSynthesis' in window) ? window.speechSynthesis : null;
+
+function podShow(screen) {
+  Object.values(podScreens).forEach(s => s && s.classList.remove('active'));
+  if (podScreens[screen]) podScreens[screen].classList.add('active');
+}
+function openPodcast() {
+  if (!state.name || !state.profile) { openWelcomeModal(); return; }
+  if (!state.apiKey) { openApiKeyModal(); return; }
+  resetPodSetup();
+  podShow('setup');
+  podOverlay.classList.add('active');
+  document.body.style.overflow = 'hidden';
+}
+function closePodcast() {
+  podStopSpeech();
+  stopPodStatus();
+  podOverlay.classList.remove('active');
+  document.body.style.overflow = '';
+}
+function resetPodSetup() {
+  podStopSpeech();
+  podState.images = []; podState.notes = ''; podState.links = []; podState.topic = '';
+  podState.script = null; podState.items = []; podState.idx = 0; podState.playing = false; podState.finished = false;
+  if (podTopic) podTopic.value = '';
+  if (podNotes) podNotes.value = '';
+  if (podLinkInput) podLinkInput.value = '';
+  if (podFileInput) podFileInput.value = '';
+  if (podCameraInput) podCameraInput.value = '';
+  renderPodThumbs();
+  updatePodGenerateBtn();
+}
+function handlePodFiles(files) {
+  const proms = Array.from(files).map(file => new Promise(res => {
+    const r = new FileReader();
+    r.onload = ev => res({ base64: ev.target.result.split(',')[1], mediaType: file.type, dataUrl: ev.target.result });
+    r.readAsDataURL(file);
+  }));
+  Promise.all(proms).then(results => { podState.images.push(...results); renderPodThumbs(); updatePodGenerateBtn(); });
+}
+function renderPodThumbs() {
+  if (!podThumbnails) return;
+  podThumbnails.innerHTML = '';
+  if (podState.images.length === 0) {
+    podThumbnails.classList.add('hidden');
+    if (podUploadPrompt) podUploadPrompt.style.display = '';
+    return;
+  }
+  podThumbnails.classList.remove('hidden');
+  if (podUploadPrompt) podUploadPrompt.style.display = 'none';
+  podState.images.forEach((img, i) => {
+    const w = document.createElement('div');
+    w.className = 'learn-thumb';
+    w.innerHTML = '<img src="' + img.dataUrl + '" alt=""><button type="button" class="learn-thumb-x" data-idx="' + i + '" aria-label="x">&times;</button>';
+    podThumbnails.appendChild(w);
+  });
+  podThumbnails.querySelectorAll('.learn-thumb-x').forEach(btn => {
+    btn.addEventListener('click', e => { e.stopPropagation(); podState.images.splice(parseInt(btn.dataset.idx, 10), 1); renderPodThumbs(); updatePodGenerateBtn(); });
+  });
+}
+function podCollectLinks() {
+  const seen = new Set(); const out = [];
+  const valid = u => (typeof snelValidLink === 'function') ? snelValidLink(u) : /^https?:\/\/\S+\.\S+/i.test(u);
+  const add = u => { u = (u || '').trim(); if (valid(u) && !seen.has(u)) { seen.add(u); out.push(u); } };
+  if (podLinkInput) add(podLinkInput.value);
+  if (typeof snelExtractUrls === 'function') snelExtractUrls(podNotes ? podNotes.value : '').forEach(add);
+  return out;
+}
+function podNotesText() {
+  const raw = podNotes ? podNotes.value : '';
+  return raw.replace(/https?:\/\/\S+/gi, ' ').replace(/\s+/g, ' ').trim();
+}
+function updatePodGenerateBtn() {
+  const topic = podTopic ? podTopic.value.trim() : '';
+  const ready = topic.length >= 3 || podState.images.length > 0 || podCollectLinks().length > 0 || podNotesText().length >= 30;
+  if (podGenerateBtn) podGenerateBtn.disabled = !ready;
+}
+function stopPodStatus() { if (podStatusTimer) { clearInterval(podStatusTimer); podStatusTimer = null; } }
+function cyclePodStatus() {
+  const msgs = [t('pod_status1'), t('pod_status2'), t('pod_status3')].filter(Boolean);
+  let i = 0; if (podLoadingStatus) podLoadingStatus.textContent = msgs[0] || '';
+  stopPodStatus();
+  podStatusTimer = setInterval(() => { i = (i + 1) % msgs.length; if (podLoadingStatus) podLoadingStatus.textContent = msgs[i] || ''; }, 2200);
+}
+
+async function startPodGeneration() {
+  if (!state.apiKey) { openApiKeyModal(); return; }
+  if (!state.name) { openWelcomeModal(); return; }
+  podState.topic = podTopic ? podTopic.value.trim() : '';
+  podState.notes = podNotesText();
+  podState.links = podCollectLinks();
+  if (podState.topic.length < 3 && podState.images.length === 0 && podState.links.length === 0 && podState.notes.length < 30) return;
+  podShow('loading'); cyclePodStatus();
+  try {
+    const data = await generatePodcastScript();
+    stopPodStatus();
+    if (!buildPodItems(data)) {
+      showError(t('pod_gen_error') || 'Het lukte niet om er een audio-les van te maken. Probeer een duidelijker onderwerp of foto.');
+      podShow('setup'); return;
+    }
+    showPodPlayer();
+  } catch (err) {
+    stopPodStatus(); console.error(err);
+    showError((t('error_prefix') || 'Er ging iets mis: ') + err.message + (t('error_check_key') || ''));
+    podShow('setup');
+  }
+}
+async function generatePodcastScript() {
+  const languageName = TRANSLATIONS[state.language].lang_name_en;
+  const sys = PODCAST_PROMPT(state.name || 'the student', languageName, podState.topic, podState.notes, profileContextText());
+  const content = podState.images.map(img => ({ type: 'image', source: { type: 'base64', media_type: img.mediaType, data: img.base64 } }));
+  const links = podState.links || [];
+  const parts = [];
+  if (podState.topic) parts.push('Topic for the lesson: ' + podState.topic);
+  if (podState.images.length) parts.push('Above are photo(s) of my study material.');
+  if (links.length) parts.push('Use the web_fetch tool to OPEN and READ these link(s) completely, then base the lesson on them:\n' + links.map(l => '- ' + l).join('\n'));
+  if (podState.notes) parts.push('My extra notes/instructions: ' + podState.notes);
+  parts.push('Write the complete spoken audio lesson as JSON now.');
+  content.push({ type: 'text', text: parts.join('\n\n') });
+
+  const headers = { 'content-type': 'application/json', 'x-api-key': state.apiKey, 'anthropic-version': '2023-06-01', 'anthropic-dangerous-direct-browser-access': 'true' };
+  const body = { model: 'claude-sonnet-4-6', max_tokens: 6000, system: sys, messages: [{ role: 'user', content }] };
+  if (links.length) { headers['anthropic-beta'] = 'web-fetch-2025-09-10'; body.tools = [{ type: 'web_fetch_20250910', name: 'web_fetch', max_uses: Math.max(6, links.length * 3) }]; }
+  const resp = await fetch('https://api.anthropic.com/v1/messages', { method: 'POST', headers, body: JSON.stringify(body) });
+  if (!resp.ok) { const e = await resp.text(); throw new Error('API ' + resp.status + ': ' + e); }
+  const d = await resp.json();
+  const raw = d.content.map(c => c.text).filter(Boolean).join('').trim();
+  return podParseJson(raw);
+}
+function podParseJson(raw) {
+  let s = (raw || '').trim().replace(/^```(?:json)?\s*/i, '').replace(/\s*```$/i, '').trim();
+  try { return JSON.parse(s); }
+  catch (e) {
+    const a = s.indexOf('{'), b = s.lastIndexOf('}');
+    if (a >= 0 && b > a) { try { return JSON.parse(s.slice(a, b + 1)); } catch (_) { } }
+    return null;
+  }
+}
+function buildPodItems(data) {
+  if (!data || typeof data !== 'object') return false;
+  const items = [];
+  const clean = x => (x == null ? '' : String(x)).replace(/\s+/g, ' ').trim();
+  if (clean(data.intro)) items.push({ kind: 'intro', text: clean(data.intro) });
+  const secs = Array.isArray(data.sections) ? data.sections : [];
+  secs.forEach(sec => {
+    const h = clean(sec && sec.heading);
+    const lines = Array.isArray(sec && sec.lines) ? sec.lines : [];
+    const spoken = lines.map(clean).filter(Boolean);
+    if (h) items.push({ kind: 'heading', text: h });
+    spoken.forEach(l => items.push({ kind: 'line', text: l }));
+  });
+  if (clean(data.outro)) items.push({ kind: 'outro', text: clean(data.outro) });
+  const spokenCount = items.filter(i => i.kind !== 'heading').length;
+  if (spokenCount < 2) return false;
+  podState.script = data;
+  podState.title = clean(data.title) || t('pod_topbar') || 'Audio-les';
+  podState.items = items;
+  podState.idx = 0;
+  return true;
+}
+function showPodPlayer() {
+  podShow('player');
+  if (podPlayerTitle) podPlayerTitle.textContent = podState.title;
+  renderPodTranscript();
+  podState.idx = 0; podState.finished = false; podState.playing = false;
+  setPodCurrent(0, false);
+  updatePlayPauseUI();
+  if (podVoiceNote) podVoiceNote.style.display = podTTS ? 'none' : '';
+  if (typeof awardXp === 'function') { try { awardXp(8, 'podcast'); } catch (_) { } }
+}
+function renderPodTranscript() {
+  if (!podTranscript) return;
+  podTranscript.innerHTML = '';
+  podState.items.forEach((it, i) => {
+    const el = document.createElement('div');
+    if (it.kind === 'heading') { el.className = 'pod-theading'; el.textContent = it.text; }
+    else {
+      el.className = 'pod-tline'; el.dataset.i = String(i); el.textContent = it.text;
+      el.addEventListener('click', () => { if (podState.playing) speakFrom(i); else setPodCurrent(i, false); });
+    }
+    it.el = el;
+    podTranscript.appendChild(el);
+  });
+}
+function setPodCurrent(i, scroll) {
+  podState.idx = i;
+  const it = podState.items[i];
+  if (it && podNowText) podNowText.textContent = it.text || '';
+  podState.items.forEach((x, j) => {
+    if (!x.el) return;
+    x.el.classList.remove('current');
+    if (j < i) x.el.classList.add('spoken'); else x.el.classList.remove('spoken');
+  });
+  if (it && it.el) { it.el.classList.add('current'); if (scroll !== false) it.el.scrollIntoView({ block: 'center', behavior: 'smooth' }); }
+  updatePodProgress();
+}
+function updatePodProgress() {
+  const total = podState.items.length || 1;
+  const pct = Math.min(100, Math.round((podState.idx / total) * 100));
+  if (podProgressFill) podProgressFill.style.width = pct + '%';
+}
+function podVoiceFor(lang) {
+  if (!podTTS) return null;
+  const voices = podTTS.getVoices() || [];
+  const want = (lang || 'nl').toLowerCase();
+  let v = voices.find(x => x.lang && x.lang.toLowerCase().startsWith(want));
+  if (!v) v = voices.find(x => x.lang && x.lang.toLowerCase().indexOf(want) !== -1);
+  return v || null;
+}
+function podLangCode() { return ({ nl: 'nl-NL', en: 'en-US', de: 'de-DE', fr: 'fr-FR', es: 'es-ES' })[state.language] || 'nl-NL'; }
+function speakFrom(i) {
+  if (!podTTS) return;
+  podTTS.cancel();
+  podState.idx = i; podState.playing = true; podState.finished = false;
+  if (podNow) podNow.classList.remove('pod-paused');
+  updatePlayPauseUI();
+  podSpeakCurrent();
+  startPodKeepAlive();
+}
+function podSpeakCurrent() {
+  if (!podTTS) return;
+  if (podState.idx >= podState.items.length) { podFinish(); return; }
+  const it = podState.items[podState.idx];
+  setPodCurrent(podState.idx, true);
+  if (it.kind === 'heading') { podState.idx++; podSpeakCurrent(); return; }
+  const u = new SpeechSynthesisUtterance(it.text);
+  const voice = podVoiceFor(state.language);
+  if (voice) u.voice = voice;
+  u.lang = podLangCode();
+  u.rate = podState.rate;
+  u.onend = () => { if (!podState.playing) return; podState.idx++; podSpeakCurrent(); };
+  u.onerror = () => { if (!podState.playing) return; podState.idx++; setTimeout(podSpeakCurrent, 80); };
+  podTTS.speak(u);
+}
+function startPodKeepAlive() { stopPodKeepAlive(); podKeepAlive = setInterval(() => { if (podTTS && podState.playing) { try { podTTS.resume(); } catch (_) { } } }, 8000); }
+function stopPodKeepAlive() { if (podKeepAlive) { clearInterval(podKeepAlive); podKeepAlive = null; } }
+function podStopSpeech() { podState.playing = false; stopPodKeepAlive(); if (podTTS) { try { podTTS.cancel(); } catch (_) { } } if (podNow) podNow.classList.add('pod-paused'); updatePlayPauseUI(); }
+function podPlay() {
+  if (!podTTS) return;
+  if (podState.finished || podState.idx >= podState.items.length) { podState.idx = 0; podState.finished = false; }
+  speakFrom(podState.idx);
+}
+function podPause() { podState.playing = false; stopPodKeepAlive(); if (podTTS) { try { podTTS.cancel(); } catch (_) { } } if (podNow) podNow.classList.add('pod-paused'); updatePlayPauseUI(); }
+function togglePodPlay() { if (podState.playing) podPause(); else podPlay(); }
+function podFinish() {
+  podState.playing = false; podState.finished = true; stopPodKeepAlive();
+  if (podNow) podNow.classList.add('pod-paused');
+  podState.items.forEach(x => { if (x.el && x.el.classList.contains('pod-tline')) x.el.classList.add('spoken'); });
+  if (podProgressFill) podProgressFill.style.width = '100%';
+  updatePlayPauseUI();
+  if (typeof showCelebration === 'function') showCelebration('i-headphones', t('pod_done_title') || 'Les afgeluisterd!', t('pod_done_text') || 'Goed bezig!', true);
+}
+function podPrev() { const i = Math.max(0, podState.idx - 1); if (podState.playing) speakFrom(i); else setPodCurrent(i, true); }
+function podNext() { const i = Math.min(podState.items.length - 1, podState.idx + 1); if (podState.playing) speakFrom(i); else setPodCurrent(i, true); }
+function podRestart() { podState.finished = false; if (podState.playing) speakFrom(0); else setPodCurrent(0, true); }
+function cyclePodSpeed() {
+  const cur = POD_SPEEDS.indexOf(podState.rate);
+  podState.rate = POD_SPEEDS[(cur + 1) % POD_SPEEDS.length];
+  if (podSpeedBtn) podSpeedBtn.textContent = (podState.rate === 1 ? '1' : String(podState.rate)) + '×';
+  if (podState.playing) speakFrom(podState.idx);
+}
+function updatePlayPauseUI() {
+  if (podPlayBtn) { const use = podPlayBtn.querySelector('use'); if (use) use.setAttribute('href', podState.playing ? '#i-pause' : '#i-play'); }
+  if (podNow) podNow.classList.toggle('pod-paused', !podState.playing);
+}
+
+if (podTTS) { try { podTTS.onvoiceschanged = () => { }; podTTS.getVoices(); } catch (_) { } }
+
+// ---- wiring ----
+{ const b = $('openPodcastBtn'); if (b) b.addEventListener('click', openPodcast); }
+{ const b = $('podBackBtn'); if (b) b.addEventListener('click', closePodcast); }
+{ const b = $('podPlayerBackBtn'); if (b) b.addEventListener('click', closePodcast); }
+if (podTopic) podTopic.addEventListener('input', updatePodGenerateBtn);
+if (podLinkInput) podLinkInput.addEventListener('input', updatePodGenerateBtn);
+if (podNotes) podNotes.addEventListener('input', updatePodGenerateBtn);
+if (podUploadZone) podUploadZone.addEventListener('click', e => { if (e.target.closest('button')) return; if (podFileInput) podFileInput.click(); });
+if (podFileInput) podFileInput.addEventListener('change', e => { if (e.target.files && e.target.files.length) handlePodFiles(e.target.files); });
+if (podCameraInput) podCameraInput.addEventListener('change', e => { if (e.target.files && e.target.files.length) handlePodFiles(e.target.files); });
+if (podGenerateBtn) podGenerateBtn.addEventListener('click', startPodGeneration);
+if (podPlayBtn) podPlayBtn.addEventListener('click', togglePodPlay);
+if (podPrevBtn) podPrevBtn.addEventListener('click', podPrev);
+if (podNextBtn) podNextBtn.addEventListener('click', podNext);
+if (podSpeedBtn) podSpeedBtn.addEventListener('click', cyclePodSpeed);
+{ const b = $('podRestartBtn'); if (b) b.addEventListener('click', podRestart); }
+{ const b = $('podNewMaterialBtn'); if (b) b.addEventListener('click', () => { podStopSpeech(); resetPodSetup(); podShow('setup'); }); }
 
 // ============ Help modal (guide + Ask-Max chat) ============
 const helpModal = $('helpModal');
