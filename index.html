@@ -5402,6 +5402,21 @@
   /* Bottom safe-area for the podcast player so controls clear the home indicator */
   .pod-player { padding-bottom: calc(18px + var(--safe-bottom)); }
 
+  /* Voice picker + read-along label */
+  .pod-voicebar { max-width: 680px; width: 100%; margin: 12px auto 0; display: flex; align-items: center; gap: 10px; }
+  .pod-voice-label { display: inline-flex; align-items: center; gap: 6px; font-size: 12.5px; font-weight: 700; color: var(--muted); white-space: nowrap; }
+  .pod-voice-label .icon { color: var(--accent); }
+  .pod-voice-select {
+    flex: 1; min-width: 0; appearance: none; -webkit-appearance: none;
+    background: var(--card); color: var(--text); border: 1px solid var(--border-strong);
+    border-radius: 999px; padding: 10px 38px 10px 14px; font-family: inherit; font-size: 14px; font-weight: 600; cursor: pointer;
+    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%238b8db5' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'><polyline points='6 9 12 15 18 9'/></svg>");
+    background-repeat: no-repeat; background-position: right 14px center;
+  }
+  .pod-voice-select:focus { border-color: var(--accent); outline: none; }
+  .pod-readalong-label { max-width: 680px; width: 100%; margin: 14px auto 2px; display: flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 800; letter-spacing: .04em; text-transform: uppercase; color: var(--muted); }
+  .pod-readalong-label .icon { color: var(--accent); width: 14px; height: 14px; }
+
   @media (pointer: coarse) {
     .pod-cbtn, .pod-speed, .snel-entry-card, .snel-foot-btn { min-height: 44px; }
   }
@@ -6996,7 +7011,12 @@
         <button type="button" class="pod-cbtn small" id="podNextBtn" aria-label="Volgende"><svg class="icon"><use href="#i-arrow-right"/></svg></button>
         <button type="button" class="pod-speed" id="podSpeedBtn">1×</button>
       </div>
+      <div class="pod-voicebar">
+        <label class="pod-voice-label" for="podVoiceSelect"><svg class="icon icon-sm"><use href="#i-mic"/></svg><span data-i18n="pod_voice_label">Stem</span></label>
+        <select id="podVoiceSelect" class="pod-voice-select" aria-label="Stem"></select>
+      </div>
       <p class="pod-note" id="podVoiceNote" style="display:none;" data-i18n="pod_no_voice">Je browser kan nog geen stem afspelen — lees mee met de tekst hieronder.</p>
+      <div class="pod-readalong-label"><svg class="icon icon-sm"><use href="#i-scroll"/></svg><span data-i18n="pod_readalong">Lees mee — wat je nu hoort licht op</span></div>
       <div class="pod-transcript" id="podTranscript"></div>
       <div class="snel-summary-actions" style="max-width:680px;margin:4px auto 0;">
         <button type="button" class="secondary-btn" id="podRestartBtn" data-i18n="pod_restart">Opnieuw vanaf begin</button>
@@ -7370,6 +7390,8 @@ const TRANSLATIONS = {
     pod_status2: 'De uitleg opbouwen…',
     pod_status3: 'De les inspreken…',
     pod_now_playing: 'Nu te horen',
+    pod_voice_label: 'Stem',
+    pod_readalong: 'Lees mee — wat je nu hoort licht op',
     pod_restart: 'Opnieuw vanaf begin',
     pod_new_material: 'Nieuwe stof inladen',
     pod_done_title: 'Les afgeluisterd!',
@@ -7818,6 +7840,8 @@ const TRANSLATIONS = {
     pod_status2: 'Building the explanation…',
     pod_status3: 'Recording the lesson…',
     pod_now_playing: 'Now playing',
+    pod_voice_label: 'Voice',
+    pod_readalong: 'Read along — the line you hear lights up',
     pod_restart: 'Restart from the beginning',
     pod_new_material: 'Load new material',
     pod_done_title: 'Lesson finished!',
@@ -8238,6 +8262,8 @@ const TRANSLATIONS = {
     pod_status2: 'Die Erklärung aufbauen…',
     pod_status3: 'Die Lektion einsprechen…',
     pod_now_playing: 'Jetzt zu hören',
+    pod_voice_label: 'Stimme',
+    pod_readalong: 'Mitlesen — die Zeile, die du hörst, leuchtet auf',
     pod_restart: 'Von vorn beginnen',
     pod_new_material: 'Neuen Stoff laden',
     pod_done_title: 'Lektion gehört!',
@@ -8656,6 +8682,8 @@ const TRANSLATIONS = {
     pod_status2: 'Construction de l’explication…',
     pod_status3: 'Enregistrement de la leçon…',
     pod_now_playing: 'En écoute',
+    pod_voice_label: 'Voix',
+    pod_readalong: 'Lis en même temps — la ligne entendue s’allume',
     pod_restart: 'Reprendre du début',
     pod_new_material: 'Charger une nouvelle matière',
     pod_done_title: 'Leçon écoutée !',
@@ -9076,6 +9104,8 @@ const TRANSLATIONS = {
     pod_status2: 'Construyendo la explicación…',
     pod_status3: 'Grabando la lección…',
     pod_now_playing: 'Sonando ahora',
+    pod_voice_label: 'Voz',
+    pod_readalong: 'Lee a la vez — la línea que oyes se ilumina',
     pod_restart: 'Empezar desde el principio',
     pod_new_material: 'Cargar nueva materia',
     pod_done_title: '¡Lección escuchada!',
@@ -17020,6 +17050,9 @@ const podPrevBtn      = $('podPrevBtn');
 const podNextBtn      = $('podNextBtn');
 const podSpeedBtn     = $('podSpeedBtn');
 const podVoiceNote    = $('podVoiceNote');
+const podVoiceSelect  = $('podVoiceSelect');
+let podVoicePrefs = (() => { try { return JSON.parse(localStorage.getItem('pod_voices') || '{}') || {}; } catch (_) { return {}; } })();
+let podSelectedVoiceURI = null;
 
 const POD_SPEEDS = [1, 1.25, 1.5, 0.85];
 const podState = { images: [], topic: '', notes: '', links: [], script: null, title: '', items: [], idx: 0, playing: false, rate: 1, finished: false };
@@ -17192,6 +17225,8 @@ function showPodPlayer() {
   podState.idx = 0; podState.finished = false; podState.playing = false;
   setPodCurrent(0, false);
   updatePlayPauseUI();
+  populatePodVoices();
+  setTimeout(populatePodVoices, 350); // some browsers load voices lazily
   if (podVoiceNote) podVoiceNote.style.display = podTTS ? 'none' : '';
   if (typeof awardXp === 'function') { try { awardXp(8, 'podcast'); } catch (_) { } }
 }
@@ -17229,10 +17264,40 @@ function updatePodProgress() {
 function podVoiceFor(lang) {
   if (!podTTS) return null;
   const voices = podTTS.getVoices() || [];
+  if (podSelectedVoiceURI) { const sel = voices.find(v => v.voiceURI === podSelectedVoiceURI); if (sel) return sel; }
   const want = (lang || 'nl').toLowerCase();
   let v = voices.find(x => x.lang && x.lang.toLowerCase().startsWith(want));
   if (!v) v = voices.find(x => x.lang && x.lang.toLowerCase().indexOf(want) !== -1);
-  return v || null;
+  return v || voices[0] || null;
+}
+function populatePodVoices() {
+  if (!podVoiceSelect) return;
+  const voices = podTTS ? (podTTS.getVoices() || []) : [];
+  if (!voices.length) { podVoiceSelect.innerHTML = ''; podVoiceSelect.disabled = true; return; }
+  podVoiceSelect.disabled = false;
+  const appLang = (state.language || 'nl').toLowerCase();
+  const matches = voices.filter(v => (v.lang || '').toLowerCase().startsWith(appLang));
+  const others = voices.filter(v => !(v.lang || '').toLowerCase().startsWith(appLang));
+  const ordered = matches.concat(others);
+  let chosenURI = podVoicePrefs[appLang];
+  if (!chosenURI || !voices.some(v => v.voiceURI === chosenURI)) chosenURI = (matches[0] || voices[0]).voiceURI;
+  podSelectedVoiceURI = chosenURI;
+  podVoiceSelect.innerHTML = '';
+  ordered.forEach(v => {
+    const opt = document.createElement('option');
+    opt.value = v.voiceURI;
+    opt.textContent = v.name + ' (' + (v.lang || '') + ')';
+    if (v.voiceURI === chosenURI) opt.selected = true;
+    podVoiceSelect.appendChild(opt);
+  });
+}
+function onPodVoiceChange() {
+  if (!podVoiceSelect) return;
+  podSelectedVoiceURI = podVoiceSelect.value;
+  const appLang = (state.language || 'nl').toLowerCase();
+  podVoicePrefs[appLang] = podSelectedVoiceURI;
+  try { localStorage.setItem('pod_voices', JSON.stringify(podVoicePrefs)); } catch (_) { }
+  if (podState.playing) speakFrom(podState.idx);
 }
 function podLangCode() { return ({ nl: 'nl-NL', en: 'en-US', de: 'de-DE', fr: 'fr-FR', es: 'es-ES' })[state.language] || 'nl-NL'; }
 function speakFrom(i) {
@@ -17291,7 +17356,7 @@ function updatePlayPauseUI() {
   if (podNow) podNow.classList.toggle('pod-paused', !podState.playing);
 }
 
-if (podTTS) { try { podTTS.onvoiceschanged = () => { }; podTTS.getVoices(); } catch (_) { } }
+if (podTTS) { try { podTTS.onvoiceschanged = () => { populatePodVoices(); }; podTTS.getVoices(); } catch (_) { } }
 
 // ---- wiring ----
 { const b = $('openPodcastBtn'); if (b) b.addEventListener('click', openPodcast); }
@@ -17308,6 +17373,7 @@ if (podPlayBtn) podPlayBtn.addEventListener('click', togglePodPlay);
 if (podPrevBtn) podPrevBtn.addEventListener('click', podPrev);
 if (podNextBtn) podNextBtn.addEventListener('click', podNext);
 if (podSpeedBtn) podSpeedBtn.addEventListener('click', cyclePodSpeed);
+if (podVoiceSelect) podVoiceSelect.addEventListener('change', onPodVoiceChange);
 { const b = $('podRestartBtn'); if (b) b.addEventListener('click', podRestart); }
 { const b = $('podNewMaterialBtn'); if (b) b.addEventListener('click', () => { podStopSpeech(); resetPodSetup(); podShow('setup'); }); }
 
