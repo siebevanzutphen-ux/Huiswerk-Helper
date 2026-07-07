@@ -3124,6 +3124,133 @@
   }
 
   /* ===== Klas — online lesson with Teacher Max at a blackboard ===== */
+  /* ===== Cijfers (grades) feature ===== */
+  .m-cijfers .mode-card-icon { background: linear-gradient(140deg, #34d399, #10b981); }
+
+  .grades-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 170;
+    display: none;
+    flex-direction: column;
+    overflow: hidden;
+    padding-top: var(--safe-top);
+    padding-bottom: var(--safe-bottom);
+    background:
+      radial-gradient(ellipse 120% 80% at 50% 0%, #123028 0%, transparent 60%),
+      linear-gradient(180deg, #101f1b 0%, #0d0d1a 100%);
+    color: var(--text);
+  }
+  .grades-overlay.active { display: flex; }
+  .grades-header {
+    display: flex; align-items: center; justify-content: space-between;
+    gap: 10px; padding: 12px 16px;
+    background: rgba(13, 13, 26, 0.5);
+    backdrop-filter: blur(10px);
+    border-bottom: 1px solid var(--border);
+  }
+  .grades-header h2 { font-size: 17px; font-weight: 800; display: flex; align-items: center; gap: 9px; }
+  .grades-header .grades-title-icon { width: 26px; height: 26px; border-radius: 8px; background: linear-gradient(140deg, #34d399, #10b981); display: inline-flex; align-items: center; justify-content: center; }
+  .grades-header .grades-title-icon .icon { width: 16px; height: 16px; color: #fff; }
+  .grades-body {
+    flex: 1; overflow-y: auto; -webkit-overflow-scrolling: touch;
+    max-width: 780px; width: 100%; margin: 0 auto;
+    padding: 20px 16px 60px; display: flex; flex-direction: column; gap: 18px;
+  }
+  /* Overall summary */
+  .grades-summary {
+    background: linear-gradient(135deg, rgba(52,211,153,0.14), rgba(16,185,129,0.08));
+    border: 1px solid var(--border-strong);
+    border-radius: var(--radius-lg);
+    padding: 18px; text-align: center;
+  }
+  .grades-summary-avg { font-size: 42px; font-weight: 900; line-height: 1; font-variant-numeric: tabular-nums; }
+  .grades-summary-avg.pass { color: #34d399; }
+  .grades-summary-avg.fail { color: #f87171; }
+  .grades-summary-avg.none { color: var(--muted); }
+  .grades-summary-label { font-size: 13px; color: var(--muted); margin-top: 6px; font-weight: 600; }
+  /* Subject block */
+  .grade-subject {
+    background: var(--card); border: 1px solid var(--border);
+    border-radius: var(--radius-md); overflow: hidden;
+  }
+  .grade-subject-head {
+    display: flex; align-items: center; gap: 12px;
+    padding: 14px 16px; cursor: pointer; user-select: none;
+  }
+  .grade-subject-name { font-size: 15.5px; font-weight: 800; flex: 1; min-width: 0; }
+  .grade-subject-name input {
+    font: inherit; font-weight: 800; color: var(--text);
+    background: transparent; border: none; width: 100%; padding: 2px 0;
+  }
+  .grade-subject-name input:focus { outline: none; border-bottom: 1px solid var(--accent); }
+  .grade-subject-avg {
+    font-size: 20px; font-weight: 900; font-variant-numeric: tabular-nums; flex-shrink: 0;
+  }
+  .grade-subject-avg.pass { color: #34d399; }
+  .grade-subject-avg.fail { color: #f87171; }
+  .grade-subject-avg.none { color: var(--muted); font-size: 14px; }
+  .grade-subject-body { padding: 0 16px 14px; display: flex; flex-direction: column; gap: 8px; }
+  .grade-row {
+    display: flex; align-items: center; gap: 8px;
+  }
+  .grade-row input {
+    font: inherit; color: var(--text);
+    background: var(--bg-2); border: 1px solid var(--border);
+    border-radius: var(--radius-sm); padding: 9px 10px; min-height: 40px;
+  }
+  .grade-row input:focus { outline: none; border-color: var(--accent); }
+  .grade-row .grade-mark { width: 74px; text-align: center; font-weight: 700; font-variant-numeric: tabular-nums; }
+  .grade-row .grade-desc { flex: 1; min-width: 0; }
+  .grade-row .grade-weight { width: 74px; text-align: center; }
+  .grade-row .grade-remove {
+    flex-shrink: 0; width: 36px; height: 36px; border-radius: var(--radius-sm);
+    background: transparent; border: 1px solid var(--border); color: var(--muted);
+    cursor: pointer; font-size: 18px; line-height: 1; display: inline-flex;
+    align-items: center; justify-content: center; font-family: inherit;
+  }
+  .grade-row .grade-remove:hover { color: #f87171; border-color: rgba(248,113,113,0.5); }
+  .grade-row-labels { display: flex; gap: 8px; font-size: 11px; color: var(--muted); font-weight: 600; padding: 0 2px; }
+  .grade-row-labels .l-mark { width: 74px; text-align: center; }
+  .grade-row-labels .l-desc { flex: 1; }
+  .grade-row-labels .l-weight { width: 74px; text-align: center; }
+  .grade-row-labels .l-spacer { width: 36px; flex-shrink: 0; }
+  .grade-add-row {
+    margin-top: 4px; align-self: flex-start;
+    background: rgba(52,211,153,0.10); border: 1px solid rgba(52,211,153,0.30);
+    color: #34d399; border-radius: var(--radius-sm); padding: 8px 14px;
+    font-size: 13px; font-weight: 700; cursor: pointer; font-family: inherit;
+    display: inline-flex; align-items: center; gap: 6px;
+  }
+  .grade-add-row:hover { background: rgba(52,211,153,0.18); }
+  .grade-subject-actions { display: flex; gap: 8px; margin-top: 4px; flex-wrap: wrap; }
+  .grade-target {
+    background: var(--bg-2); border: 1px solid var(--border);
+    border-radius: var(--radius-sm); padding: 12px; margin-top: 8px;
+    font-size: 13px; color: var(--text-soft); line-height: 1.5;
+  }
+  .grade-target strong { color: var(--text); }
+  .grade-target-input {
+    width: 64px; text-align: center; font: inherit; font-weight: 700;
+    color: var(--text); background: var(--card); border: 1px solid var(--border-strong);
+    border-radius: 8px; padding: 4px 6px; margin: 0 4px;
+  }
+  .grade-subject-delete {
+    background: transparent; border: 1px solid var(--border); color: var(--muted);
+    border-radius: var(--radius-sm); padding: 8px 12px; font-size: 12.5px;
+    font-weight: 600; cursor: pointer; font-family: inherit;
+  }
+  .grade-subject-delete:hover { color: #f87171; border-color: rgba(248,113,113,0.4); }
+  .grades-add-subject {
+    width: 100%; background: var(--card); border: 1px dashed var(--border-strong);
+    color: var(--text-soft); border-radius: var(--radius-md); padding: 16px;
+    font-size: 14px; font-weight: 700; cursor: pointer; font-family: inherit;
+    display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+  }
+  .grades-add-subject:hover { background: var(--card-hover); color: var(--text); }
+  .grades-empty { text-align: center; color: var(--muted); font-size: 14px; padding: 20px; line-height: 1.6; }
+  .grades-intro { font-size: 13.5px; color: var(--muted); line-height: 1.6; text-align: center; }
+
   .classroom-overlay {
     position: fixed;
     inset: 0;
@@ -5883,6 +6010,9 @@
     <symbol id="i-arrow-right" viewBox="0 0 24 24">
       <path d="M5 12h14"/><path d="m12 5 7 7-7 7"/>
     </symbol>
+    <symbol id="i-arrow-left" viewBox="0 0 24 24">
+      <path d="M19 12H5"/><path d="m12 19-7-7 7-7"/>
+    </symbol>
     <symbol id="i-send" viewBox="0 0 24 24">
       <path d="m22 2-7 20-4-9-9-4z"/><path d="M22 2 11 13"/>
     </symbol>
@@ -6223,6 +6353,16 @@
           </span>
           <span class="mode-card-arrow"><svg class="icon"><use href="#i-arrow-right"/></svg></span>
         </button>
+
+        <!-- Cijfers: Gemairo-achtig cijferoverzicht. Alleen Nederlandse versie. -->
+        <button type="button" class="mode-card m-cijfers nl-only" id="openGradesBtn">
+          <span class="mode-card-icon"><svg class="icon"><use href="#i-trending"/></svg></span>
+          <span class="mode-card-body">
+            <span class="mode-card-title">Cijfers — bereken hoe je ervoor staat</span>
+            <span class="mode-card-desc">Voer je cijfers in per vak met hun weging. Max berekent je gemiddelde en welk cijfer je nog nodig hebt.</span>
+          </span>
+          <span class="mode-card-arrow"><svg class="icon"><use href="#i-arrow-right"/></svg></span>
+        </button>
       </div>
     </div>
 
@@ -6537,6 +6677,21 @@
     <span class="study-stat-chip" data-tier="learning"><span class="dot"></span><span data-i18n="study_tier_learning">Aan het leren</span> <strong id="studyCountLearning">0</strong></span>
     <span class="study-stat-chip" data-tier="familiar"><span class="dot"></span><span data-i18n="study_tier_familiar">Vertrouwd</span> <strong id="studyCountFamiliar">0</strong></span>
     <span class="study-stat-chip" data-tier="mastered"><span class="dot"></span><span data-i18n="study_tier_mastered">Gemasterd</span> <strong id="studyCountMastered">0</strong></span>
+  </div>
+</div>
+
+<!-- Cijfers — Gemairo-achtig cijferoverzicht en berekeningen (alleen NL) -->
+<div class="grades-overlay" id="gradesOverlay">
+  <div class="grades-header">
+    <button type="button" class="back-link" id="gradesCloseBtn">
+      <svg class="icon"><use href="#i-arrow-left"/></svg>
+      <span>Terug</span>
+    </button>
+    <h2><span class="grades-title-icon"><svg class="icon"><use href="#i-trending"/></svg></span>Mijn cijfers</h2>
+    <div style="width:64px;"></div>
+  </div>
+  <div class="grades-body" id="gradesBody">
+    <!-- gevuld door renderGrades() -->
   </div>
 </div>
 
@@ -11285,6 +11440,11 @@ const state = {
     try { return JSON.parse(localStorage.getItem('user_library') || '[]'); }
     catch { return []; }
   })(),
+  // Grades (Cijfers) — list of subjects, each with grades. Dutch-only feature.
+  grades: (() => {
+    try { return JSON.parse(localStorage.getItem('user_grades') || '[]'); }
+    catch { return []; }
+  })(),
   skills: (() => {
     try { return JSON.parse(localStorage.getItem('user_skills') || '{}'); }
     catch { return {}; }
@@ -11506,6 +11666,11 @@ function applyLanguage() {
   applyBackendLabels();
 
   userGreeting.textContent = state.name ? `· ${t('greeting')}, ${state.name}` : '';
+
+  // Cijfers is een Nederlandse feature: toon de knop alleen in het Nederlands.
+  const isNl = state.language === 'nl';
+  document.querySelectorAll('.nl-only').forEach(el => { el.style.display = isNl ? '' : 'none'; });
+  if (!isNl && gradesOverlay && gradesOverlay.classList.contains('active')) closeGrades();
 
   if (state.subject) {
     chatHeaderTitle.textContent = `${subjectDisplayLabel(state.subject)} ${t('tutor_suffix')}`;
@@ -13246,6 +13411,222 @@ const libraryGrid = $('libraryGrid');
 function saveLibrary() {
   localStorage.setItem('user_library', JSON.stringify(state.library));
 }
+
+/* ===================================================================
+   CIJFERS (grades) — Gemairo-achtig cijferoverzicht. Alleen NL.
+   Datamodel: state.grades = [{ id, name, target, grades: [{id, mark, weight, desc}] }]
+   =================================================================== */
+const PASS_THRESHOLD = 5.5;          // Nederlands: 5.5 en hoger = voldoende
+const gradesOverlay = $('gradesOverlay');
+const gradesBody = $('gradesBody');
+
+function saveGrades() {
+  try { localStorage.setItem('user_grades', JSON.stringify(state.grades)); } catch (_) {}
+}
+function newId(prefix) { return prefix + '_' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6); }
+
+// Parse a Dutch grade string ("7,2" of "7.2") -> number, of null als leeg/ongeldig
+function parseMark(str) {
+  if (str === null || str === undefined) return null;
+  const s = String(str).trim().replace(',', '.');
+  if (s === '') return null;
+  const n = parseFloat(s);
+  return Number.isFinite(n) ? n : null;
+}
+function parseWeight(str) {
+  const n = parseMark(str);
+  if (n === null || n <= 0) return null;
+  return n;
+}
+// Gewogen gemiddelde van een vak; null als er geen geldige cijfers zijn
+function subjectAverage(subj) {
+  let sum = 0, w = 0;
+  for (const g of subj.grades) {
+    const m = parseMark(g.mark), wt = parseWeight(g.weight) ?? 1;
+    if (m === null) continue;
+    sum += m * wt; w += wt;
+  }
+  if (w === 0) return null;
+  return sum / w;
+}
+function overallAverage() {
+  const avgs = state.grades.map(subjectAverage).filter(a => a !== null);
+  if (!avgs.length) return null;
+  return avgs.reduce((a, b) => a + b, 0) / avgs.length;
+}
+function fmtGrade(n) { return n.toLocaleString('nl-NL', { minimumFractionDigits: 1, maximumFractionDigits: 1 }); }
+function passClass(avg) { return avg === null ? 'none' : (avg >= PASS_THRESHOLD ? 'pass' : 'fail'); }
+
+// Bereken welk cijfer nog nodig is voor het streefgemiddelde (bij weging w)
+function requiredNextMark(subj, target, weight) {
+  let sum = 0, W = 0;
+  for (const g of subj.grades) {
+    const m = parseMark(g.mark), wt = parseWeight(g.weight) ?? 1;
+    if (m === null) continue;
+    sum += m * wt; W += wt;
+  }
+  const w = weight > 0 ? weight : 1;
+  return (target * (W + w) - sum) / w;
+}
+
+function openGrades() {
+  renderGrades();
+  gradesOverlay.classList.add('active');
+  document.body.style.overflow = 'hidden';
+}
+function closeGrades() {
+  gradesOverlay.classList.remove('active');
+  document.body.style.overflow = '';
+}
+
+function renderGrades() {
+  const overall = overallAverage();
+  let html = '';
+
+  // Samenvatting bovenaan
+  html += `<div class="grades-summary">
+    <div class="grades-summary-avg ${passClass(overall)}">${overall === null ? '—' : fmtGrade(overall)}</div>
+    <div class="grades-summary-label">${overall === null ? 'Nog geen cijfers ingevoerd' : 'Gemiddelde van al je vakken'}</div>
+  </div>`;
+
+  if (!state.grades.length) {
+    html += `<p class="grades-empty">Je hebt nog geen vakken.<br>Voeg een vak toe en vul je cijfers in — Max rekent je gemiddelde automatisch uit.</p>`;
+  } else {
+    html += `<p class="grades-intro">Tip: gebruik de <strong>weging</strong> om aan te geven hoe zwaar een cijfer telt (bijv. een SO telt 1×, een toets 2×). Bij "wat moet ik nog halen?" reken je uit welk cijfer je nodig hebt.</p>`;
+  }
+
+  for (const subj of state.grades) {
+    const avg = subjectAverage(subj);
+    html += `<div class="grade-subject" data-sid="${subj.id}">
+      <div class="grade-subject-head">
+        <div class="grade-subject-name"><input type="text" value="${escapeHtml(subj.name)}" placeholder="Vaknaam" data-sid="${subj.id}" data-field="name" aria-label="Vaknaam"></div>
+        <div class="grade-subject-avg ${passClass(avg)}" data-avg-for="${subj.id}">${avg === null ? '—' : fmtGrade(avg)}</div>
+      </div>
+      <div class="grade-subject-body">
+        <div class="grade-row-labels"><span class="l-mark">Cijfer</span><span class="l-desc">Omschrijving (bijv. SO H1)</span><span class="l-weight">Weging</span><span class="l-spacer"></span></div>`;
+
+    for (const g of subj.grades) {
+      html += `<div class="grade-row" data-gid="${g.id}">
+        <input class="grade-mark" type="text" inputmode="decimal" value="${escapeHtml(g.mark ?? '')}" placeholder="7,5" data-sid="${subj.id}" data-gid="${g.id}" data-field="mark" aria-label="Cijfer">
+        <input class="grade-desc" type="text" value="${escapeHtml(g.desc ?? '')}" placeholder="Omschrijving" data-sid="${subj.id}" data-gid="${g.id}" data-field="desc" aria-label="Omschrijving">
+        <input class="grade-weight" type="text" inputmode="decimal" value="${escapeHtml(g.weight ?? '')}" placeholder="1" data-sid="${subj.id}" data-gid="${g.id}" data-field="weight" aria-label="Weging">
+        <button type="button" class="grade-remove" data-action="removeGrade" data-sid="${subj.id}" data-gid="${g.id}" aria-label="Cijfer verwijderen">×</button>
+      </div>`;
+    }
+
+    const target = (typeof subj.target === 'number' && subj.target > 0) ? subj.target : PASS_THRESHOLD;
+    html += `<button type="button" class="grade-add-row" data-action="addGrade" data-sid="${subj.id}"><svg class="icon icon-sm"><use href="#i-plus"/></svg>Cijfer toevoegen</button>
+        <div class="grade-target" data-target-for="${subj.id}">${targetText(subj, target)}</div>
+        <div class="grade-subject-actions">
+          <button type="button" class="grade-subject-delete" data-action="deleteSubject" data-sid="${subj.id}">Vak verwijderen</button>
+        </div>
+      </div>
+    </div>`;
+  }
+
+  html += `<button type="button" class="grades-add-subject" data-action="addSubject"><svg class="icon"><use href="#i-plus"/></svg>Vak toevoegen</button>`;
+
+  gradesBody.innerHTML = html;
+}
+
+// Tekst voor "wat moet ik nog halen?" per vak
+function targetText(subj, target) {
+  const avg = subjectAverage(subj);
+  const req = requiredNextMark(subj, target, 1);
+  const tStr = fmtGrade(target);
+  let msg;
+  if (avg === null) {
+    msg = `Vul cijfers in om te zien wat je nog nodig hebt voor een <strong>${tStr}</strong> gemiddeld.`;
+  } else if (req <= 1) {
+    msg = `Je staat al veilig op een <strong>${tStr}</strong> gemiddelde — zelfs een 1 erbij houdt je erboven. 🎉`;
+  } else if (req > 10) {
+    msg = `Een <strong>${tStr}</strong> gemiddelde haal je met één cijfer erbij niet meer (je zou een ${fmtGrade(req)} nodig hebben). Meerdere goede cijfers zijn nodig.`;
+  } else {
+    msg = `Voor een <strong>${tStr}</strong> gemiddelde heb je bij je volgende cijfer (weging 1×) een <strong>${fmtGrade(req)}</strong> nodig.`;
+  }
+  return `Streefgemiddelde: <input class="grade-target-input" type="text" inputmode="decimal" value="${tStr}" data-sid="${subj.id}" data-field="target" aria-label="Streefgemiddelde"><br>${msg}`;
+}
+
+// Werk alleen de berekende weergaven bij (zonder inputs te herbouwen → focus blijft behouden)
+function refreshGradeCalcs() {
+  const overall = overallAverage();
+  const sumEl = gradesBody.querySelector('.grades-summary-avg');
+  if (sumEl) {
+    sumEl.textContent = overall === null ? '—' : fmtGrade(overall);
+    sumEl.className = 'grades-summary-avg ' + passClass(overall);
+  }
+  for (const subj of state.grades) {
+    const avg = subjectAverage(subj);
+    const avgEl = gradesBody.querySelector(`[data-avg-for="${subj.id}"]`);
+    if (avgEl) {
+      avgEl.textContent = avg === null ? '—' : fmtGrade(avg);
+      avgEl.className = 'grade-subject-avg ' + passClass(avg);
+    }
+    const tEl = gradesBody.querySelector(`[data-target-for="${subj.id}"]`);
+    if (tEl) {
+      const active = document.activeElement;
+      // Herbouw de doel-tekst niet als de gebruiker net in het streef-invoerveld typt
+      if (!(active && active.classList.contains('grade-target-input') && active.dataset.sid === subj.id)) {
+        const target = (typeof subj.target === 'number' && subj.target > 0) ? subj.target : PASS_THRESHOLD;
+        tEl.innerHTML = targetText(subj, target);
+      }
+    }
+  }
+}
+
+function findSubject(sid) { return state.grades.find(s => s.id === sid); }
+
+// Invoer bijwerken (gedelegeerd)
+gradesBody.addEventListener('input', (e) => {
+  const el = e.target;
+  const sid = el.dataset.sid, field = el.dataset.field;
+  if (!sid || !field) return;
+  const subj = findSubject(sid);
+  if (!subj) return;
+  if (field === 'name') {
+    subj.name = el.value;
+  } else if (field === 'target') {
+    const t = parseMark(el.value);
+    subj.target = (t !== null && t > 0) ? t : PASS_THRESHOLD;
+  } else {
+    const g = subj.grades.find(x => x.id === el.dataset.gid);
+    if (!g) return;
+    g[field] = el.value;
+  }
+  saveGrades();
+  if (field !== 'name' && field !== 'desc') refreshGradeCalcs();
+});
+
+// Klik-acties (toevoegen/verwijderen)
+gradesBody.addEventListener('click', (e) => {
+  const btn = e.target.closest('[data-action]');
+  if (!btn) return;
+  const action = btn.dataset.action, sid = btn.dataset.sid;
+  if (action === 'addSubject') {
+    state.grades.push({ id: newId('subj'), name: '', target: PASS_THRESHOLD, grades: [{ id: newId('gr'), mark: '', weight: '', desc: '' }] });
+    saveGrades(); renderGrades();
+    // Focus de nieuwe vaknaam
+    const inputs = gradesBody.querySelectorAll('input[data-field="name"]');
+    if (inputs.length) inputs[inputs.length - 1].focus();
+  } else if (action === 'addGrade') {
+    const subj = findSubject(sid);
+    if (subj) { subj.grades.push({ id: newId('gr'), mark: '', weight: '', desc: '' }); saveGrades(); renderGrades(); }
+  } else if (action === 'removeGrade') {
+    const subj = findSubject(sid);
+    if (subj) { subj.grades = subj.grades.filter(g => g.id !== btn.dataset.gid); saveGrades(); renderGrades(); }
+  } else if (action === 'deleteSubject') {
+    const subj = findSubject(sid);
+    if (subj && confirm(`Weet je zeker dat je "${subj.name || 'dit vak'}" en alle cijfers wilt verwijderen?`)) {
+      state.grades = state.grades.filter(s => s.id !== sid); saveGrades(); renderGrades();
+    }
+  }
+});
+
+$('openGradesBtn').addEventListener('click', openGrades);
+$('gradesCloseBtn').addEventListener('click', closeGrades);
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape' && gradesOverlay.classList.contains('active')) closeGrades();
+});
 
 function addToLibrary(cards, meta = {}) {
   if (!cards || !cards.length) return;
