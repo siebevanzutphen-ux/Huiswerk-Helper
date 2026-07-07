@@ -5622,6 +5622,95 @@
     .mode-card-icon .icon { width: 24px; height: 24px; }
   }
 
+  /* ===== Home hub: Max in het midden, keuzeknoppen aan de zijkanten ===== */
+  .hub {
+    display: grid;
+    grid-template-columns: 1fr minmax(210px, 300px) 1fr;
+    align-items: center;
+    gap: 22px;
+    margin: 8px 0 8px;
+  }
+  .hub-col { display: grid; gap: 14px; align-content: center; }
+  .hub-center {
+    display: flex; flex-direction: column; align-items: center; gap: 14px;
+    text-align: center; padding: 0 4px;
+  }
+  .hub-max {
+    width: clamp(150px, 40vw, 210px);
+    aspect-ratio: 1 / 1;
+    filter: drop-shadow(0 18px 40px rgba(167, 139, 250, 0.35));
+    animation: hubMaxFloat 4.2s ease-in-out infinite;
+  }
+  @media (prefers-reduced-motion: reduce) { .hub-max { animation: none; } }
+  @keyframes hubMaxFloat {
+    0%, 100% { transform: translateY(0) rotate(-1deg); }
+    50%      { transform: translateY(-10px) rotate(1deg); }
+  }
+  .hub-max .cheek { animation: hubCheek 4.2s ease-in-out infinite; }
+  @keyframes hubCheek { 0%, 100% { opacity: .75; } 50% { opacity: 1; } }
+  .hub-max .m-eye { transform-origin: center; transform-box: fill-box; animation: hubBlink 5s infinite; }
+  @keyframes hubBlink { 0%, 92%, 100% { transform: scaleY(1); } 96% { transform: scaleY(0.1); } }
+  .hub-prompt {
+    font-size: clamp(19px, 4.5vw, 26px); font-weight: 900; letter-spacing: -0.02em;
+    line-height: 1.15; text-wrap: balance;
+  }
+  .hub-prompt .grad {
+    background: var(--accent-gradient); -webkit-background-clip: text; background-clip: text; color: transparent;
+  }
+  .hub-subtitle { font-size: 14px; color: var(--text-soft); line-height: 1.5; max-width: 320px; }
+
+  /* Keuzeknop in de hub */
+  .hub-btn {
+    position: relative; display: flex; align-items: center; gap: 13px; text-align: left; width: 100%;
+    background: var(--card); border: 1px solid var(--border); border-radius: var(--radius-lg);
+    padding: 14px 16px; cursor: pointer; font-family: inherit; color: inherit;
+    transition: transform .16s ease, box-shadow .2s ease, border-color .2s ease, background .2s ease;
+  }
+  .hub-btn:hover { transform: translateY(-3px); box-shadow: var(--shadow-lg); border-color: var(--border-strong); background: var(--card-hover); }
+  .hub-btn:active { transform: translateY(-1px) scale(.99); }
+  .hub-btn-icon {
+    flex-shrink: 0; width: 46px; height: 46px; border-radius: 14px; display: grid; place-items: center;
+    background: var(--accent-gradient); box-shadow: var(--shadow-glow);
+  }
+  .hub-btn-icon .icon { width: 23px; height: 23px; color: #fff; }
+  .hub-btn-icon .robot { width: 30px; height: 38px; }
+  .hub-btn-body { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+  .hub-btn-title { font-size: 15px; font-weight: 800; letter-spacing: -.01em; }
+  .hub-btn-desc { font-size: 12px; color: var(--muted); line-height: 1.35; }
+  /* Per-knop accentkleuren (zacht en vrolijk) */
+  .hub-btn.b-home .hub-btn-icon { background: linear-gradient(140deg, #a78bfa, #f472b6); }
+  .hub-btn.b-learn .hub-btn-icon { background: linear-gradient(140deg, #60a5fa, #818cf8); }
+  .hub-btn.b-snel  .hub-btn-icon { background: linear-gradient(140deg, #f472b6, #fb7185); }
+  .hub-btn.b-pod   .hub-btn-icon { background: linear-gradient(140deg, #38bdf8, #22d3ee); }
+  .hub-btn.b-klas  .hub-btn-icon { background: linear-gradient(140deg, #fbbf24, #fb923c); }
+  .hub-btn.b-cijfers .hub-btn-icon { background: linear-gradient(140deg, #34d399, #10b981); }
+  /* "Huiswerk helpen" is de hoofdactie: iets prominenter */
+  .hub-btn.b-home {
+    background: linear-gradient(135deg, rgba(167,139,250,0.16), rgba(244,114,182,0.12));
+    border-color: var(--border-strong);
+  }
+  .hub-btn.b-home .hub-btn-title { font-size: 16px; }
+  .hub-badge {
+    position: absolute; top: -8px; right: 12px; z-index: 2;
+    background: var(--accent-gradient); color: #fff; font-size: 9.5px; font-weight: 900;
+    letter-spacing: .05em; text-transform: uppercase; padding: 3px 8px; border-radius: 999px; box-shadow: var(--shadow-md);
+  }
+  /* Op smalle schermen: Max bovenaan, knoppen eronder in twee kolommen */
+  @media (max-width: 860px) {
+    .hub { grid-template-columns: 1fr; gap: 18px; }
+    .hub-center { order: -1; }
+    .hub-col { grid-template-columns: 1fr 1fr; gap: 12px; }
+    .hub-col.hub-col-full { grid-template-columns: 1fr; }
+    .hub-btn.b-home { grid-column: 1 / -1; }
+  }
+  @media (max-width: 460px) {
+    .hub-col { grid-template-columns: 1fr; }
+    .hub-btn { padding: 13px 14px; }
+  }
+
+  /* Subjects picker: apart scherm na 'Huiswerk helpen' */
+  .subjects-back-bar { margin-bottom: 6px; }
+
   /* Waarschuwing als tokens bijna op zijn */
   .token-toast {
     position: fixed; top: calc(14px + var(--safe-top)); left: 50%; transform: translate(-50%, -160%);
@@ -6134,7 +6223,7 @@
 <main>
   <div id="errorBox" class="error hidden"></div>
 
-  <section class="hero" id="hero">
+  <section class="hero hidden" id="hero">
     <h2 data-i18n="hero_title">Je eigen bijles, altijd binnen handbereik.</h2>
     <p data-i18n="hero_subtitle">Max legt uit, overhoort en daagt je uit met spelletjes — tot je het écht snapt. Jouw persoonlijke leermaatje, dag en nacht.</p>
   </section>
@@ -6177,7 +6266,116 @@
     </div>
   </section>
 
+  <!-- HOME HUB: Max in het midden vraagt wat je wilt doen; keuzeknoppen aan de zijkanten -->
   <section id="step-subject">
+    <div class="hub">
+      <div class="hub-col hub-col-left">
+        <button type="button" class="hub-btn b-home" id="openHomeworkBtn">
+          <span class="hub-btn-icon"><svg class="icon"><use href="#i-cap"/></svg></span>
+          <span class="hub-btn-body">
+            <span class="hub-btn-title">Huiswerk helpen</span>
+            <span class="hub-btn-desc">Kies een vak en krijg uitleg</span>
+          </span>
+        </button>
+        <button type="button" class="hub-btn b-learn" id="openLearnModeBtn">
+          <span class="hub-btn-icon"><svg class="icon"><use href="#i-book"/></svg></span>
+          <span class="hub-btn-body">
+            <span class="hub-btn-title">Leren</span>
+            <span class="hub-btn-desc">Overhoren met flitskaarten & spelletjes</span>
+          </span>
+        </button>
+        <button type="button" class="hub-btn b-snel" id="openSnelBtn">
+          <span class="hub-badge">Nieuw</span>
+          <span class="hub-btn-icon"><svg class="icon"><use href="#i-bolt"/></svg></span>
+          <span class="hub-btn-body">
+            <span class="hub-btn-title">Snel Leren</span>
+            <span class="hub-btn-desc">Sprint in één keer door je stof</span>
+          </span>
+        </button>
+      </div>
+
+      <div class="hub-center">
+        <svg class="hub-max" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Max de robot">
+          <defs>
+            <linearGradient id="maxBody" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0" stop-color="#f7f3ff"/>
+              <stop offset="1" stop-color="#ddd1ff"/>
+            </linearGradient>
+            <linearGradient id="maxAntenna" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0" stop-color="#f9a8d4"/>
+              <stop offset="1" stop-color="#f472b6"/>
+            </linearGradient>
+          </defs>
+          <!-- antenne met hartje -->
+          <line x1="100" y1="34" x2="100" y2="52" stroke="#c4b5fd" stroke-width="5" stroke-linecap="round"/>
+          <circle cx="100" cy="28" r="9" fill="url(#maxAntenna)"/>
+          <circle cx="96" cy="25" r="2.6" fill="#fff" opacity="0.85"/>
+          <!-- oortjes -->
+          <rect x="24" y="96" width="14" height="34" rx="7" fill="#c9b8f7"/>
+          <rect x="162" y="96" width="14" height="34" rx="7" fill="#c9b8f7"/>
+          <!-- hoofd -->
+          <rect x="34" y="50" width="132" height="118" rx="34" fill="url(#maxBody)" stroke="#c9b8f7" stroke-width="2"/>
+          <!-- vizier -->
+          <rect x="52" y="72" width="96" height="52" rx="22" fill="#4b3b73"/>
+          <rect x="52" y="72" width="96" height="52" rx="22" fill="#6b5aa0" opacity="0.35"/>
+          <!-- ogen -->
+          <ellipse class="m-eye" cx="82" cy="98" rx="11" ry="13" fill="#fff"/>
+          <ellipse class="m-eye" cx="118" cy="98" rx="11" ry="13" fill="#fff"/>
+          <circle cx="84" cy="100" r="5.5" fill="#7c3aed"/>
+          <circle cx="120" cy="100" r="5.5" fill="#7c3aed"/>
+          <circle cx="80" cy="95" r="2.6" fill="#fff"/>
+          <circle cx="116" cy="95" r="2.6" fill="#fff"/>
+          <!-- wangetjes -->
+          <ellipse class="cheek" cx="60" cy="140" rx="9" ry="6" fill="#fb9fce"/>
+          <ellipse class="cheek" cx="140" cy="140" rx="9" ry="6" fill="#fb9fce"/>
+          <!-- glimlach -->
+          <path d="M86 146 Q100 157 114 146" fill="none" stroke="#b6a4ec" stroke-width="4.5" stroke-linecap="round"/>
+        </svg>
+        <div class="hub-prompt">Hoi<span id="hubName"></span>! <span class="grad">Wat wil je doen?</span></div>
+        <div class="hub-subtitle">Kies hieronder waar Max je vandaag mee kan helpen.</div>
+      </div>
+
+      <div class="hub-col hub-col-right">
+        <button type="button" class="hub-btn b-pod" id="openPodcastBtn">
+          <span class="hub-badge">Nieuw</span>
+          <span class="hub-btn-icon"><svg class="icon"><use href="#i-headphones"/></svg></span>
+          <span class="hub-btn-body">
+            <span class="hub-btn-title">Audio-les</span>
+            <span class="hub-btn-desc">Luister naar je stof als podcast</span>
+          </span>
+        </button>
+        <button type="button" class="hub-btn b-klas" id="openClassroomBtn">
+          <span class="hub-btn-icon"><svg class="robot"><use href="#i-robot-teacher"/></svg></span>
+          <span class="hub-btn-body">
+            <span class="hub-btn-title">Klas</span>
+            <span class="hub-btn-desc">Krijg live les van Meester Max</span>
+          </span>
+        </button>
+        <button type="button" class="hub-btn b-cijfers nl-only" id="openGradesBtn">
+          <span class="hub-btn-icon"><svg class="icon"><use href="#i-trending"/></svg></span>
+          <span class="hub-btn-body">
+            <span class="hub-btn-title">Cijfers</span>
+            <span class="hub-btn-desc">Bereken hoe je ervoor staat</span>
+          </span>
+        </button>
+      </div>
+    </div>
+
+    <!-- Library: opgeslagen decks uit eerdere leersessies; alleen zichtbaar als er zijn -->
+    <div class="library-section" id="librarySection">
+      <div class="subject-category" data-i18n="library_label">Jouw bibliotheek</div>
+      <div class="library-grid" id="libraryGrid"></div>
+    </div>
+  </section>
+
+  <!-- VAKKEN: apart scherm, geopend via 'Huiswerk helpen' -->
+  <section id="subjectsPicker" class="hidden">
+    <div class="back-bar subjects-back-bar">
+      <button type="button" class="back-link" id="backToHubBtn">
+        <svg class="icon"><use href="#i-arrow-left"/></svg>
+        <span>Terug</span>
+      </button>
+    </div>
     <div class="subject-category" data-i18n="step1">Welk vak?</div>
 
     <div class="subject-category" data-i18n="cat_sciences">Bèta</div>
@@ -6308,69 +6506,6 @@
       </button>
     </div>
 
-    <!-- ===== Studie-modi: alle manieren om te leren, overzichtelijk bij elkaar ===== -->
-    <div class="modes-section">
-      <div class="modes-head">
-        <span class="modes-eyebrow"><svg class="icon"><use href="#i-sparkles"/></svg><span data-i18n="modes_eyebrow">Meer manieren om te leren</span></span>
-        <h2 class="modes-title" data-i18n="modes_title">Leer op de manier die bij jou past</h2>
-        <p class="modes-subtitle" data-i18n="modes_subtitle">Naast uitleg per vraag kun je flitsend overhoren, in één keer je hele toets oefenen, je stof beluisteren als podcast, of live les krijgen van Meester Max.</p>
-      </div>
-      <div class="modes-grid">
-        <button type="button" class="mode-card m-learn" id="openLearnModeBtn">
-          <span class="mode-card-icon"><svg class="icon"><use href="#i-book"/></svg></span>
-          <span class="mode-card-body">
-            <span class="mode-card-title" data-i18n="learn_entry_title">Leermodus — uit je hoofd leren</span>
-            <span class="mode-card-desc" data-i18n="learn_entry_desc">Stuur foto's van woordjes of formules. Max overhoort je met flitskaarten of spelletjes.</span>
-          </span>
-          <span class="mode-card-arrow"><svg class="icon"><use href="#i-arrow-right"/></svg></span>
-        </button>
-
-        <button type="button" class="mode-card m-snel" id="openSnelBtn">
-          <span class="mode-badge" data-i18n="snel_entry_kicker">Nieuw</span>
-          <span class="mode-card-icon"><svg class="icon"><use href="#i-bolt"/></svg></span>
-          <span class="mode-card-body">
-            <span class="mode-card-title" data-i18n="snel_entry_title">Snel Leren — sprint door je stof</span>
-            <span class="mode-card-desc" data-i18n="snel_entry_desc">Foto's erin + jouw eigen aantekeningen. Max maakt meteen een complete overhoring: een lange vragenlijst, invuloefeningen én open vragen. Fouten krijg je aan het eind terug.</span>
-          </span>
-          <span class="mode-card-arrow"><svg class="icon"><use href="#i-arrow-right"/></svg></span>
-        </button>
-
-        <button type="button" class="mode-card m-pod" id="openPodcastBtn">
-          <span class="mode-badge" data-i18n="pod_entry_kicker">Nieuw</span>
-          <span class="mode-card-icon"><svg class="icon"><use href="#i-headphones"/></svg></span>
-          <span class="mode-card-body">
-            <span class="mode-card-title" data-i18n="pod_entry_title">Audio-les — luister naar je stof</span>
-            <span class="mode-card-desc" data-i18n="pod_entry_desc">Max maakt van je stof een heldere gesproken les. Luister onderweg, met je ogen dicht of tijdens het sporten.</span>
-          </span>
-          <span class="mode-card-arrow"><svg class="icon"><use href="#i-arrow-right"/></svg></span>
-        </button>
-
-        <button type="button" class="mode-card m-klas" id="openClassroomBtn">
-          <span class="mode-card-icon"><svg class="robot"><use href="#i-robot-teacher"/></svg></span>
-          <span class="mode-card-body">
-            <span class="mode-card-title" data-i18n="crt_entry_title">Klas — krijg les van Meester Max</span>
-            <span class="mode-card-desc" data-i18n="crt_entry_desc">Lever je stof in en Max legt het stap voor stap uit op het bord, net als in de klas.</span>
-          </span>
-          <span class="mode-card-arrow"><svg class="icon"><use href="#i-arrow-right"/></svg></span>
-        </button>
-
-        <!-- Cijfers: Gemairo-achtig cijferoverzicht. Alleen Nederlandse versie. -->
-        <button type="button" class="mode-card m-cijfers nl-only" id="openGradesBtn">
-          <span class="mode-card-icon"><svg class="icon"><use href="#i-trending"/></svg></span>
-          <span class="mode-card-body">
-            <span class="mode-card-title">Cijfers — bereken hoe je ervoor staat</span>
-            <span class="mode-card-desc">Voer je cijfers in per vak met hun weging. Max berekent je gemiddelde en welk cijfer je nog nodig hebt.</span>
-          </span>
-          <span class="mode-card-arrow"><svg class="icon"><use href="#i-arrow-right"/></svg></span>
-        </button>
-      </div>
-    </div>
-
-    <!-- Library: saved decks from previous learn sessions; shows only when there are any -->
-    <div class="library-section" id="librarySection">
-      <div class="subject-category" data-i18n="library_label">Jouw bibliotheek</div>
-      <div class="library-grid" id="libraryGrid"></div>
-    </div>
   </section>
 
   <!-- Subject view: shown after a subject card is clicked. Contains hero, photo upload, chat. -->
@@ -11516,6 +11651,10 @@ const subjectHeroTitle = $('subjectHeroTitle');
 const subjectHeroText = $('subjectHeroText');
 const backToSubjectsBtn = $('backToSubjectsBtn');
 const heroEl = document.querySelector('.hero');
+const subjectsPicker = $('subjectsPicker');
+const openHomeworkBtn = $('openHomeworkBtn');
+const backToHubBtn = $('backToHubBtn');
+const hubNameEl = $('hubName');
 // Learn-mode refs
 const learnView = $('learnView');
 const openLearnModeBtn = $('openLearnModeBtn');
@@ -11666,6 +11805,7 @@ function applyLanguage() {
   applyBackendLabels();
 
   userGreeting.textContent = state.name ? `· ${t('greeting')}, ${state.name}` : '';
+  if (typeof updateHubName === 'function') updateHubName();
 
   // Cijfers is een Nederlandse feature: toon de knop alleen in het Nederlands.
   const isNl = state.language === 'nl';
@@ -12215,12 +12355,18 @@ function buildSubjectIntro() {
   subjectHeroText.textContent  = apply(t('intro_text'));
 }
 
+// Zet de naam in de hub-begroeting ("Hoi, Siebe! Wat wil je doen?")
+function updateHubName() {
+  if (hubNameEl) hubNameEl.textContent = state.name ? ', ' + state.name : '';
+}
+
 function showSubjectView(subject) {
   state.subject = subject;
   resetSubjectWorkspace();
-  // Hide home
+  // Hide home + vakkenlijst
   if (heroEl) heroEl.classList.add('hidden');
   stepSubject.classList.add('hidden');
+  if (subjectsPicker) subjectsPicker.classList.add('hidden');
   // Show subject page
   subjectView.classList.remove('hidden');
   stepPhoto.classList.remove('hidden');
@@ -12229,16 +12375,32 @@ function showSubjectView(subject) {
   window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
+// De hub (startscherm met Max in het midden)
 function showHomeView() {
   state.subject = null;
   if (state.learn) state.learn.active = false;
   resetSubjectWorkspace();
   subjectCards.forEach(c => c.classList.remove('active'));
   subjectView.classList.add('hidden');
+  if (subjectsPicker) subjectsPicker.classList.add('hidden');
   if (learnView) learnView.classList.add('hidden');
-  if (heroEl) heroEl.classList.remove('hidden');
+  if (heroEl) heroEl.classList.add('hidden');   // oude tagline-hero blijft verborgen; de hub is nu het startscherm
   stepSubject.classList.remove('hidden');
+  updateHubName();
   renderAccountCard();
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+// De vakkenlijst (na 'Huiswerk helpen')
+function showSubjectsPicker() {
+  state.subject = null;
+  resetSubjectWorkspace();
+  subjectCards.forEach(c => c.classList.remove('active'));
+  if (heroEl) heroEl.classList.add('hidden');
+  stepSubject.classList.add('hidden');
+  subjectView.classList.add('hidden');
+  if (learnView) learnView.classList.add('hidden');
+  subjectsPicker.classList.remove('hidden');
   window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
@@ -12254,7 +12416,10 @@ subjectCards.forEach(card => {
   });
 });
 
-backToSubjectsBtn.addEventListener('click', showHomeView);
+openHomeworkBtn.addEventListener('click', showSubjectsPicker);
+backToHubBtn.addEventListener('click', showHomeView);
+// "Andere vak" op een vakpagina gaat terug naar de vakkenlijst
+backToSubjectsBtn.addEventListener('click', showSubjectsPicker);
 
 // ============ Learn mode ============
 function resetLearnWorkspace() {
@@ -12286,6 +12451,7 @@ function showLearnView() {
   // Hide home + subject
   if (heroEl) heroEl.classList.add('hidden');
   stepSubject.classList.add('hidden');
+  if (subjectsPicker) subjectsPicker.classList.add('hidden');
   subjectView.classList.add('hidden');
   // Show learn view
   learnView.classList.remove('hidden');
