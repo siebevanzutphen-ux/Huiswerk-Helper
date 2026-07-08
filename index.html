@@ -333,6 +333,8 @@
     box-shadow: var(--shadow-glow);
   }
   .logo-mark .icon { width: 22px; height: 22px; }
+  /* Meester Max staand in het logo-vierkantje: vult de hoogte, netjes gecentreerd */
+  .logo-mark .logo-robot { width: auto; height: 90%; display: block; }
   header h1 .brand-text { color: var(--text); font-weight: 900; }
   .user-greeting {
     font-size: 13px;
@@ -6200,7 +6202,7 @@
 
 <header>
   <h1>
-    <span class="logo-mark"><svg class="robot"><use href="#i-robot"/></svg></span>
+    <span class="logo-mark"><svg class="robot logo-robot" viewBox="0 0 140 220"><use href="#i-robot-teacher"/></svg></span>
     <span class="brand-text" data-i18n="app_name">Huiswerk helper</span>
     <span class="user-greeting" id="userGreeting"></span>
   </h1>
