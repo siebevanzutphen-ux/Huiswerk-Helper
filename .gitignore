@@ -1,2 +1,25 @@
 # Other files in this folder we don't want on GitHub
 tafel-dekken.html
+
+# Gedownloade pakketten en build-output (opnieuw te maken met `npm install`)
+node_modules/
+my-video/out/
+my-video/.remotion/
+
+# Gekloonde repo van iemand anders — hoort niet in deze repo
+codeburn/
+
+# Geinstalleerde AI-skills en lokale editor-instellingen (herinstalleerbaar)
+.agents/
+.claude/
+
+# Oude merge-backups; de echte geschiedenis zit al in git
+index.LOCAL-BACKUP-*.html
+index.BACKUP-*.html
+index.BASE-*.html
+index.REMOTE-*.html
+
+# Rommel
+.DS_Store
+Thumbs.db
+*.log
